@@ -7,6 +7,7 @@ namespace Sonic {
     */
     class IndexBuffer
     {
+    public:
         /**
         * Creates a new IndexBuffer
         * 
@@ -15,6 +16,7 @@ namespace Sonic {
         */
         IndexBuffer(const int* indices, int elementCount);
 
+    private:
         /**
         * Binds the index buffer to opengl GL_ELEMENT_ARRAY_BUFFER
         */

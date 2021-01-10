@@ -11,7 +11,6 @@ class SnakeApp : public Sonic::App
 
     Sonic::Scene* OnInit() override
     {
-        std::cout << "Test 1" << std::endl;
         return new GameScene();
     }
 

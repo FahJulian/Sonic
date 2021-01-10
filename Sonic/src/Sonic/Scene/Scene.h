@@ -150,7 +150,6 @@ namespace Sonic {
         template<typename Component>
         bool HasComponent(Entity entity)
         {
-            if (m_EntityComponentMap[entity].)
             return GetComponentPool<Component>()->Has(entity);
         }
 
@@ -207,6 +206,39 @@ namespace Sonic {
         {
             GetEventDispatcher<Event>()->AddListener(obj, method);
         }
+
+        /**
+        * Adds a listener to the EventDispatcher. This method should be used to add
+        * functions, not methods. This adds a removable listener, meaning that the
+        * returned int ptr can later be used to remove this listener.
+        *
+        * @param listener Pointer to the function
+        *
+        * @return pointer to the index of the function within this EventDispatcher. Can be used
+        *         to remove the function later.
+        */
+        template<typename Event>
+        std::shared_ptr<int> AddRemovableListener(std::function<void(const Event&)> listener)
+        {
+            return GetEventDispatcher<Event>()->AddRemovableListener(listener);
+        }
+
+        /**
+        * Adds a listener to the EventDispatcher. This method should be used to add
+        * methods, not functions. This adds a removable listener, meaning that the
+        * returned int ptr can later be used to remove this listener.
+        *
+        * @param obj Pointer to the object of the method
+        * @param method Pointer to the method
+        *
+        * @return pointer to the index of the method within this EventDispatcher. Can be used
+        *         to remove the method later.
+        */
+        template<typename F, typename Event>
+        std::shared_ptr<int> AddRemovableListener(F* const obj, void(F::* method)(const Event&))
+        {
+            return GetEventDispatcher<Event>()->AddRemovableListener(obj, method);
+        }
         
         /**
         * Dispatches the given Event to all event listeners that are registert for
@@ -216,6 +248,17 @@ namespace Sonic {
         void DispatchEvent(const Event& e)
         {
             GetEventDispatcher<Event>()->Dispatch(e);
+        }
+
+        /**
+        * Removes the listener at the specified index
+        *
+        * @param index The index of the listener to remove
+        */
+        template<typename Event>
+        void RemoveEventListener(const std::shared_ptr<int>& index)
+        {
+            GetEventDispatcher<Event>()->Remove(index);
         }
 
     private:
@@ -263,7 +306,7 @@ namespace Sonic {
             }
             else
             {
-                SONIC_LOG_DEBUG("Scene: Reallocating space for CompoentPools")
+                SONIC_LOG_DEBUG("Scene: Reallocating space for ComponentPools")
 
                 ComponentPool* newComponentPools = new ComponentPool[type + COMPONENT_POOL_ARRAY_RESERVE_STEP];
                 std::copy(m_ComponentPools, m_ComponentPools + m_ComponentPoolsSize, newComponentPools);

@@ -100,6 +100,7 @@ void GameScene::OnKeyReleased(const KeyReleasedEvent& event)
         case Keys::Right:
             View<SnakeHeadComponent>().ForEach([](auto e, auto& c) { if (c.lastDirection != Direction::Left) c.direction = Direction::Right; });
             break;
+
         default: 
             break;
     }
