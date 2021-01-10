@@ -4,3 +4,4 @@ bin/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+enc_temp_folder/
