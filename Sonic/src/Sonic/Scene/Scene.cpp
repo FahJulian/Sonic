@@ -1,29 +1,31 @@
-#include "../App.h"
+#include "Sonic/Renderer/Renderer2D.h"
+#include "Sonic/Window/Window.h"
+#include "Sonic/Renderer/Camera2D.h"
+#include "Sonic/App.h"
 #include "Scene.h"
 #include "Components.h"
 #include "ComponentView.h"
-#include "../Window/Window.h"
-#include "../Renderer/Camera2D.h"
-#include "../Renderer/Renderer2D.h"
 
 namespace Sonic {
 
     Scene::Scene()
         : m_ComponentPools(nullptr), m_ComponentPoolsSize(0), m_Camera(Camera2D(0, 0, 0, 0))
     {
+        m_EventDispatchers.reserve(EVENT_DISPATCHER_RESERVE_STEP);
     }
 
     Entity Scene::AddEntity()
     {
         Entity e = nextEntity++;
-        m_EntityComponentMap[e] = std::vector<ComponentType>();
         m_EntityComponentMap[e].reserve(ENTITY_COMPONENT_MAP_VECTOR_RESERVE_STEP);
         return e;
     }
 
     void Scene::RemoveEntity(Entity entity)
     {
-        m_EntitiesToDelete.emplace_back(entity);
+        for (ComponentType t : m_EntityComponentMap[entity])
+            m_ToDelete[t].insert(entity);
+        m_EntityComponentMap.erase(entity);
     }
 
     void Scene::Init()
@@ -46,29 +48,12 @@ namespace Sonic {
 
         OnUpdate(deltaTime);
 
-        #ifdef SONIC_DEBUG
-        bool canDeleteEntities = true;
-        for (int i = 0; i < m_ComponentPoolsSize; i++)
-        {
-            if (m_ComponentPools[i].m_ActiveIterators != 0)
-                canDeleteEntities = false;
-        }
-
-        if (!canDeleteEntities)
-        {
-            SONIC_LOG_DEBUG("Exiting App: There are iterators over ComponentViews active at the end of the Update stage.")
-            App::get()->Stop();
-        }
-        else
-        #endif
-
-        for (Entity e : m_EntitiesToDelete)
-        {
-            std::vector<ComponentType> componentsOfEntity = m_EntityComponentMap[e];
-            for (ComponentType type : componentsOfEntity)
-                m_ComponentPools[type - 1].Remove(e);
-            m_EntityComponentMap.erase(e);
-        }
+        // Erase all Components that were deleted during the update phase
+        // Needs to be done at the end of the update phase because there
+        // may be iterators that will cause Segfaults during the update phase
+        for (auto& [type, entities] : m_ToDelete)
+            m_ComponentPools[type - 1].Remove(entities);
+        m_ToDelete.clear();
     }
 
     void Scene::Render()

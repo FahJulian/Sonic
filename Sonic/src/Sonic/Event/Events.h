@@ -1,11 +1,14 @@
 #pragma once
-#include "../Window/MouseButtons.h"
-#include "../Window/Keys.h"
+#include "Sonic/Window/MouseButtons.h"
+#include "Sonic/Window/Keys.h"
+#include "Event.h"
 
 namespace Sonic {
 
     struct KeyPressedEvent
     {
+        SONIC_REGISTER_EVENT
+
         Key key;
 
         KeyPressedEvent(Key key)
@@ -16,6 +19,8 @@ namespace Sonic {
 
     struct KeyReleasedEvent
     {
+        SONIC_REGISTER_EVENT
+
         Key key;
 
         KeyReleasedEvent(Key key)
@@ -26,6 +31,8 @@ namespace Sonic {
 
     struct MouseMovedEvent
     {
+        SONIC_REGISTER_EVENT
+
         float x;
         float y;
         float deltaX;
@@ -39,6 +46,8 @@ namespace Sonic {
 
     struct MouseDraggedEvent
     {
+        SONIC_REGISTER_EVENT
+
         MouseButton button;
         float x;
         float y;
@@ -53,6 +62,8 @@ namespace Sonic {
 
     struct MouseButtonPressedEvent
     {
+        SONIC_REGISTER_EVENT
+
         MouseButton button;
         float x;
         float y;
@@ -65,6 +76,8 @@ namespace Sonic {
 
     struct MouseButtonReleasedEvent
     {
+        SONIC_REGISTER_EVENT
+
         MouseButton button;
         float x;
         float y;
@@ -77,6 +90,8 @@ namespace Sonic {
 
     struct MouseScrolledEvent
     {
+        SONIC_REGISTER_EVENT
+
         float x;
         float y;
         float scrollX;
@@ -90,10 +105,14 @@ namespace Sonic {
 
     struct WindowClosedEvent
     {
+        SONIC_REGISTER_EVENT
+
     };
 
     struct WindowResizedEvent
     {
+        SONIC_REGISTER_EVENT
+
         int width;
         int height;
 

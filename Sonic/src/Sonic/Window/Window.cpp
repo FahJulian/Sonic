@@ -1,5 +1,7 @@
 #include <iostream>
+#include <gl/glew.h>
 #include <GLFW/glfw3.h>
+#include "Sonic/App.h"
 #include "Window.h"
 
 struct WindowData
@@ -14,35 +16,8 @@ static WindowData s_Data;
 
 namespace Sonic {
 
-    EventDispatcher<KeyPressedEvent>* Window::onKeyPressed;
-    EventDispatcher<KeyReleasedEvent>* Window::onKeyReleased;
-
-    EventDispatcher<MouseMovedEvent>* Window::onMouseMoved;
-    EventDispatcher<MouseDraggedEvent>* Window::onMouseDragged;
-    EventDispatcher<MouseButtonPressedEvent>* Window::onMouseButtonPressed;
-    EventDispatcher<MouseButtonReleasedEvent>* Window::onMouseButtonReleased;
-    EventDispatcher<MouseScrolledEvent>* Window::onMouseScrolled;
-
-    EventDispatcher<WindowClosedEvent>* Window::onWindowClosed;
-    EventDispatcher<WindowResizedEvent>* Window::onWindowResized;
-
-    bool Window::init(int width, int height, const char* title)
+    bool Window::init(int width, int height, const char* title, bool resizable)
     {
-        Keyboard::init();
-        Mouse::init();
-
-        Window::onKeyPressed = &Keyboard::onKeyPressed;
-        Window::onKeyReleased = &Keyboard::onKeyReleased;
-        
-        Window::onMouseMoved = &Mouse::onMouseMoved;
-        Window::onMouseDragged = &Mouse::onMouseDragged;
-        Window::onMouseButtonPressed = &Mouse::onMouseButtonPressed;
-        Window::onMouseButtonReleased = &Mouse::onMouseButtonReleased;
-        Window::onMouseScrolled = &Mouse::onMouseScrolled;
-
-        Window::onWindowClosed = new EventDispatcher<WindowClosedEvent>();
-        Window::onWindowResized = new EventDispatcher<WindowResizedEvent>();
-
         if (!glfwInit())
             return false;
 
@@ -56,6 +31,8 @@ namespace Sonic {
         s_Data.width = static_cast<float>(width);
         s_Data.height = static_cast<float>(height);
         s_Data.title = title;
+
+        glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
 
         s_Data.glfwID = glfwCreateWindow(width, height, title, NULL, NULL);
         if (!s_Data.glfwID)
@@ -82,9 +59,6 @@ namespace Sonic {
     {
         glfwTerminate();
         glfwSetErrorCallback(NULL);
-
-        delete onWindowClosed;
-        delete onWindowResized;
     }
 
     bool Window::isClosed()
@@ -104,7 +78,7 @@ namespace Sonic {
 
     void Window::windowCloseCallback(GLFWwindow* window)
     {
-        onWindowClosed->Dispatch(WindowClosedEvent());
+        App::get()->GetActiveScene()->DispatchEvent(WindowClosedEvent());
     }
 
     void Window::windowResizeCallback(GLFWwindow* window, int width, int height)
@@ -112,7 +86,7 @@ namespace Sonic {
         s_Data.width = static_cast<float>(width);
         s_Data.height = static_cast<float>(height);
 
-        onWindowResized->Dispatch(WindowResizedEvent(width, height));
+        App::get()->GetActiveScene()->DispatchEvent(WindowResizedEvent(width, height));
     }
 
     float Window::getWidth()

@@ -1,11 +1,15 @@
+#include <GL/glew.h>
+#include "glfw/glfw3.h"
 #include "App.h"
 #include "Renderer/Renderer2D.h"
+#include "Window/Window.h"
 
 struct InitialWindowData
 {
     int width;
     int height;
     const char* title;
+    bool resizable;
 };
 
 static InitialWindowData s_InitialWindowData;
@@ -14,7 +18,7 @@ namespace Sonic {
     
     App* App::m_Instance;
 
-    App::App(int width, int height, const char* title)
+    App::App(int width, int height, const char* title, bool windowResizable)
         : m_Scene(nullptr), m_Running(false)
     {
         if (m_Instance != nullptr)
@@ -25,11 +29,13 @@ namespace Sonic {
         s_InitialWindowData.width = width;
         s_InitialWindowData.height = height;
         s_InitialWindowData.title = title;
+        s_InitialWindowData.resizable = windowResizable;
     }
 
     bool App::Init()
     {
-        if (!Sonic::Window::init(s_InitialWindowData.width, s_InitialWindowData.height, s_InitialWindowData.title))
+        if (!Sonic::Window::init(s_InitialWindowData.width, s_InitialWindowData.height, 
+                s_InitialWindowData.title, s_InitialWindowData.resizable))
             return false;
 
         if (glewInit() != GLEW_OK)
@@ -38,11 +44,11 @@ namespace Sonic {
             return false;
         }
 
-        Window::onWindowClosed->AddListener<App, &App::OnWindowClosed>(this);
 
         Renderer2D::init();
 
         m_Scene = OnInit();
+        m_Scene->AddEventListener(this, &App::OnWindowClosed);
         m_Scene->Init();
         
         return true;

@@ -43,11 +43,16 @@ struct FoodComponent
 
 class GameScene : public Scene
 {
+    void OnRender() override {};
+
     void OnInit() override;
     void OnUpdate(float deltaTime) override;
-    void OnRender() override;
     void OnKeyReleased(const KeyReleasedEvent& event);
-    void AddBorderEntities();
     bool IsOutOfBorders(const glm::vec3& position);
+
+    void RandomizeFoodPos();
+
     void Reset();
+    void AddBorder();
+    void InitEntities();
 };

@@ -5,7 +5,7 @@
 class SnakeApp : public Sonic::App
 {
     SnakeApp()
-        : Sonic::App(WIDTH, HEIGHT, TITLE)
+        : Sonic::App(WIDTH, HEIGHT, TITLE, false)
     {
     }
 
