@@ -20,25 +20,83 @@ static Sonic::Entity nextEntity = 1;
 
 namespace Sonic {
 
+    /**
+    * The Scene is responsible of managin Entities and their Components by 
+    * adding and removing them to ComponentPools. It also holds EventDispatchers
+    * and adds EventListeners to those EventDispatchers. It should be subclassed
+    * by the Scene of the crGame.
+    */
     class Scene
     {
     public:
+        /**
+        * Constructs a new Scene
+        */
         Scene();
 
     private:
+        /**
+        * Initializes the Scene.
+        */
         void Init();
+
+        /**
+        * Updates the Scene. Runs system updating the componentsAt the end of the Update, all
+        * components that were removed during the Update are removed at once.
+        * 
+        * @param deltaTime The time that has passed since the last update in seconds
+        */
         void Update(float deltaTime);
+
+        /**
+        * Draws all scene objects to the screen. 
+        */
         void Render();
 
     protected:
+        /**
+        * Virtual method that should be overridden by the Subclass to initialize all entities and
+        * register event listeners
+        */
         virtual void OnInit() = 0;
+
+        /**
+        * Virtual method that should be override by the Subclass to update all entities in the scene
+        * that are not automatically updated by the Baseclass
+        * 
+        * @param deltaTime The time that has passed since the last update in seconds
+        */
         virtual void OnUpdate(float deltaTime) = 0;
+
+        /**
+        * Virtual method that should be overriden by the Subclass to draw all entities to the screen
+        * that are not automatically drawn by the Baseclass
+        */
         virtual void OnRender() = 0;
 
     public:
+        /**
+        * Registers a new entity within this scene.
+        * 
+        * @return The ID of the new Entity
+        */
         Entity AddEntity();
+
+        /**
+        * Removes an Entity with the given Entity ID and all its components from
+        * the scene. The entities get removed at the end of the current update 
+        * phase together to avoid memory leaks from iterators during the update phase.
+        * 
+        * @param entity The Entity ID of the Entity that should be removed
+        */
         void RemoveEntity(Entity entity);
 
+        /**
+        * Adds the given component to the given entity
+        *
+        * @param entity The Entity ID of the Entity that the Component should be added to
+        * @param component The component that should be added to the entity
+        */
         template<typename Component>
         void AddComponent(Entity entity, const Component& component)
         {
@@ -46,6 +104,13 @@ namespace Sonic {
             m_EntityComponentMap[entity].insert(Component::getComponentType());
         }
 
+        /**
+        * Adds a component of the given type with the given constructor arguments to the 
+        * given entity
+        * 
+        * @param entity The Entity ID of the Entity that the Component should be added to
+        * @param args The arguments to pass to the Components constructor
+        */
         template<typename Component, typename... Args>
         void AddComponent(Entity entity, Args&&... args)
         {
@@ -54,6 +119,18 @@ namespace Sonic {
             m_EntityComponentMap[entity].insert(Component::getComponentType());
         }
 
+        /**
+        * Searches the scene for a component of the given type that is part of
+        * the given entity. The returned pointer may only be valid during the
+        * current update phase because the buffers holding the components may
+        * move their data resulting in the pointer pointing to freed memory.
+        * If this method is called right after Scene::HasComponent() with the 
+        * same entity, the scene is not searched twice. Thus, calling 
+        * HasComponent() and the GetComponent() is not slower that calling 
+        * GetComponent() and cecking if the result is NULL.
+        * 
+        * @param entity The entity for whos component to search or NULL
+        */
         template<typename Component>
         Component* GetComponent(Entity entity)
         {
@@ -61,12 +138,28 @@ namespace Sonic {
             return p->Get<Component>(entity);
         }
 
+        /**
+        * Checks if the given Entity has a component of the given type.
+        * If this method is called right before Scene::GetComponent() with the 
+        * same entity, the scene is not searched twice. Thus, calling 
+        * HasComponent() and the GetComponent() is not slower that calling 
+        * GetComponent() and cecking if the result is NULL.
+        * 
+        * @param entity The entity whos components to check
+        */
         template<typename Component>
         bool HasComponent(Entity entity)
         {
+            if (m_EntityComponentMap[entity].)
             return GetComponentPool<Component>()->Has(entity);
         }
 
+        /**
+        * Removes the component that is part of the given entity. Components are
+        * removed only at the end of the current update phase to avoid memory leaks
+        *
+        * @param entity The entity whos componed should be removed
+        */
         template<typename Component>
         void RemoveComponent(Entity entity)
         {
@@ -76,6 +169,11 @@ namespace Sonic {
             m_ToDelete[type].emplace_back(entity);
         }
 
+        /**
+        * Returns a ComponentView of all the components of the given Component type.
+        * It should mainly be used to be iterated over with either ComponentView::ForEach()
+        * or with ComponentView::Iterator. It is important to use references to avoid copying
+        */
         template<typename Component>
         ComponentView<Component> View()
         {
@@ -83,18 +181,37 @@ namespace Sonic {
             return p->ToComponentView<Component>();
         }
 
+        /**
+        * Adds an event listener of the given type to the scene. If gets called every time an
+        * event of the given type is dispatched. This method should be used to add 
+        * functions, not methods.
+        * 
+        * @param listener The listener to add
+        */
         template<typename Event>
         void AddEventListener(std::function<void(const Event&)> listener)
         {
             GetEventDispatcher<Event>()->AddListener(listener);
         }
 
+        /**
+        * Adds an event listener of the given type to the scene. If gets called every time an
+        * event of the given type is dispatched. This method should be used to add
+        * methods, not functions.
+        *
+        * @param obj Pointer to the object of the method
+        * @param method Pointer to the method
+        */
         template<typename F, typename Event>
         void AddEventListener(F* const obj, void(F::* method)(const Event&))
         {
             GetEventDispatcher<Event>()->AddListener(obj, method);
         }
         
+        /**
+        * Dispatches the given Event to all event listeners that are registert for
+        * that event type.
+        */
         template<typename Event>
         void DispatchEvent(const Event& e)
         {
@@ -102,6 +219,12 @@ namespace Sonic {
         }
 
     private:
+        /**
+        * Searches all EventDispatchers of one of the given Event type. If none is found,
+        * a new one gets added.
+        * 
+        * @return The found or added EventDispatcher
+        */
         template<typename Event>
         EventDispatcher<Event>* GetEventDispatcher()
         {
@@ -120,6 +243,12 @@ namespace Sonic {
             }
         }
 
+        /**
+        * Searches all ComponentPools of one of the given Component type. If none is found,
+        * a new one gets added.
+        * 
+        * @return Pointer to the found or added ComponentPool
+        */
         template<typename Component>
         ComponentPool* GetComponentPool()
         {

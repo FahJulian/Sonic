@@ -3,10 +3,6 @@
 
 namespace Sonic {
 
-    /**
-    * Struct to Group ComponentData in ComponentViews and 
-    * their Iterators
-    */
     template<typename Component>
     struct EntityComponentPair
     {

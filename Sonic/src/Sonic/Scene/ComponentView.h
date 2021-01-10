@@ -10,10 +10,19 @@
 
 namespace Sonic {
 
+    /**
+    * A ComponenView holds the buffer and the size of a ComponentView and is mainly
+    * used to iterate over that ComponentPool. ComponentViews should be destroyed
+    * at the end of the Update Phase because ComponentPools might move their data 
+    * buffer resulting in the ComponentView pointing to freed memory
+    */
     template<typename Component>
     class ComponentView
     {   
     public:
+        /**
+        * Basically a wrapper around a pointer to the ComponentPools data.
+        */
         struct Iterator
         {
             using iterator_category = std::forward_iterator_tag;
@@ -49,9 +58,21 @@ namespace Sonic {
         }
     
     public:
+        /**
+        * @return An Iterator that points to the first EntityComponentPair in this view
+        */
         Iterator begin() { return Iterator(reinterpret_cast<Pair*>(m_Data)); }
+
+        /**
+        * @return An Iterator that points to the last EntityComponentPair in this view
+        */
         Iterator end() { return Iterator(reinterpret_cast<Pair*>(m_Data + m_Size * sizeof(Pair))); }
 
+        /**
+        * Calls the given function for each Entity and Component pair in this view
+        * 
+        * @param function The function to call on the elements
+        */
         void ForEach(std::function<void(const Entity, Component&)> function)
         {
             for (auto& [entity, component] : *this)

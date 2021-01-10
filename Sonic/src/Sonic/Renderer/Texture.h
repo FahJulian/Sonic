@@ -4,20 +4,48 @@
 
 namespace Sonic {
 
+    /**
+    * A OpenGL Texture (Holds width and height of the texture as well as the
+    * OpenGL id.
+    */
     class Texture
     {
     public:
+        /**
+        * Constructs a new Texture
+        * 
+        * @param filePath Path to the .png file of the Texture
+        */
         Texture(const char* filePath);
+
+        /**
+        * Constructs a new Texture
+        *
+        * @param filePath Path to the .png file of the Texture
+        */
         Texture(const std::string& filePath)
             : Texture(filePath.c_str()) 
         {
         }
+
+        /**
+        * Constructs a null Texture object
+        */
         Texture()
             : m_OpenGL_ID(0), m_Width(0), m_Height(0)
         {
         }
 
+        /**
+        * Binds the texture to OpenGLs Texture2D Texture slots
+        * 
+        * @param slot The slot to bind to
+        */
         void Bind(unsigned int slot = 0) const;
+
+        /**
+        * Unbinds all Textures from OpenGLs Texture2D Texture slots
+        */
         void Unbind() const;
 
         int GetWidth() const { return m_Width; }
