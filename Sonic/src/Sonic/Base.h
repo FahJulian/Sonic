@@ -1,10 +1,14 @@
 #pragma once
+#include <memory>
 #include <string>
 
 #define SONIC_RESOURCE_DIR std::string("C:\\Users\\fahju\\dev\\cpp\\Sonic\\Sonic\\res\\")
 
 namespace Sonic {
 
-    extern const std::string resourceDir();
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
+
+    extern const std::string& resourceDir();
 
 }

@@ -46,7 +46,7 @@ namespace Sonic {
             if (m_Listeners.capacity() == m_Listeners.size())
                 m_Listeners.reserve(m_Listeners.capacity() + VECTOR_RESERVE_STEP);
 
-            std::shared_ptr<int> indexPtr = std::make_shared<int>(m_Listeners.size() - 1);
+            std::shared_ptr<int> indexPtr = std::make_shared<int>(static_cast<int>(m_Listeners.size() - 1));
             m_IndexRefs.push_back(indexPtr);
             return indexPtr;
         }
@@ -66,7 +66,7 @@ namespace Sonic {
         std::shared_ptr<int> AddRemovableListener(F* const obj, void(F::*method)(const Event&))
         {
             EventListener listener = [obj, method](const Event& e) { (obj->*method)(e); };
-            return AddListener(listener);
+            return AddRemovableListener(listener);
         }
 
         /**

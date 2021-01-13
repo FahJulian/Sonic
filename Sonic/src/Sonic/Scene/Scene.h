@@ -3,14 +3,15 @@
 #include <vector> 
 #include <unordered_map>
 #include <unordered_set>
-#include "Entity.h"
-#include "Component.h"
-#include "ComponentPool.h"
-#include "ComponentView.h"
 #include "Sonic/Log/Log.h"
 #include "Sonic/Renderer/Camera2D.h"
 #include "Sonic/Event/Event.h"
 #include "Sonic/Event/EventDispatcher.h"
+#include "Entity.h"
+#include "Component.h"
+#include "ComponentPool.h"
+#include "ComponentView.h"
+//#include "Behaviour.h"
 
 static const int COMPONENT_POOL_ARRAY_RESERVE_STEP = 10;
 static const unsigned short ENTITY_COMPONENT_MAP_VECTOR_RESERVE_STEP = 6;
@@ -19,6 +20,8 @@ static const int EVENT_DISPATCHER_RESERVE_STEP = 10;
 static Sonic::Entity nextEntity = 1;
 
 namespace Sonic {
+
+    class Behaviour;
 
     /**
     * The Scene is responsible of managin Entities and their Components by 
@@ -29,6 +32,8 @@ namespace Sonic {
     class Scene
     {
     public:
+        virtual void CheckCollisions() {}
+
         /**
         * Constructs a new Scene
         */
@@ -83,8 +88,8 @@ namespace Sonic {
         Entity AddEntity();
 
         /**
-        * Removes an Entity with the given Entity ID and all its components from
-        * the scene. The entities get removed at the end of the current update 
+        * Removes an Entity with the given Entity ID and all its components and behaviours 
+        * from the scene. The entities get removed at the end of the current update 
         * phase together to avoid memory leaks from iterators during the update phase.
         * 
         * @param entity The Entity ID of the Entity that should be removed
@@ -165,7 +170,7 @@ namespace Sonic {
             ComponentType type = Component::getComponentType();
             std::unordered_set<ComponentType>& components = m_EntityComponentMap[entity];
             components.erase(std::find(components.begin(), components.end(), type));
-            m_ToDelete[type].emplace_back(entity);
+            m_ComponentsToDelete[type].emplace_back(entity);
         }
 
         /**
@@ -178,6 +183,33 @@ namespace Sonic {
         {
             ComponentPool* p = GetComponentPool<Component>();
             return p->ToComponentView<Component>();
+        }
+
+        /**
+        * Creates a new instance of the given behaviour type and passes it to the method that
+        * adds it to the scene
+        * 
+        * @param entity The entity the behaviour should be added to
+        */
+        template<typename DerivedBehaviour>
+        void AddBehaviour(Entity entity)
+        {
+            DerivedBehaviour* behaviour = new DerivedBehaviour();
+            AddBehaviour(entity, static_cast<Behaviour*>(behaviour));
+        }
+
+        /**
+        * Creates a new instance of the given behaviour type and passes it to the method that
+        * adds it to the scene
+        * 
+        * @param entity The entity the behaviour should be added to
+        * @param args The arguments to pass to the behaviours constructor
+        */
+        template<typename DerivedBehaviour, typename... Args>
+        void AddBehaviour(Entity entity, Args&&... args)
+        {
+            DerivedBehaviour* behaviour = new DerivedBehaviour(std::forward<Args>(args)...);
+            AddBehaviour(entity, static_cast<Behaviour*>(behaviour));
         }
 
         /**
@@ -263,6 +295,11 @@ namespace Sonic {
 
     private:
         /**
+        * Assigns the entity and this scene to the given behaviour and adds the behaviour to the scene
+        */
+        void AddBehaviour(Entity entity, Behaviour* behaviour);
+
+        /**
         * Searches all EventDispatchers of one of the given Event type. If none is found,
         * a new one gets added.
         * 
@@ -324,10 +361,16 @@ namespace Sonic {
         ComponentPool* m_ComponentPools;
         ComponentType m_ComponentPoolsSize;
         std::unordered_map<Entity, std::unordered_set<ComponentType>> m_EntityComponentMap;
-        std::unordered_map<ComponentType, std::set<Entity>> m_ToDelete;
+        std::unordered_map<ComponentType, std::set<Entity>> m_ComponentsToDelete;
+
         std::unordered_map<EventType, intptr_t> m_EventDispatchers;
 
+        std::vector<Behaviour*> m_Behaviours;
+        std::set<int> m_BehavioursToDelete;
+
         Camera2D m_Camera;
+
+        bool m_Initialized;
 
         friend class App;
     };

@@ -1,28 +1,14 @@
-#include <Sonic/main.h>
-#include "GameScene.h"
-#include "Settings.h"
-
-class SnakeApp : public Sonic::App
-{
-    SnakeApp()
-        : Sonic::App(WIDTH, HEIGHT, TITLE, false)
-    {
-    }
-
-    Sonic::Scene* OnInit() override
-    {
-        return new GameScene();
-    }
-
-    friend Sonic::App* Sonic::createApplication();
-};
+#pragma once
+#include "Sonic/main.h"
+#include "Application.h"
 
 Sonic::App* Sonic::createApplication()
 {
-    return new SnakeApp();
+	return new Application();
 }
 
-const std::string Sonic::resourceDir()
+const std::string& Sonic::resourceDir()
 {
-    return "C:\\Users\\fahju\\dev\\cpp\\Sonic\\ExampleGames\\Snake\\res\\";
+	static const std::string RESOURCE_DIR = "C:\\dev\\Sonic\\Examples\\Snake\\res\\";
+	return RESOURCE_DIR;
 }

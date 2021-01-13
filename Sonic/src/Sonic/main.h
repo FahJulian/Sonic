@@ -1,4 +1,5 @@
 #pragma once
+#include "Sonic/Base.h"
 #include "Sonic/App.h"
 #include "Sonic/Scene/Scene.h"
 

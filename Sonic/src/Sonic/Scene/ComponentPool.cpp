@@ -48,6 +48,8 @@ namespace Sonic {
 
     void ComponentPool::IncreaseSize()
     {
+        SONIC_LOG_DEBUG("Reallocation")
+
         m_Capacity += m_ExpectedMagnitude;
         char* newData = new char[m_Capacity * m_ElementSize];
         std::copy(m_Data, m_Data + m_Size * m_ElementSize, newData);
