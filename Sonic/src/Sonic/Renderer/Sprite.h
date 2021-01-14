@@ -17,7 +17,7 @@ namespace Sonic {
         * @param textureCoords float Array with the texture coordinates ot the 
         *                      sprite on the texture
         */
-        Sprite(const Texture& texture, const float textureCoords[8]);
+        Sprite(const Texture& texture, float textureCoords[8]);
 
         const Texture& GetTexture() const { return m_Texture; }
         const float* GetTextureCoords() const { return m_TextureCoords; }

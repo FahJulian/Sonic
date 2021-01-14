@@ -10,24 +10,25 @@ namespace Sonic {
 	{
 		void OnInit() override
 		{
-			onKeyReleased = AddRemovableListener<KeyReleasedEvent>([this](auto& e) {
-				auto* component = GetComponent<DirectionComponent>();
-				switch (e.key)
-				{
-				case Keys::Up: case Keys::W: component->direction = DirectionComponent::Direction::Up; break;
-				case Keys::Down: case Keys::S: component->direction = DirectionComponent::Direction::Down; break;
-				case Keys::Right: case Keys::D: component->direction = DirectionComponent::Direction::Right; break;
-				case Keys::Left: case Keys::A: component->direction = DirectionComponent::Direction::Left; break;
-				}
-			});
+			GetScene()->AddKeyedListener(this, &DirectionController::OnKeyReleased);
+		}
+
+		void OnKeyReleased(const KeyReleasedEvent& e)
+		{
+			auto* component = GetEntity().GetComponent<DirectionComponent>();
+			switch (e.key)
+			{
+			case Keys::Up: case Keys::W: component->direction = DirectionComponent::Direction::Up; break;
+			case Keys::Down: case Keys::S: component->direction = DirectionComponent::Direction::Down; break;
+			case Keys::Right: case Keys::D: component->direction = DirectionComponent::Direction::Right; break;
+			case Keys::Left: case Keys::A: component->direction = DirectionComponent::Direction::Left; break;
+			}
 		}
 
 		void OnDestroy() override
 		{
-			RemoveEventListener<KeyReleasedEvent>(onKeyReleased);
+			GetScene()->RemoveKeyedListener<KeyReleasedEvent>(this);
 		}
-
-		Ref<int> onKeyReleased;
 	};
 
 }

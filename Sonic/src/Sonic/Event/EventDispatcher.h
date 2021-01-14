@@ -1,136 +1,75 @@
 #pragma once
-#include <vector>
 #include <functional>
-#include <memory>
-
-static const size_t VECTOR_RESERVE_STEP = 10;
+#include <vector>
+#include <unordered_map>
 
 namespace Sonic {
 
-    /**
-    * An EventDispatcher holds member methods and functions that get called
-    * when an Event of the given type is dispatched
-    */
-    template<typename Event>
-    class EventDispatcher
-    {
-    public:
-        /**
-        * A function that gets called when an Event of the given type is dispatched.
-        */
-        using EventListener = std::function<void(const Event&)>;
+	template<typename Event>
+	using EventListener = std::function<void(const Event&)>;
 
-    public:
-        /**
-        * Constructs a new EventDispatcher
-        */
-        EventDispatcher()
-        {
-            m_Listeners.reserve(VECTOR_RESERVE_STEP);
-        }
+	class EventDispatcher
+	{
+	public:
+		template<typename Event>
+		void AddListener(EventListener<Event> listener)
+		{
+			GetListeners<Event>().push_back(listener);
+		}
 
-        /**
-        * Adds a listener to the EventDispatcher. This method should be used to add 
-        * functions, not methods. This adds a removable listener, meaning that the
-        * returned int ptr can later be used to remove this listener.
-        * 
-        * @param listener Pointer to the function
-        * 
-        * @return pointer to the index of the function within this EventDispatcher. Can be used
-        *         to remove the function later.
-        */
-        std::shared_ptr<int> AddRemovableListener(EventListener listener)
-        {
-            m_Listeners.emplace_back(listener);
+		template<typename F, typename Event>
+		void AddListener(F* key, void(F::* listenerMethod)(const Event&))
+		{
+			EventListener<Event> listener = [key, listenerMethod](const Event& e) { (key->*listenerMethod)(e); };
+			GetListeners<Event>().push_back(listener);
+		}
 
-            if (m_Listeners.capacity() == m_Listeners.size())
-                m_Listeners.reserve(m_Listeners.capacity() + VECTOR_RESERVE_STEP);
+		template<typename F, typename Event>
+		void AddKeyedListener(F* key, void(F::* listenerMethod)(const Event&))
+		{
+			EventListener<Event> listener = [key, listenerMethod](const Event& e) { (key->*listenerMethod)(e); };
+			auto& listeners = GetListeners<Event>();
+			listeners.push_back(listener);
+			GetKeys<Event>()[reinterpret_cast<intptr_t>(key)] = static_cast<unsigned int>(listeners.size()) - 1;
+		}
 
-            std::shared_ptr<int> indexPtr = std::make_shared<int>(static_cast<int>(m_Listeners.size() - 1));
-            m_IndexRefs.push_back(indexPtr);
-            return indexPtr;
-        }
-            
-        /**
-        * Adds a listener to the EventDispatcher. This method should be used to add
-        * methods, not functions. This adds a removable listener, meaning that the
-        * returned int ptr can later be used to remove this listener.
-        * 
-        * @param obj Pointer to the object of the method
-        * @param method Pointer to the method
-        * 
-        * @return pointer to the index of the method within this EventDispatcher. Can be used
-        *         to remove the method later.
-        */
-        template<typename F>
-        std::shared_ptr<int> AddRemovableListener(F* const obj, void(F::*method)(const Event&))
-        {
-            EventListener listener = [obj, method](const Event& e) { (obj->*method)(e); };
-            return AddRemovableListener(listener);
-        }
+		template<typename Event, typename F>
+		void RemoveKeyedListener(F* object)
+		{
+			auto& keys = GetKeys<Event>();
+			auto& listeners = GetListeners<Event>();
 
-        /**
-        * Adds a listener to the EventDispatcher. This method should be used to add
-        * functions, not methods.
-        *
-        * @param listener Pointer to the function
-        */
-        void AddListener(EventListener listener)
-        {
-            m_Listeners.emplace_back(listener);
+			intptr_t key = reinterpret_cast<intptr_t>(object);
+			unsigned int index = keys[key];
+			keys.erase(key);
+			listeners.erase(listeners.begin() + index);
 
-            if (m_Listeners.capacity() == m_Listeners.size())
-                m_Listeners.reserve(m_Listeners.capacity() + VECTOR_RESERVE_STEP);
-        }
+			for (auto& [_, value] : keys)
+				if (value > index)
+					value--;
+		}
 
-        /**
-        * Adds a listener to the EventDispatcher. This method should be used to add
-        * methods, not functions.
-        *
-        * @param obj Pointer to the object of the method
-        * @param method Pointer to the method
-        */
-        template<typename F>
-        void AddListener(F* const obj, void(F::* method)(const Event&))
-        {
-            EventListener listener = [obj, method](const Event& e) { (obj->*method)(e); };
-            AddListener(listener);
-        }
+		template<typename Event>
+		void DispatchEvent(const Event& e)
+		{
+			for (EventListener<Event>& listener : GetListeners<Event>())
+				listener(e);
+		}
 
-        /**
-        * Calls all registered event listeners with the given event.
-        * @param event The event to dispatch
-        */
-        void Dispatch(const Event& event)
-        {
-            for (EventListener listener : m_Listeners)
-                listener(event);
-        }
+	private:
+		template<typename Event>
+		std::vector<EventListener<Event>>& GetListeners()
+		{
+			static std::vector<EventListener<Event>> listeners;
+			return listeners;
+		}
 
-        /**
-        * Removes the listener at the specified index
-        * 
-        * @param index The index of the listener to remove
-        */
-        void Remove(const std::shared_ptr<int>& index)
-        {
-            m_Listeners.erase(m_Listeners.begin() + *index);
-
-            int indexRefRemoveIdx = 0;
-            for (int i = 0; i < m_IndexRefs.size(); i++)
-            {
-                if (*(m_IndexRefs.at(i)) == *index)
-                    indexRefRemoveIdx = i;
-                else if (*(m_IndexRefs.at(i)) > *index)
-                    (*(m_IndexRefs.at(i)))--;
-            }
-
-            m_IndexRefs.erase(m_IndexRefs.begin() + indexRefRemoveIdx);
-        }
-
-    private:
-        std::vector<std::function<void(const Event&)>> m_Listeners;
-        std::vector<std::shared_ptr<int>> m_IndexRefs;
-    };
+		template<typename Event>
+		std::unordered_map<intptr_t, unsigned int>& GetKeys()
+		{
+			static std::unordered_map<intptr_t, unsigned int> keys;
+			return keys;
+		}
+	};
 
 }

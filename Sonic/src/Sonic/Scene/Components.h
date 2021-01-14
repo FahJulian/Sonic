@@ -2,14 +2,11 @@
 #include <glm/glm.hpp>
 #include "../Renderer/Sprite.h"
 #include "../Renderer/Color.h"
-#include "Component.h"
 
 namespace Sonic {
 
     struct DirectionComponent
     {
-        SONIC_REGISTER_COMPONENT(0);
-
         enum class Direction : char
         {
             Up = 2,
@@ -29,8 +26,6 @@ namespace Sonic {
 
     struct Transform2DComponent
     {   
-        SONIC_REGISTER_COMPONENT(0)
-
         glm::vec3 position;
         glm::vec2 scale;
         float rotation;
@@ -51,18 +46,21 @@ namespace Sonic {
 
     struct SpriteComponent
     {
-        SONIC_REGISTER_COMPONENT(0)
-
-        const Sprite sprite;
+        Sprite sprite;
 
         SpriteComponent(const Sprite& sprite)
             : sprite(sprite) {}
+        SpriteComponent(const SpriteComponent& other)
+            : sprite(other.sprite) {}
+
+        SpriteComponent operator=(const SpriteComponent& other)
+        {
+            return SpriteComponent(other);
+        }
     };
 
     struct ColorComponent
     {
-        SONIC_REGISTER_COMPONENT(0)
-
         Color color;
 
         ColorComponent(const Color& color)
@@ -73,19 +71,22 @@ namespace Sonic {
 
     struct ColoredSpriteComponent
     {
-        SONIC_REGISTER_COMPONENT(0)
-
-        const Color color;
-        const Sprite sprite;
+        Color color;
+        Sprite sprite;
 
         ColoredSpriteComponent(const Color& color, const Sprite& sprite)
             : color(color), sprite(sprite) {}
+        ColoredSpriteComponent(const ColoredSpriteComponent& other)
+            : color(other.color), sprite(other.sprite) {}
+
+        ColoredSpriteComponent operator=(const ColoredSpriteComponent& other)
+        {
+            return ColoredSpriteComponent(other);
+        }
     };
 
     struct Camera2DComponent
     {
-        SONIC_REGISTER_COMPONENT(0)
-
         Camera2D camera;
         bool isSceneCamera;
 

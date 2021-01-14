@@ -26,11 +26,9 @@
 
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/Entity.h"
-#include "Sonic/Scene/Component.h"
+#include "Sonic/Scene/EntityID.h"
 #include "Sonic/Scene/Components.h"
-#include "Sonic/Scene/ComponentPool.h"
 #include "Sonic/Scene/ComponentView.h"
-#include "Sonic/Scene/EntityComponentPair.h"
 #include "Sonic/Scene/Behaviour.h"
 #include "Sonic/Scene/Behaviours.h"
 

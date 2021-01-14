@@ -10,6 +10,8 @@ public:
 	}
 
 protected:
+	void Load() override;
+
 	void OnInit() override;
 
 	void OnUpdate(float deltaTime) override;

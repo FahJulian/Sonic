@@ -3,8 +3,6 @@
 
 struct SnakeHeadComponent
 {
-	SONIC_REGISTER_COMPONENT(0)
-
 	int snakeLength;
 
 	SnakeHeadComponent(int snakeLength)
@@ -13,8 +11,6 @@ struct SnakeHeadComponent
 
 struct SnakeTailComponent
 {
-	SONIC_REGISTER_COMPONENT(0)
-
 	Entity snake;
 	int snakeIndex;
 
@@ -24,8 +20,6 @@ struct SnakeTailComponent
 
 struct FoodComponent
 {
-	SONIC_REGISTER_COMPONENT(0)
-
 	Entity snake;
 
 	FoodComponent(Entity snake)

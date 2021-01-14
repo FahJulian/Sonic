@@ -48,7 +48,7 @@ namespace Sonic {
         Renderer2D::init();
 
         m_Scene = OnInit();
-        m_Scene->AddEventListener(this, &App::OnWindowClosed);
+        m_Scene->AddListener(this, &App::OnWindowClosed);
         m_Scene->Init();
         
         return true;
