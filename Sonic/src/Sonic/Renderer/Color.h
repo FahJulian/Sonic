@@ -34,6 +34,9 @@ namespace Sonic {
         {
             White = 0xffffffff,
             Black = 0x000000ff,
+            Dark_Gray = 0x555555ff,
+            Light_Gray = 0x999999ff,
+
             Red = 0xff0000ff,
             Green = 0x00ff00ff,
             Blue = 0x0000ffff,

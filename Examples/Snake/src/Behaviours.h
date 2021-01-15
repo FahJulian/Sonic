@@ -19,7 +19,7 @@ class SnakeTailBehaviour : public Behaviour
 		if (e.snake != component->snake)
 			return;
 
-		if (component->snakeIndex > SNAKE_START_LENGTH)
+		if (component->tailIndex > SNAKE_START_LENGTH)
 		{
 			GetScene()->RemoveEntity(GetEntity());
 			return;
@@ -27,7 +27,7 @@ class SnakeTailBehaviour : public Behaviour
 
 		auto* transform = GetEntity().GetComponent<Transform2DComponent>();
 		transform->position.x = static_cast<float>(SNAKE_START_X);
-		transform->position.y = static_cast<float>(SNAKE_START_Y - component->snakeIndex * CELL_SIZE);
+		transform->position.y = static_cast<float>(SNAKE_START_Y - component->tailIndex * CELL_SIZE);
 	}
 
 	void OnDestroy() override

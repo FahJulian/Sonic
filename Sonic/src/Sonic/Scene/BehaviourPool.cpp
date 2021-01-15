@@ -52,7 +52,7 @@ namespace Sonic {
 			m_Entites.push_back(entity);
 			m_Behaviours.push_back(behaviour);
 			behaviour->m_Scene = m_Scene;
-			behaviour->m_Entity = entity;
+			behaviour->m_EntityID = entity;
 			behaviour->OnInit();
 		}
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Sonic/Renderer/Renderer2D.h"
+#include "Sonic/UI/Components.h"
 #include "Scene.h"
 #include "Entity.h"
 #include "Components.h"
@@ -7,7 +8,9 @@
 namespace Sonic {
 
 	Scene::Scene()
-		: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())) {}
+		: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())) 
+	{
+	}
 
 	Entity Scene::AddEntity()
 	{
@@ -33,41 +36,17 @@ namespace Sonic {
 	void Scene::Init()
 	{
 		Load();
-
-		for (BaseBehaviourPool* pool : m_BehaviourPools)
-			pool->UpdatePool();
-
-		for (BaseComponentPool* pool : m_ComponentPools)
-			pool->OnUpdate();
-
+		UpdatePools();
 		OnInit();
 	}
 
 	void Scene::Update(float deltaTime)
 	{
-		for (auto entity : View<Camera2DComponent>())
-		{
-			auto* cameraComponent = View<Camera2DComponent>().GetComponent(entity);
-
-			if (HasComponent<Transform2DComponent>(entity))
-			{
-				auto* t = GetComponent<Transform2DComponent>(entity);
-				cameraComponent->camera.SetPosition(t->position);
-				cameraComponent->camera.SetRotation(t->rotation);
-				m_Camera = cameraComponent->camera;
-			}
-		}
-
 		OnUpdate(deltaTime);
-
-		for (BaseBehaviourPool* pool : m_BehaviourPools)
-			pool->UpdateBehaviours(deltaTime);
-
+		UpdateComponents(deltaTime);
+		UpdateBehaviours(deltaTime);
 		UpdatePools();
-
-		CheckCollisions();
-
-		UpdatePools();
+		PollCollisionEvents();
 	}
 
 	void Scene::UpdatePools()
@@ -79,38 +58,55 @@ namespace Sonic {
 			pool->OnUpdate();
 	}
 
+	void Scene::UpdateBehaviours(float deltaTime)
+	{
+		for (BaseBehaviourPool* pool : m_BehaviourPools)
+			pool->UpdateBehaviours(deltaTime);
+	}
+
+	void Scene::UpdateComponents(float deltaTime)
+	{
+		for (auto [entity, component] : View<Camera2DComponent>())
+		{
+			if (!HasComponent<Transform2DComponent>(entity))
+				return;
+
+			auto* t = GetComponent<Transform2DComponent>(entity);
+			component->camera.SetPosition(t->position);
+			component->camera.SetRotation(t->rotation);
+			m_Camera = component->camera;
+		}
+	}
+
 	void Scene::Render()
 	{
 		Renderer2D::startScene(&m_Camera);
 
-		for (auto entity : View<SpriteComponent>())
+		for (auto [entity, component] : View<SpriteComponent>())
 		{
-			auto* spriteComponent = View<SpriteComponent>().GetComponent(entity);
 			auto* t = GetComponent<Transform2DComponent>(entity);
 			if (t->rotation != 0)
-				Renderer2D::drawRotatedRect(t->position, t->scale, t->rotation, spriteComponent->sprite);
+				Renderer2D::drawRotatedRect(t->position, t->scale, t->rotation, component->sprite);
 			else
-				Renderer2D::drawRect(t->position, t->scale, spriteComponent->sprite);
+				Renderer2D::drawRect(t->position, t->scale, component->sprite);
 		}
 
-		for (auto& entity : View<ColorComponent>())
+		for (auto [entity, component] : View<ColorComponent>())
 		{
-			auto* colorComponent = View<ColorComponent>().GetComponent(entity);
 			auto* t = GetComponent<Transform2DComponent>(entity);
 			if (t->rotation != 0)
-				Renderer2D::drawRotatedRect(t->position, t->scale, t->rotation, colorComponent->color);
+				Renderer2D::drawRotatedRect(t->position, t->scale, t->rotation, component->color);
 			else
-				Renderer2D::drawRect(t->position, t->scale, colorComponent->color);
+				Renderer2D::drawRect(t->position, t->scale, component->color);
 		}
 
-		for (auto& entity : View<ColoredSpriteComponent>())
+		for (auto [entity, component] : View<ColoredSpriteComponent>())
 		{
-			auto* coloredSpriteComponent = View<ColoredSpriteComponent>().GetComponent(entity);
 			auto* t = GetComponent<Transform2DComponent>(entity);
 			if (t->rotation != 0)
-				Renderer2D::drawRotatedRect(t->position, t->scale, t->rotation, coloredSpriteComponent->sprite, coloredSpriteComponent->color);
+				Renderer2D::drawRotatedRect(t->position, t->scale, t->rotation, component->sprite, component->color);
 			else
-				Renderer2D::drawRect(t->position, t->scale, coloredSpriteComponent->sprite, coloredSpriteComponent->color);
+				Renderer2D::drawRect(t->position, t->scale, component->sprite, component->color);
 		}
 
 		Renderer2D::endScene();

@@ -56,9 +56,9 @@ namespace Sonic {
 
         static float getWidth();
 
-        static const char* getTitle();
+        static const std::string& getTitle();
 
-        void setTitle(const char* title);
+        static void setTitle(const std::string& title);
 
     private:
         static void windowCloseCallback(GLFWwindow* window);

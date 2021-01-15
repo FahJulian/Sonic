@@ -4,9 +4,11 @@
 
 namespace Sonic {
 
-	Entity Behaviour::GetEntity()
+	Entity Behaviour::GetEntity() const
 	{
-		return m_Scene->ToEntity(m_Entity);
+		//static Entity entity = m_Scene->ToEntity(m_EntityID);
+		//return entity;
+		return m_Scene->ToEntity(m_EntityID);
 	}
 
 }

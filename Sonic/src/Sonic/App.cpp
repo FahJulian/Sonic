@@ -1,5 +1,7 @@
 #include <GL/glew.h>
-#include "glfw/glfw3.h"
+#include <glfw/glfw3.h>
+#include <iostream>
+#include <string>
 #include "App.h"
 #include "Renderer/Renderer2D.h"
 #include "Window/Window.h"
@@ -44,7 +46,6 @@ namespace Sonic {
             return false;
         }
 
-
         Renderer2D::init();
 
         m_Scene = OnInit();
@@ -70,6 +71,12 @@ namespace Sonic {
         double startTime = 0.0;
         double lastUpdate = 0.0;
 
+#ifdef SONIC_DEBUG
+        double fpsTimer = 0.0f;
+        int frames = 0;
+        int lastFpsLength = 0;
+#endif
+
         while (m_Running)
         {
             dueUpdates += deltaSeconds / secondsPerUpdate;
@@ -84,11 +91,26 @@ namespace Sonic {
             glClear(GL_COLOR_BUFFER_BIT);
             m_Scene->Render();
             Window::swapBuffers();
+            frames++;
 
             const double endTime = Window::getTime();
             deltaSeconds = endTime - startTime;
             startTime = endTime;
             
+#ifdef SONIC_DEBUG
+            fpsTimer += deltaSeconds;
+            if (fpsTimer > 1.0f)
+            {
+                fpsTimer -= 1.0f;
+                std::string oldTitle = std::string(Window::getTitle());
+                std::string framesStr = std::to_string(frames);
+                std::string sub = oldTitle.substr(0, oldTitle.length() - lastFpsLength);
+                Window::setTitle(oldTitle.substr(0, oldTitle.length() - lastFpsLength) + " (" + framesStr + ")");
+                lastFpsLength = static_cast<int>(framesStr.length()) + 3;
+                frames = 0;
+            }
+#endif
+
             Window::pollEvents();
         }
     }

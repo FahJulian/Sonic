@@ -11,16 +11,16 @@ struct SnakeHeadComponent
 
 struct SnakeTailComponent
 {
-	Entity snake;
-	int snakeIndex;
+	EntityID snake;
+	int tailIndex;
 
-	SnakeTailComponent(Entity snake, int snakeIndex = 1)
-		: snake(snake), snakeIndex(snakeIndex) {}
+	SnakeTailComponent(Entity snake, int tailIndex = 1)
+		: snake(snake), tailIndex(tailIndex) {}
 };
 
 struct FoodComponent
 {
-	Entity snake;
+	EntityID snake;
 
 	FoodComponent(Entity snake)
 		: snake(snake) {}

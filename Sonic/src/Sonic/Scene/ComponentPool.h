@@ -60,7 +60,9 @@ namespace Sonic {
 		std::unordered_map<EntityID, Component> m_ToAdd;
 
 		friend class Scene;
+		template<typename> friend class EntityView;
 		template<typename> friend class ComponentView;
+		template<typename> friend class PairView;
 	};
 
 }

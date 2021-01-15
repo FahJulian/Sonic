@@ -4,7 +4,9 @@
 #include "Sonic/Window/Window.h"
 #include "EntityID.h"
 #include "ComponentPool.h"
+#include "EntityView.h"
 #include "ComponentView.h"
+#include "PairView.h"
 #include "Behaviour.h"
 #include "BehaviourPool.h"
 
@@ -23,13 +25,17 @@ namespace Sonic {
 		void Render();
 
 		void UpdatePools();
+		void UpdateComponents(float deltaTime);
+		void UpdateBehaviours(float deltaTime);
+
+		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
 
 	protected:
 		virtual void Load() = 0;
 		virtual void OnInit() {}
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnRender() {}
-		virtual void CheckCollisions() {}
+		virtual void PollCollisionEvents() {}
 
 	public:
 		Entity AddEntity();
@@ -73,9 +79,21 @@ namespace Sonic {
 		}
 
 		template<typename Component>
-		ComponentView<Component> View()
+		EntityView<Component> ViewEntities()
+		{
+			return EntityView<Component>(GetComponentPool<Component>());
+		}
+
+		template<typename Component>
+		ComponentView<Component> ViewComponents()
 		{
 			return ComponentView<Component>(GetComponentPool<Component>());
+		}
+
+		template<typename Component>
+		PairView<Component> View()
+		{
+			return PairView<Component>(GetComponentPool<Component>());
 		}
 
 	private:

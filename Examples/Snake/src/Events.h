@@ -3,11 +3,11 @@
 
 struct SnakeResetEvent
 {
-	Entity snake;
+	EntityID snake;
 };
 
 struct SnakeEatEvent
 {
-	Entity snake;
-	Entity food;
+	EntityID snake;
+	EntityID food;
 };

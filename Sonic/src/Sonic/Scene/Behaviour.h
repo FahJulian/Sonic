@@ -14,10 +14,11 @@ namespace Sonic {
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnDestroy() {}
 
-		Scene* GetScene() { return m_Scene; }
-		Entity GetEntity();
+		Scene* GetScene() const { return m_Scene; }
+		EntityID GetEntityID() const { return m_EntityID; }
+		Entity GetEntity() const;
 
-		EntityID m_Entity;
+		EntityID m_EntityID;
 		Scene* m_Scene;
 
 		friend class Scene;

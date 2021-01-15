@@ -9,7 +9,7 @@ struct WindowData
     GLFWwindow* glfwID;
     float width;
     float height;
-    const char* title;
+    std::string title;
 };
 
 static WindowData s_Data;
@@ -99,16 +99,15 @@ namespace Sonic {
         return s_Data.height;
     }
 
-    const char* Window::getTitle()
+    const std::string& Window::getTitle()
     {
         return s_Data.title;
     }
 
-    void Window::setTitle(const char* title)
+    void Window::setTitle(const std::string& title)
     {
+        glfwSetWindowTitle(s_Data.glfwID, title.c_str());
         s_Data.title = title;
-
-        glfwSetWindowTitle(s_Data.glfwID, s_Data.title);
     }
 
     double Window::getTime()

@@ -18,5 +18,5 @@ protected:
 
 	void OnRender() override {};
 
-	void CheckCollisions() override;
+	void PollCollisionEvents() override;
 };
