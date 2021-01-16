@@ -10,6 +10,11 @@ namespace Sonic {
     */
     struct Sprite
     {
+    private:
+        Sprite()
+            : m_Texture(nullptr), m_TextureCoords{ 0 } {}
+
+    public:
         /**
         * Constructs a new Sprite
         * 
@@ -17,13 +22,17 @@ namespace Sonic {
         * @param textureCoords float Array with the texture coordinates ot the 
         *                      sprite on the texture
         */
-        Sprite(const Texture& texture, float textureCoords[8]);
+        Sprite(const Texture* texture, float textureCoords[8]);
 
-        const Texture& GetTexture() const { return m_Texture; }
+        static Sprite Null() { return Sprite(); }
+
+        bool IsNull() const;
+
+        const Texture* GetTexture() const { return m_Texture; }
         const float* GetTextureCoords() const { return m_TextureCoords; }
 
     private:
-        const Texture& m_Texture;
+        const Texture* m_Texture;
         float m_TextureCoords[8];
     };
 

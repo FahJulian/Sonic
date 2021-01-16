@@ -26,7 +26,7 @@ namespace Sonic {
 			Iterator& operator++() { m_ComponentIterator++; return *this; }
 			Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
 
-			friend bool operator==(const Iterator& a, const Iterator& b) { a.m_ComponentIterator == b.m_ComponentIterator; }
+			friend bool operator==(const Iterator& a, const Iterator& b) { return a.m_ComponentIterator == b.m_ComponentIterator; }
 			friend bool operator!=(const Iterator& a, const Iterator& b) { return !(a == b); }
 
 			ComponentIterator m_ComponentIterator;

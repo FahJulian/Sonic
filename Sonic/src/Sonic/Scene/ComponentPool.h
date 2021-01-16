@@ -2,6 +2,7 @@
 #include <set>
 #include <vector>
 #include <unordered_map>
+#include "Sonic/Log/Log.h"
 #include "EntityID.h"
 
 namespace Sonic {
@@ -35,6 +36,13 @@ namespace Sonic {
 
 		Component* GetComponent(EntityID entity)
 		{
+#ifdef SONIC_DEBUG
+			if (IndexOf(entity) == -1)
+			{
+				SONIC_LOG_DEBUG("Critical: ComponentPool::GetComponent: No component exists for this entity")
+				return nullptr;
+			}
+#endif
 			return &m_Components.at(IndexOf(entity));
 		}
 

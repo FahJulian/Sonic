@@ -91,12 +91,12 @@ class SnakeHeadBehaviour : public Behaviour
 			timer -= TIME_STEP;
 
 			auto* transform = GetEntity().GetComponent<Transform2DComponent>();
-			auto* direction = GetEntity().GetComponent<DirectionComponent>();
+			auto* direction = GetEntity().GetComponent<Direction2DComponent>();
 
 			Entity newTailElement = GetScene()->AddEntity();
 			newTailElement.AddComponent<Transform2DComponent>(*transform);
 			newTailElement.AddComponent<SnakeTailComponent>(GetEntity(), 1);
-			newTailElement.AddComponent<ColorComponent>(TAIL_COLOR);
+			newTailElement.AddComponent<Renderer2DComponent>(TAIL_COLOR);
 			newTailElement.AddBehaviour<SnakeTailBehaviour>();
 
 			transform->position.x += static_cast<float>(static_cast<int>(direction->direction) % 2 * CELL_SIZE);
@@ -122,9 +122,9 @@ class SnakeHeadBehaviour : public Behaviour
 		t->position.x = SNAKE_START_X;
 		t->position.y = SNAKE_START_Y;
 
-		auto* d = GetEntity().GetComponent<DirectionComponent>();
-		d->direction = DirectionComponent::Direction::Up;
-		d->lastDirection = DirectionComponent::Direction::Up;
+		auto* d = GetEntity().GetComponent<Direction2DComponent>();
+		d->direction = Direction2DComponent::Direction::Up;
+		d->lastDirection = Direction2DComponent::Direction::Up;
 	}
 
 	void OnDestroy() override

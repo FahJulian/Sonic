@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 
-#define SONIC_RESOURCE_DIR std::string("C:\\Users\\fahju\\dev\\cpp\\Sonic\\Sonic\\res\\")
+#define SONIC_RESOURCE_DIR std::string("C:\\dev\\Sonic\\Sonic\\res\\")
 
 namespace Sonic {
 

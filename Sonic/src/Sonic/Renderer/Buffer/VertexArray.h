@@ -1,51 +1,31 @@
 #pragma once
-#include <memory>
-#include <vector>
+#include <initializer_list>
 #include "VertexBuffer.h"
-#include "IndexBuffer.h"
 
 namespace Sonic {
 
-    /**
-    * A vertex array holds an IndexBuffer and one or more VertexBuffers.
-    * Handles the index buffer and gl vertex attrib arrays
-    */
-    class VertexArray
-    {
-    public:
-        /**
-        * Constructs a new VertexArray
-        */
-        VertexArray();
+	class VertexArray
+	{
+	private:
+		VertexArray() 
+			: m_ElementCount(0), m_Vao_OpenGL_ID(0), m_Ibo_OpenGL_ID(0) {};
 
-        /**
-        * Binds the vao to opengl
-        */
-        void Bind() const;
+	public:
+		VertexArray(const int* indices, unsigned int elementCount, std::initializer_list<VertexBuffer> buffers);
 
-        /**
-        * Unbinds all vaos from opengl
-        */
-        void Unbind() const;
+		void Bind() const;
+		void Unbind() const;
 
-        /**
-        * Binds the given IndexBuffer to this vao
-        */
-        void SetIndexBuffer(std::shared_ptr<IndexBuffer> indexBuffer);
+		unsigned int GetElementCount() const { return m_ElementCount; };
 
-        /**
-        * Adds the given vertex buffer and adjusts the vertex attrib pointers
-        * accordingly
-        */
-        void AddVertexBuffer(const VertexBuffer& vertexBuffer);
+		bool IsNull() const { return m_ElementCount == 0; }
 
-        const IndexBuffer& GetIndexBuffer() const { return *m_IndexBuffer; }
-    private:
-        unsigned int m_OpenGL_ID;
-        std::shared_ptr<IndexBuffer> m_IndexBuffer;
-        std::vector<VertexBuffer> m_VertexBuffers;
+		static VertexArray Null() { return VertexArray(); }
 
-        void UpdateVertexAttribPointers() const;
-    };
+	private:
+		unsigned int m_ElementCount;
+		unsigned int m_Vao_OpenGL_ID;
+		unsigned int m_Ibo_OpenGL_ID;
+	};
 
 }

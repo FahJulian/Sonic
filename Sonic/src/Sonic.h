@@ -20,7 +20,6 @@
 #include "Sonic/Renderer/Texture.h"
 #include "Sonic/Renderer/Sprite.h"
 #include "Sonic/Renderer/Spritesheet.h"
-#include "Sonic/Renderer/Buffer/IndexBuffer.h"
 #include "Sonic/Renderer/Buffer/VertexArray.h"
 #include "Sonic/Renderer/Buffer/VertexBuffer.h"
 
@@ -33,6 +32,5 @@
 #include "Sonic/Scene/Behaviours.h"
 
 #include "Sonic/UI/UI.h"
-#include "Sonic/UI/Components.h"
 
 using namespace Sonic;

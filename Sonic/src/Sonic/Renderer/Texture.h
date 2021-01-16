@@ -10,6 +10,9 @@ namespace Sonic {
     */
     class Texture
     {
+    private:
+        Texture();
+
     public:
         /**
         * Constructs a new Texture
@@ -28,13 +31,7 @@ namespace Sonic {
         {
         }
 
-        /**
-        * Constructs a null Texture object
-        */
-        Texture()
-            : m_OpenGL_ID(0), m_Width(0), m_Height(0)
-        {
-        }
+        static const Texture* White();
 
         /**
         * Binds the texture to OpenGLs Texture2D Texture slots

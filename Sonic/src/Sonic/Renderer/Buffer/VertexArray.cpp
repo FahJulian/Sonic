@@ -1,83 +1,51 @@
+#include <gl/glew.h>
 #include "VertexArray.h"
-#include <GL/glew.h>
-
-
-///// Static Utility functions /////
-
-static void createVertexAttribPointer(int n, Sonic::ShaderDataType dataType, bool normalized, int stride, intptr_t offset)
-{
-    glVertexAttribPointer(n, Sonic::componentCountOfShaderType(dataType), 
-        Sonic::primitiveTypeOfShaderType(dataType), normalized, stride, (const void*) offset);
-    glEnableVertexAttribArray(n);
-}
-
-////////////////////////////////////
 
 namespace Sonic {
 
-    VertexArray::VertexArray()
-        : m_IndexBuffer(nullptr)
-    {
-        glGenVertexArrays(1, &m_OpenGL_ID);
-    }
+	VertexArray::VertexArray(const int* indices, unsigned int elementCount, std::initializer_list<VertexBuffer> buffers)
+		: m_ElementCount(elementCount)
+	{
+		glGenVertexArrays(1, &m_Vao_OpenGL_ID);
 
-    void VertexArray::AddVertexBuffer(const VertexBuffer& vertexBuffer)
-    {
-        m_VertexBuffers.push_back(vertexBuffer);
-        UpdateVertexAttribPointers();
-    }
+		glBindVertexArray(m_Vao_OpenGL_ID);
 
-    void VertexArray::UpdateVertexAttribPointers() const
-    {
-        Bind();
+		int attribPointerCount = 0;
+		for (auto& buffer : buffers)
+		{
+			buffer.Bind();
 
-        int attribPointerCount = 0;
-        for (int i = 0; i < m_VertexBuffers.size(); i++)
-        {
-            const VertexBuffer& vertexBuffer = m_VertexBuffers.at(i);
-            vertexBuffer.Bind();
+			intptr_t offset = 0;
+			for (int element : buffer.m_Layout)
+			{
+				glVertexAttribPointer(attribPointerCount, element, GL_FLOAT, false, buffer.m_Stride, (const void*)offset);
+				glEnableVertexAttribArray(attribPointerCount);
 
-            intptr_t offset = 0;
-            for (int i = 0; i < vertexBuffer.m_Layout.m_Elements.size(); i++)
-            {
-                const BufferLayoutElement& element = vertexBuffer.m_Layout.m_Elements.at(i);
-                createVertexAttribPointer(attribPointerCount++, element.m_Type, 
-                    element.m_Normalized, vertexBuffer.m_Stride, offset);
-                offset += sizeOfShaderType(element.m_Type);
-                continue;
-            }
+				attribPointerCount++;
+				offset += element * sizeof(float);
+			}
 
-            vertexBuffer.Unbind();        
-        }
+			buffer.Unbind();
+		}
 
-        Unbind();
-    }
+		glGenBuffers(1, &m_Ibo_OpenGL_ID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Ibo_OpenGL_ID);
 
-    void VertexArray::SetIndexBuffer(std::shared_ptr<IndexBuffer> indexBuffer)
-    {
-        m_IndexBuffer = indexBuffer;
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_ElementCount * sizeof(int), indices, GL_STATIC_DRAW);
 
-        Bind();
-        indexBuffer->Bind();     
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBuffer->m_ElementCount * sizeof(int), indexBuffer->m_Indices, GL_STATIC_DRAW);
-        indexBuffer->Unbind();
-        Unbind();
-    }
+		Unbind();
+	}
 
-    void VertexArray::Bind() const
-    {
-        glBindVertexArray(m_OpenGL_ID);
+	void VertexArray::Bind() const
+	{
+		glBindVertexArray(m_Vao_OpenGL_ID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Ibo_OpenGL_ID);
+	}
 
-        if (m_IndexBuffer)
-            m_IndexBuffer->Bind();
-    }
-
-    void VertexArray::Unbind() const
-    {
-        glBindVertexArray(0);
-
-        if (m_IndexBuffer)
-            m_IndexBuffer->Unbind();
-    }
+	void VertexArray::Unbind() const
+	{
+		glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
 
 }

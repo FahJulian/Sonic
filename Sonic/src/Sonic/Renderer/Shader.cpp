@@ -37,7 +37,7 @@ static ShaderCompilationErrorInfo compilationSuccessful(unsigned int programID, 
         char* infoLog = new char[info];
         glGetShaderInfoLog(vertexShaderID, info, nullptr, infoLog);
 
-        std::string s(infoLog);
+        std::string s = std::string("Vertex Shader Compilation Error:\n") + std::string(infoLog);
         delete[] infoLog;
 
         return { false, s };
@@ -50,7 +50,7 @@ static ShaderCompilationErrorInfo compilationSuccessful(unsigned int programID, 
         char* infoLog = new char[info];
         glGetShaderInfoLog(fragmentShaderID, info, nullptr, infoLog);
 
-        std::string s(infoLog);
+        std::string s = std::string("Fragment Shader Compilation Error:\n") + std::string(infoLog);
         delete[] infoLog;
 
         return { false, s };
@@ -63,7 +63,7 @@ static ShaderCompilationErrorInfo compilationSuccessful(unsigned int programID, 
         char* infoLog = new char[info];
         glGetProgramInfoLog(programID, info, nullptr, infoLog);
 
-        std::string s(infoLog);
+        std::string s = std::string("Shader Linking Error:\n") + std::string(infoLog);
         delete[] infoLog;
 
         return { false, s };

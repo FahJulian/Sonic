@@ -1,6 +1,7 @@
 #pragma once
 #include <Sonic.h>
 #include "GameScene.h"
+#include "StartScene.h"
 #include "Settings.h"
 
 class Application : public Sonic::App
@@ -12,6 +13,11 @@ public:
 private:
 	Scene* OnInit() override
 	{
-		return new GameScene();
+		gameScene = new GameScene();
+		startScene = new StartScene(gameScene);
+		return startScene;
 	}
+
+	GameScene* gameScene;
+	StartScene* startScene;
 };

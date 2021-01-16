@@ -58,6 +58,8 @@ namespace Sonic {
         * @return A pointer to the currently active scene
         */
         Scene* GetActiveScene() { return m_Scene; }
+
+        void SetScene(Scene* scene) { m_Scene = scene; scene->Init(); }
         
     private:
         /**

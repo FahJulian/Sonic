@@ -5,7 +5,43 @@
 
 namespace Sonic {
 
-    struct DirectionComponent
+    struct ClickListenerComponent
+    {
+        std::function<void(const MouseButtonReleasedEvent&)> listener;
+        
+        template<typename T>
+        ClickListenerComponent(T* obj, void* (T::* listener)(const MouseButtonReleasedEvent&))
+            : listener([obj, listener](const MouseButtonReleasedEvent& e) { (obj->*listener)(e); }) {}
+        ClickListenerComponent(void(*listener)(const MouseButtonReleasedEvent&))
+            : listener(listener) {}
+        ClickListenerComponent(std::function<void(const MouseButtonReleasedEvent&)> listener)
+            : listener(listener) {}
+    };
+
+    struct HoverComponent
+    {
+        Sprite sprite;
+        Color color;
+        bool hovered;
+
+        HoverComponent(const Sprite& sprite, const Color& color)
+            : sprite(sprite), color(color), hovered(false) {}
+        HoverComponent(const Sprite& sprite)
+            : sprite(sprite), color(Colors::White), hovered(false) {}
+        HoverComponent(const Color& color)
+            : sprite(Sprite::Null()), color(color), hovered(false) {}
+    };
+
+    struct BorderComponent
+    {
+        Color color;
+        float borderWeight;
+
+        BorderComponent(const Color& borderColor, float borderWeight)
+            : color(borderColor), borderWeight(borderWeight) {}
+    };
+
+    struct Direction2DComponent
     {
         enum class Direction : char
         {
@@ -18,9 +54,9 @@ namespace Sonic {
         Direction direction;
         Direction lastDirection;
 
-        DirectionComponent(Direction direction)
+        Direction2DComponent(Direction direction)
             : direction(direction), lastDirection(direction) {}
-        DirectionComponent(Direction direction, Direction lastDirection)
+        Direction2DComponent(Direction direction, Direction lastDirection)
             : direction(direction), lastDirection(lastDirection) {}
     };
 
@@ -44,45 +80,17 @@ namespace Sonic {
             : position({ x, y, 0.0f }), scale({ width, height }), rotation(0.0f) {}
     };
 
-    struct SpriteComponent
+    struct Renderer2DComponent
     {
         Sprite sprite;
-
-        SpriteComponent(const Sprite& sprite)
-            : sprite(sprite) {}
-        SpriteComponent(const SpriteComponent& other)
-            : sprite(other.sprite) {}
-
-        SpriteComponent operator=(const SpriteComponent& other)
-        {
-            return SpriteComponent(other);
-        }
-    };
-
-    struct ColorComponent
-    {
         Color color;
 
-        ColorComponent(const Color& color)
-            : color(color) {}
-        ColorComponent(float r, float g, float b, float a)
-            : color({ r, g, b, a }) {}
-    };
-
-    struct ColoredSpriteComponent
-    {
-        Color color;
-        Sprite sprite;
-
-        ColoredSpriteComponent(const Color& color, const Sprite& sprite)
-            : color(color), sprite(sprite) {}
-        ColoredSpriteComponent(const ColoredSpriteComponent& other)
-            : color(other.color), sprite(other.sprite) {}
-
-        ColoredSpriteComponent operator=(const ColoredSpriteComponent& other)
-        {
-            return ColoredSpriteComponent(other);
-        }
+        Renderer2DComponent(const Sprite& sprite, const Color& color)
+            : sprite(sprite), color(color) {}
+        Renderer2DComponent(const Sprite& sprite)
+            : sprite(sprite), color(Colors::White) {}
+        Renderer2DComponent(const Color& color)
+            : sprite(Sprite::Null()), color(color) {}
     };
 
     struct Camera2DComponent

@@ -34,8 +34,8 @@ namespace Sonic {
         {
             White = 0xffffffff,
             Black = 0x000000ff,
-            Dark_Gray = 0x555555ff,
-            Light_Gray = 0x999999ff,
+            DarkGray = 0x555555ff,
+            LightGray = 0x999999ff,
 
             Red = 0xff0000ff,
             Green = 0x00ff00ff,
@@ -48,8 +48,8 @@ namespace Sonic {
             DarkGreen = 0x084d08ff,
             LightRed = 0xf42828ff,
             DarkRed = 0x810707ff,
-            LightBlue = 0x2947ff,
-            DarkBlue = 0x071463,
+            LightBlue = 0x4ab8f7ff,
+            DarkBlue = 0x071463ff,
 
             Orange = 0xff8c00ff,
         };

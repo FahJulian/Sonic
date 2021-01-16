@@ -29,6 +29,7 @@ namespace Sonic {
 		void UpdateBehaviours(float deltaTime);
 
 		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
+		void OnMouseMoved(const MouseMovedEvent& e);
 
 	protected:
 		virtual void Load() = 0;
@@ -100,31 +101,29 @@ namespace Sonic {
 		template<typename Component>
 		ComponentPool<Component>* GetComponentPool()
 		{
-			static ComponentPool<Component>* pool = CreateComponentPool<Component>();
-			return pool;
-		}
+			static std::unordered_map<Scene*, ComponentPool<Component>*> pools;
 
-		template<typename Component>
-		ComponentPool<Component>* CreateComponentPool()
-		{
-			static ComponentPool<Component> pool;
-			m_ComponentPools.push_back(&pool);
-			return &pool;
+			if (pools.find(this) == pools.end())
+			{
+				pools.emplace(this, new ComponentPool<Component>());
+				m_ComponentPools.push_back(pools[this]);
+			}
+
+			return pools[this];
 		}
 
 		template<typename DerivedBehaviour>
 		BehaviourPool<DerivedBehaviour>* GetBehaviourPool()
 		{
-			static BehaviourPool<DerivedBehaviour>* pool = CreateBehaviourPool<DerivedBehaviour>();
-			return pool;
-		}
+			static std::unordered_map<Scene*, BehaviourPool<DerivedBehaviour>*> pools;
 
-		template<typename DerivedBehaviour>
-		BehaviourPool<DerivedBehaviour>* CreateBehaviourPool()
-		{
-			static BehaviourPool<DerivedBehaviour> pool(this);
-			m_BehaviourPools.push_back(static_cast<BaseBehaviourPool*>(&pool));
-			return &pool;
+			if (pools.find(this) == pools.end())
+			{
+				pools.emplace(this, new BehaviourPool<DerivedBehaviour>(this));
+				m_BehaviourPools.push_back(pools[this]);
+			}
+
+			return pools[this];
 		}
 
 		std::vector<BaseComponentPool*> m_ComponentPools;

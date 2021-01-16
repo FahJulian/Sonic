@@ -7,6 +7,10 @@ namespace Sonic {
 
     class Shader
     {
+    private:
+        Shader()
+            : m_OpenGL_ID(0xffffffff) {}
+
     public:
         /**
         * Constructs an OpenGL shader program with a vertex shader and a fragment shader.
@@ -15,6 +19,10 @@ namespace Sonic {
         * @param fragmentSourcePath Path to the .fs file containing the fragment shader source code.
         */
         Shader(const std::string& vertexSourcePath, const std::string& fragmentSourcePath);
+
+        bool IsNull() const { return m_OpenGL_ID == 0xffffffff; }
+
+        static Shader Null() { return Shader(); }
 
         /**
         * Binds this shader program to OpenGL

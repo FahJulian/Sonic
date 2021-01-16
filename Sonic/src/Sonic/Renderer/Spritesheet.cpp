@@ -23,7 +23,7 @@ namespace Sonic {
                     x1, y1 
                 };  
 
-                m_Sprites.emplace_back(*this, textureCoords);
+                m_Sprites.emplace_back(this, textureCoords);
             }
         }
     }
