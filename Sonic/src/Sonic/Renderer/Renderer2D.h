@@ -7,8 +7,6 @@
 #include "Color.h"
 
 static const Sonic::Color WHITE = Sonic::Color(0xffffffff);
-static const Sonic::Sprite NULL_SPRITE = Sonic::Sprite::Null();
-
 
 namespace Sonic {
 
@@ -42,22 +40,22 @@ namespace Sonic {
 
         static void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Color& color)
         {
-            drawRect(position, size, rotation, NULL_SPRITE, color);
+            drawRect(position, size, rotation, Sprite(), color);
         }
 
         static void drawRect(const glm::vec3& position, const glm::vec2& size, const Color& color)
         {
-            drawRect(position, size, 0.0f, NULL_SPRITE, color);
+            drawRect(position, size, 0.0f, Sprite(), color);
         }
 
         static void drawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const Color& color)
         {
-            drawRect(glm::vec3{ position, 0.0f }, size, rotation, NULL_SPRITE, color);
+            drawRect(glm::vec3{ position, 0.0f }, size, rotation, Sprite(), color);
         }
 
         static void drawRect(const glm::vec2& position, const glm::vec2& size, const Color& color)
         {
-            drawRect(glm::vec3{ position, 0.0f }, size, 0.0f, NULL_SPRITE, color);
+            drawRect(glm::vec3{ position, 0.0f }, size, 0.0f, Sprite(), color);
         }
 
         static void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite)

@@ -1,5 +1,7 @@
 #pragma once
 #include "Sonic/Renderer/Renderer2D.h"
+#include "Sonic/UI/UIComponents.h"
+#include "Sonic/UI/UIRenderer.h"
 #include "Scene.h"
 #include "Entity.h"
 #include "Components.h"
@@ -86,60 +88,68 @@ namespace Sonic {
 		for (auto [entity, component] : View<Renderer2DComponent>())
 		{
 			auto* t = GetComponent<Transform2DComponent>(entity);
-			
-			Color* color = &component->color;
-			Sprite* sprite = &component->sprite;
-
-			if (HasComponent<HoverComponent>(entity))
-			{
-				auto* h = GetComponent<HoverComponent>(entity);
-				if (h->hovered)
-				{
-					color = &h->color;
-					sprite = &h->sprite;
-				}
-			}
-
-			if (HasComponent<BorderComponent>(entity))
-			{
-				auto* b = GetComponent<BorderComponent>(entity);
-				Renderer2D::drawRect(t->position, { t->scale.x - b->borderWeight, b->borderWeight }, t->rotation, b->color);
-				Renderer2D::drawRect({ t->position.x + t->scale.x, t->position.y, t->position.z }, { -b->borderWeight, t->scale.y - b->borderWeight }, b->color);
-				Renderer2D::drawRect({ t->position.x + t->scale.x, t->position.y + t->scale.y, t->position.z }, { -t->scale.x + b->borderWeight, -b->borderWeight }, t->rotation, b->color);
-				Renderer2D::drawRect({ t->position.x, t->position.y + t->scale.y, t->position.z }, { b->borderWeight, -t->scale.y + b->borderWeight }, t->rotation, b->color);
-
-				Renderer2D::drawRect({ t->position.x + b->borderWeight, t->position.y + b->borderWeight, t->position.z }, 
-					{ t->scale.x - 2 * b->borderWeight, t->scale.y - 2 * b->borderWeight }, t->rotation, *sprite, *color);
-			}
-			else
-			{
-				Renderer2D::drawRect(t->position, t->scale, t->rotation, *sprite, *color);
-			}
+			Renderer2D::drawRect(t->position, t->scale, t->rotation, component->sprite, component->color);
 		}
 
 		Renderer2D::endScene();
+
+		UIRenderer::startScene();
+
+		for (auto [entity, component] : View<UIRendererComponent>())
+		{
+			auto* c = GetComponent<UIConstraintsComponent>(entity);
+
+			Sprite* sprite = &component->sprite;
+			Color* color = &component->color;
+			Color* borderColor = &component->color;
+			float borderWeight = 0;
+			float edgeRadius = 0;
+
+			if (HasComponent<UIHoverComponent>(entity))
+			{
+				auto* h = GetComponent<UIHoverComponent>(entity);
+				if (h->hovered)
+				{
+					sprite = &h->sprite;
+					color = &h->color;
+				}
+			}
+
+			if (HasComponent<UIBorderComponent>(entity))
+			{
+				auto* b = GetComponent<UIBorderComponent>(entity);
+				borderColor = &b->color;
+				borderWeight = b->weight;
+			}
+
+			if (HasComponent<UIRoundedEdgeComponent>(entity))
+			{
+				auto* r = GetComponent<UIRoundedEdgeComponent>(entity);
+				edgeRadius = r->edgeRadius;
+			}
+
+			UIRenderer::drawElement(c->x, c->y, c->zIndex, c->width, c->height, *sprite, *color, borderWeight, *borderColor, edgeRadius);
+		}
+
+		UIRenderer::endScene();
 	}
 
 	void Scene::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 	{
-		for (auto [entity, component] : View<ClickListenerComponent>())
+		for (auto [entity, component] : View<UIClickListenerComponent>())
 		{
-			if (!HasComponent<Transform2DComponent>(entity))
-				continue;
-
-			auto* t = GetComponent<Transform2DComponent>(entity);
-			if (e.x >= t->position.x && e.x < t->position.x + t->scale.x && e.y >= t->position.y && e.y < t->position.y + t->scale.y)
+			auto* c = GetComponent<UIConstraintsComponent>(entity);
+			if (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->width)
 				component->listener(e);
 		}
 	}
 
 	void Scene::OnMouseMoved(const MouseMovedEvent& e)
 	{
-		for (auto [entity, component] : View<HoverComponent>())
+		for (auto [entity, component] : View<UIHoverComponent>())
 		{
-			auto* t = GetComponent<Transform2DComponent>(entity);
-			component->hovered = (e.x >= t->position.x && e.x < t->position.x + t->scale.x && 
-								  e.y >= t->position.y && e.y < t->position.y + t->scale.y);
+			auto* c = GetComponent<UIConstraintsComponent>(entity);
+			GetComponent<UIHoverComponent>(entity)->hovered = (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->width);
 		}
 	}
 

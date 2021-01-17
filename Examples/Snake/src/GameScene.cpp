@@ -46,6 +46,25 @@ void GameScene::Load()
 		tailElement.AddComponent<Renderer2DComponent>(TAIL_COLOR);
 		tailElement.AddBehaviour<SnakeTailBehaviour>();
 	}
+
+	for (int i = 0; i < 5000; i++)
+	{
+		Entity e = AddEntity();
+		e.AddComponent<Transform2DComponent>(0, 0, 50, 50);
+		e.AddComponent<Renderer2DComponent>(Colors::DarkBlue);
+	}
+
+	EventListener<MouseButtonReleasedEvent> listener = [](const MouseButtonReleasedEvent& e) {
+		std::cout << "CLICKED!" << std::endl;
+	};
+
+	Entity uiTest = AddEntity();
+	uiTest.AddComponent<UIConstraintsComponent>(100, 100, 100, 100);
+	uiTest.AddComponent<UIRendererComponent>(Colors::Yellow);
+	uiTest.AddComponent<UIBorderComponent>(2.0f, Colors::Black);
+	uiTest.AddComponent<UIRoundedEdgeComponent>(10.0f);
+	uiTest.AddComponent<UIHoverComponent>(Colors::DarkGray);
+	uiTest.AddComponent<UIClickListenerComponent>(listener);
 }
 
 void GameScene::OnInit()

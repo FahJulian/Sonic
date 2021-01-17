@@ -5,42 +5,6 @@
 
 namespace Sonic {
 
-    struct ClickListenerComponent
-    {
-        std::function<void(const MouseButtonReleasedEvent&)> listener;
-        
-        template<typename T>
-        ClickListenerComponent(T* obj, void* (T::* listener)(const MouseButtonReleasedEvent&))
-            : listener([obj, listener](const MouseButtonReleasedEvent& e) { (obj->*listener)(e); }) {}
-        ClickListenerComponent(void(*listener)(const MouseButtonReleasedEvent&))
-            : listener(listener) {}
-        ClickListenerComponent(std::function<void(const MouseButtonReleasedEvent&)> listener)
-            : listener(listener) {}
-    };
-
-    struct HoverComponent
-    {
-        Sprite sprite;
-        Color color;
-        bool hovered;
-
-        HoverComponent(const Sprite& sprite, const Color& color)
-            : sprite(sprite), color(color), hovered(false) {}
-        HoverComponent(const Sprite& sprite)
-            : sprite(sprite), color(Colors::White), hovered(false) {}
-        HoverComponent(const Color& color)
-            : sprite(Sprite::Null()), color(color), hovered(false) {}
-    };
-
-    struct BorderComponent
-    {
-        Color color;
-        float borderWeight;
-
-        BorderComponent(const Color& borderColor, float borderWeight)
-            : color(borderColor), borderWeight(borderWeight) {}
-    };
-
     struct Direction2DComponent
     {
         enum class Direction : char
@@ -90,7 +54,7 @@ namespace Sonic {
         Renderer2DComponent(const Sprite& sprite)
             : sprite(sprite), color(Colors::White) {}
         Renderer2DComponent(const Color& color)
-            : sprite(Sprite::Null()), color(color) {}
+            : sprite(Sprite()), color(color) {}
     };
 
     struct Camera2DComponent

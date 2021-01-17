@@ -32,5 +32,7 @@
 #include "Sonic/Scene/Behaviours.h"
 
 #include "Sonic/UI/UI.h"
+#include "Sonic/UI/UIComponents.h"
+#include "Sonic/UI/UIRenderer.h"
 
 using namespace Sonic;

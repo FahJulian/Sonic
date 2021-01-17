@@ -18,10 +18,6 @@ private:
 		Entity startButton = AddEntity();
 		startButton.AddComponent<Transform2DComponent>((Window::getWidth() - 100) / 2, (Window::getHeight() - 40) / 2, 100, 40);
 		startButton.AddComponent<Renderer2DComponent>(Colors::LightGray);
-		startButton.AddComponent<HoverComponent>(Colors::DarkGray);
-		startButton.AddComponent<BorderComponent>(Colors::Black, 1.0f);
-
-		startButton.AddComponent<ClickListenerComponent>([this](const MouseButtonReleasedEvent& e) { App::get()->SetScene(gameScene); });
 	}
 
 	GameScene* gameScene;

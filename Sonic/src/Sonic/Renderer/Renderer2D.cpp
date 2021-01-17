@@ -25,7 +25,7 @@ struct QuadRendererData
 
     int rectCount;
     Vertex vertices[MAX_RECTS * 4];
-    Vertex* nextVertex = &vertices[0];
+    Vertex* nextVertex;
 
     std::vector<Sonic::Texture> textures;
     int textureSlots[16];
@@ -39,7 +39,7 @@ struct QuadRendererData
         for (int i = 0; i < MAX_TEXTURES; i++)
             textureSlots[i] = i;
 
-        int indices[6 * MAX_RECTS];
+        int* indices = new int[6 * MAX_RECTS];
         for (int i = 0; i < MAX_RECTS; i++)
         {
             indices[6 * i + 0] = 4 * i + 0;
@@ -55,6 +55,8 @@ struct QuadRendererData
         vertexArray = Sonic::VertexArray(indices, MAX_RECTS * 6, { vertexBuffer });
 
         textures.reserve(MAX_TEXTURES);
+
+        delete[] indices;
     }
 };
 
@@ -77,7 +79,7 @@ static float textureSlotOf(const Sonic::Texture& texture)
         return static_cast<float>(s_Data.textures.size()) - 1;
     }
 
-    return 0.0f;
+    return -1.0f;
 }
 
 
@@ -97,7 +99,7 @@ namespace Sonic {
         if (s_Data.rectCount == MAX_RECTS)
             return;
 
-        float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(*sprite.GetTexture());
+        float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(*sprite.texture);
 
         if (rotation == 0)
         {
@@ -110,8 +112,8 @@ namespace Sonic {
                 s_Data.nextVertex->g = color.g;
                 s_Data.nextVertex->b = color.b;
                 s_Data.nextVertex->a = color.a;
-                s_Data.nextVertex->textureX = sprite.GetTextureCoords()[2 * i + 0];
-                s_Data.nextVertex->textureY = sprite.GetTextureCoords()[2 * i + 1];
+                s_Data.nextVertex->textureX = i % 2 == 0 ? sprite.x0 : sprite.x1;
+                s_Data.nextVertex->textureY = i / 2 == 0 ? sprite.y0 : sprite.y1;
                 s_Data.nextVertex->textureSlot = textureSlot;
 
                 s_Data.nextVertex++;
@@ -119,21 +121,21 @@ namespace Sonic {
         }
         else
         {
-            for (int i = 0; i < 4; i++)
-            {
-                s_Data.nextVertex->x = position.x + (i % 2) * size.x;
-                s_Data.nextVertex->y = position.y + (i / 2) * size.y;
-                s_Data.nextVertex->z = position.z;
-                s_Data.nextVertex->r = color.r;
-                s_Data.nextVertex->g = color.g;
-                s_Data.nextVertex->b = color.b;
-                s_Data.nextVertex->a = color.a;
-                s_Data.nextVertex->textureX = sprite.GetTextureCoords()[2 * i + 0];
-                s_Data.nextVertex->textureY = sprite.GetTextureCoords()[2 * i + 1];
-                s_Data.nextVertex->textureSlot = textureSlot;
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    s_Data.nextVertex->x = position.x + (i % 2) * size.x;
+            //    s_Data.nextVertex->y = position.y + (i / 2) * size.y;
+            //    s_Data.nextVertex->z = position.z;
+            //    s_Data.nextVertex->r = color.r;
+            //    s_Data.nextVertex->g = color.g;
+            //    s_Data.nextVertex->b = color.b;
+            //    s_Data.nextVertex->a = color.a;
+            //    s_Data.nextVertex->textureX = sprite.GetTextureCoords()[2 * i + 0];
+            //    s_Data.nextVertex->textureY = sprite.GetTextureCoords()[2 * i + 1];
+            //    s_Data.nextVertex->textureSlot = textureSlot;
 
-                s_Data.nextVertex++;
-            }
+            //    s_Data.nextVertex++;
+            //}
         }
 
         s_Data.rectCount++;

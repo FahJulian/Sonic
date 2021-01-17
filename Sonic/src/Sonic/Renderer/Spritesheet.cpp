@@ -16,14 +16,7 @@ namespace Sonic {
                 float y1 = (y * (spriteHeight + padding)) / Texture::GetHeight();
                 float y0 = y1 - (spriteHeight / Texture::GetHeight());
 
-                float textureCoords[8] = {
-                    x0, y0,
-                    x1, y0,
-                    x0, y1,
-                    x1, y1 
-                };  
-
-                m_Sprites.emplace_back(this, textureCoords);
+                m_Sprites.emplace_back(this, x0, x1, y0, y1);
             }
         }
     }

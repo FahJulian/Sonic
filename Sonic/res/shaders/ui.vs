@@ -7,18 +7,18 @@ layout (location = 3) in float v_TextureSlot;
 
 layout (location = 4) in vec2 v_RectPosition;
 layout (location = 5) in vec2 v_RectScale;
-layout (location = 6) in float v_BorderRadius;
+layout (location = 6) in vec4 v_BorderColor;
 layout (location = 7) in float v_BorderWidth;
-layout (location = 8) in vec4 v_BorderColor;
+layout (location = 8) in float v_EdgeRadius;
 
 out vec4 f_Color;
 out vec2 f_TextureCoords;
 out float f_TextureSlot;
 out vec2 f_RectPosition;
 out vec2 f_RectScale;
-out float f_BorderRadius;
-out float f_BorderWidth;
 out vec4 f_BorderColor;
+out float f_BorderWidth;
+out float f_EdgeRadius;
 
 uniform float u_WindowWidth;
 uniform float u_WindowHeight;
@@ -32,7 +32,7 @@ void main()
 	f_TextureSlot = v_TextureSlot;
 	f_RectPosition = v_RectPosition;
 	f_RectScale = v_RectScale;
-	f_BorderRadius = v_BorderRadius;
-	f_BorderWidth = v_BorderWidth;
 	f_BorderColor = v_BorderColor;
+	f_BorderWidth = v_BorderWidth;
+	f_EdgeRadius = v_EdgeRadius;
 }

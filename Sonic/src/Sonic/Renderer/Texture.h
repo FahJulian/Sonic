@@ -10,9 +10,6 @@ namespace Sonic {
     */
     class Texture
     {
-    private:
-        Texture();
-
     public:
         /**
         * Constructs a new Texture
@@ -30,8 +27,6 @@ namespace Sonic {
             : Texture(filePath.c_str()) 
         {
         }
-
-        static const Texture* White();
 
         /**
         * Binds the texture to OpenGLs Texture2D Texture slots

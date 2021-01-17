@@ -2,9 +2,10 @@
 #include <glfw/glfw3.h>
 #include <iostream>
 #include <string>
-#include "App.h"
 #include "Renderer/Renderer2D.h"
+#include "UI/UIRenderer.h"
 #include "Window/Window.h"
+#include "App.h"
 
 struct InitialWindowData
 {
@@ -47,6 +48,7 @@ namespace Sonic {
         }
 
         Renderer2D::init();
+        UIRenderer::init();
 
         m_Scene = OnInit();
         m_Scene->AddListener(this, &App::OnWindowClosed);

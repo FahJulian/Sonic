@@ -10,11 +10,10 @@ namespace Sonic {
     */
     struct Sprite
     {
-    private:
-        Sprite()
-            : m_Texture(nullptr), m_TextureCoords{ 0 } {}
-
     public:
+        Sprite()
+            : texture(nullptr), x0(0), x1(1), y0(0), y1(1) {}
+
         /**
         * Constructs a new Sprite
         * 
@@ -22,18 +21,21 @@ namespace Sonic {
         * @param textureCoords float Array with the texture coordinates ot the 
         *                      sprite on the texture
         */
-        Sprite(const Texture* texture, float textureCoords[8]);
+        Sprite(const Texture* texture, float x0, float x1, float y0, float y1)
+            : texture(texture), x0(x0), x1(x1), y0(y0), y1(y1) {}
 
-        static Sprite Null() { return Sprite(); }
+        Sprite(const Sprite& other)
+            : texture(other.texture), x0(other.x0), x1(other.x1), y0(other.y0), y1(other.y1) {}
 
-        bool IsNull() const;
+        Sprite operator=(const Sprite& other)
+        {
+            return Sprite(other);
+        }
 
-        const Texture* GetTexture() const { return m_Texture; }
-        const float* GetTextureCoords() const { return m_TextureCoords; }
+        bool IsNull() const { return texture == nullptr; }
 
-    private:
-        const Texture* m_Texture;
-        float m_TextureCoords[8];
+        const Texture* const texture;
+        const float x0, x1, y0, y1;
     };
 
 }
