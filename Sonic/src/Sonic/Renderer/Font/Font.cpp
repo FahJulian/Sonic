@@ -1,4 +1,7 @@
+#include <iostream>
+
 #include <unordered_map>
+#include <vector>
 #include <gl/glew.h>
 #include "Sonic/Log/Log.h"
 #include "Font.h"
@@ -26,6 +29,33 @@ namespace Sonic {
 		if (FT_Set_Pixel_Sizes(m_Face, 0, size) != FT_Err_Ok)
 			SONIC_LOG_DEBUG("Error setting char size");
 
+		std::vector<int> widths;
+		std::vector<int> heights;
+		widths.reserve(0xff);
+		heights.reserve(0xff);
+
+		for (unsigned char c = 0; c < 0xff; c++)
+		{
+			auto glypIndex = FT_Get_Char_Index(m_Face, c);
+			FT_Load_Glyph(m_Face, glypIndex, FT_LOAD_RENDER);
+			FT_Render_Glyph(m_Face->glyph, ft_render_mode_normal);
+
+			widths.push_back(m_Face->glyph->bitmap.width + 1);
+			heights.push_back(m_Face->glyph->bitmap.rows);
+		}
+
+		int maxHeight = 0;
+		for (int i : heights)
+			if (i > maxHeight)
+				maxHeight = i;
+
+		int totalWidth = 0;
+		for (int i : widths)
+			totalWidth += i;
+
+		unsigned char* giantBitmap = new unsigned char[maxHeight * totalWidth]{ 0 };
+
+		unsigned int currentX = 0;
 		for (unsigned char c = 0; c < 0xff; c++)
 		{
 			auto glypIndex = FT_Get_Char_Index(m_Face, c);
@@ -33,36 +63,41 @@ namespace Sonic {
 			FT_Render_Glyph(m_Face->glyph, ft_render_mode_normal);
 			auto glyph = m_Face->glyph;
 
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			int width = static_cast<int>(glyph->bitmap.width);
+			int height = static_cast<int>(glyph->bitmap.rows);
+			int bearingX = static_cast<int>(glyph->bitmap_left);
+			int bearingY = static_cast<int>(glyph->bitmap_top);
+			int advanceX = static_cast<int>(glyph->advance.x >> 6);
 
-			unsigned int texture;
-			glGenTextures(1, &texture);
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				GL_RED,
-				glyph->bitmap.width,
-				glyph->bitmap.rows,
-				0,
-				GL_RED,
-				GL_UNSIGNED_BYTE,
-				glyph->bitmap.buffer
-			);
+			for (int y = 0; y < height; y++)
+				for (int x = 0; x < width; x++)
+					giantBitmap[currentX + x + y * totalWidth] = glyph->bitmap.buffer[x + y * width];
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			float x0 = static_cast<float>(currentX) / totalWidth;
+			float x1 = static_cast<float>(currentX + width) / totalWidth;
+			float y0 = 0.0f;
+			float y1 = static_cast<float>(height) / maxHeight;
 
-			m_Characters.emplace(c, Character{ texture, static_cast<float>(glyph->bitmap.width), 
-				static_cast<float>(glyph->bitmap.rows), static_cast<float>(glyph->bitmap_left), static_cast<float>(glyph->bitmap_top), static_cast<float>(glyph->advance.x >> 6) });
+			m_Characters.emplace(c, Character{ width, height, 
+				bearingX, bearingY, advanceX, x0, x1, y0, y1 });
+
+			currentX += glyph->bitmap.width + 1;
 		}
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glGenTextures(1, &m_TextureID);
+		glBindTexture(GL_TEXTURE_2D, m_TextureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, totalWidth, maxHeight, 0, GL_RED, GL_UNSIGNED_BYTE, giantBitmap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	}
 
 	Font::~Font()
 	{
-		FT_Done_Face(m_Face);
+		/*if (m_Face)
+			FT_Done_Face(m_Face);*/
 	}
 
 	const Character& Font::GetCharacter(unsigned char c) const

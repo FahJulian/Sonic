@@ -1,4 +1,5 @@
 #pragma once
+#include "Sonic/Renderer/Color.h"
 #include "Font.h"
 
 namespace Sonic {
@@ -7,9 +8,9 @@ namespace Sonic {
 	{
 		void init();
 
-		void drawCharacter(float x, float y, unsigned char c, const Font& font);
+		void drawCharacter(float x, float y, float z, unsigned char c, const Font& font, const Color& color);
 
-		void drawString(float x, float y, const std::string& string, const Font& font);
+		void drawString(float x, float y, float z, const std::string& string, const Font& font, const Color& color);
 
 		void startScene();
 

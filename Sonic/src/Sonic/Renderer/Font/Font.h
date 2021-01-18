@@ -8,10 +8,10 @@ namespace Sonic {
 
 	struct Character
 	{
-		const unsigned int textureID;
-		const float width, height;
-		const float bearingX, bearingY;
-		const float advanceX;
+		const int width, height;
+		const int bearingX, bearingY;
+		const int advanceX;
+		const float x0, x1, y0, y1;
 	};
 
 	class Font
@@ -27,7 +27,10 @@ namespace Sonic {
 
 		float GetKerning(unsigned char c1, unsigned char c2) const;
 
+		bool operator==(const Font& other) { return m_TextureID == other.m_TextureID; }
+
 		FT_Face m_Face;
+		unsigned int m_TextureID;
 		std::unordered_map<unsigned char, Character> m_Characters;
 	};
 

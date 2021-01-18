@@ -1,12 +1,51 @@
+#include <vector>
 #include <gl/glew.h>
+#include "Sonic/Base.h"
+#include "Sonic/Renderer/Shader.h"
+#include "Sonic/Renderer/Buffer/VertexBuffer.h"
+#include "Sonic/Renderer/Buffer/VertexArray.h"
+#include "Sonic/Window/Window.h"
 #include "Sonic/Log/Log.h"
 #include "Font.h"
 #include "FontRenderer.h"
 
+struct Vertex
+{
+	float x, y, z;
+	float r, g, b, a;
+	float textureX, textureY;
+	float fontIndex;
+};
 
-unsigned int shader;
-unsigned int vao;
-unsigned int vbo;
+const int MAX_CHARACTERS = 10000;
+const int MAX_FONTS = 16;
+
+Sonic::Shader s_Shader = Sonic::Shader::Null();
+Sonic::VertexBuffer s_VBO = Sonic::VertexBuffer::Null();
+Sonic::VertexArray s_VAO = Sonic::VertexArray::Null();
+
+int s_CharacterCount;
+Vertex s_Vertices[MAX_CHARACTERS * 4];
+Vertex* s_NextVertex;
+
+std::vector<Sonic::Font> s_Fonts;
+
+int s_TextureSlots[MAX_FONTS];
+
+static float indexOf(const Sonic::Font& font)
+{
+	for (int i = 0; i < s_Fonts.size(); i++)
+		if (s_Fonts.at(i) == font)
+			return static_cast<float>(i);
+
+	if (s_Fonts.size() < MAX_FONTS)
+	{
+		s_Fonts.push_back(font);
+		return static_cast<float>(s_Fonts.size() - 1);
+	}
+
+	return -1.0f;
+}
 
 
 namespace Sonic {
@@ -15,90 +54,97 @@ namespace Sonic {
 
 		void init()
 		{
-			const char* vertex =
-				"#version 450 core\n"
-				"layout (location = 0) in vec4 vertex;\n"
-				"out vec2 f_v;\n"
-				"void main()\n"
-				"{\n"
-				"f_v = vertex.zw;\n"
-				"gl_Position = vec4(vertex.x / 250 - 1, vertex.y / 250 - 1, 0.0, 1.0);\n"
-				"}\n";
+			s_CharacterCount = 0;
+			s_NextVertex = &s_Vertices[0];
 
-			const char* frag =
-				"#version 450 core\n"
-				"in vec2 f_v;\n"
-				"out vec4 color;\n"
-				"uniform sampler2D texture;"
-				"void main()\n"
-				"{\n"
-				"if (f_v.x == 3.0)\n"
-				"color = vec4(1.0, 0.0, 1.0, 1.0);\n"
-				"else\n"
-				"color = vec4(1.0, 0.0, 1.0, texture(texture, f_v).r);\n"
-				"}\n";
+			s_Shader = Shader(SONIC_RESOURCE_DIR + "shaders\\font.vs", SONIC_RESOURCE_DIR + "shaders\\font.fs");
 
-			vao = 0;
-			glCreateVertexArrays(1, &vao);
-			glBindVertexArray(vao);
-			vbo = 0;
-			glCreateBuffers(1, &vbo);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-			glEnableVertexAttribArray(0);
+			int* indices = new int[6 * MAX_CHARACTERS];
+			for (int i = 0; i < MAX_CHARACTERS; i++)
+			{
+				indices[6 * i + 0] = 4 * i + 0;
+				indices[6 * i + 1] = 4 * i + 1;
+				indices[6 * i + 2] = 4 * i + 2;
 
-			shader = glCreateProgram();
-			unsigned int v = glCreateShader(GL_VERTEX_SHADER);
-			unsigned int f = glCreateShader(GL_FRAGMENT_SHADER);
-			int vl = static_cast<int>(std::string(vertex).length());
-			int fl = static_cast<int>(std::string(frag).length());
-			glShaderSource(v, 1, &vertex, &vl);
-			glShaderSource(f, 1, &frag, &fl);
-			glCompileShader(v);
-			glCompileShader(f);
-			glAttachShader(shader, v);
-			glAttachShader(shader, f);
-			glLinkProgram(shader);	
+				indices[6 * i + 3] = 4 * i + 1;
+				indices[6 * i + 4] = 4 * i + 3;
+				indices[6 * i + 5] = 4 * i + 2;
+			}
+
+			s_VBO = Sonic::VertexBuffer(4 * MAX_CHARACTERS * sizeof(Vertex), { 3, 4, 2, 1 });
+			s_VAO = Sonic::VertexArray(indices, MAX_CHARACTERS * 6, { s_VBO });
+
+			s_Fonts.reserve(MAX_FONTS);
+			for (int i = 0; i < MAX_FONTS; i++)
+				s_TextureSlots[i] = i;
+
+			delete[] indices;
 		}
 
-		void drawCharacter(float x, float y, unsigned char c, const Font& font)
+		void startScene()
 		{
+			s_NextVertex = &s_Vertices[0];
+			s_CharacterCount = 0;
+
+			s_Shader.Bind();
+			s_Shader.UniformFloat("u_WindowWidth", Window::getWidth());
+			s_Shader.UniformFloat("u_WindowHeight", Window::getHeight());
+		}
+
+		void endScene()
+		{
+			s_VAO.Bind();
+			s_VBO.SetData(s_Vertices, 4 * s_CharacterCount * sizeof(Vertex));
+
+			for (int i = 0; i < s_Fonts.size(); i++)
+			{
+				glActiveTexture(GL_TEXTURE0 + i);
+				glBindTexture(GL_TEXTURE_2D, s_Fonts.at(i).m_TextureID);
+			}
+
+			glDrawElements(GL_TRIANGLES, s_CharacterCount * 6, GL_UNSIGNED_INT, nullptr);
+		}
+
+		void drawCharacter(float x, float y, float z, unsigned char c, const Font& font, const Color& color)
+		{
+			if (s_CharacterCount == MAX_CHARACTERS)
+				return;
+
+			float fontIndex = indexOf(font);
+			if (fontIndex == -1.0f)
+				return;
+
  			Character character = font.GetCharacter(c);
 
-			float vertices[]
+			for (int i = 0; i < 4; i++)
 			{
-				x, y, 0.0f, 1.0f,
-				x + character.width, y, 1.0f, 1.0f,
-				x, y + character.height, 0.0f, 0.0f,
+				s_NextVertex->x = x + (i % 2) * character.width;
+				s_NextVertex->y = y + (i / 2) * character.height;
+				s_NextVertex->z = z;
+				s_NextVertex->r = color.r;
+				s_NextVertex->g = color.g;
+				s_NextVertex->b = color.b;
+				s_NextVertex->a = color.a;
+				s_NextVertex->textureX = (i % 2 == 0) ? character.x0 : character.x1;
+				s_NextVertex->textureY = (i / 2 == 0) ? character.y1 : character.y0;
+				s_NextVertex->fontIndex = fontIndex;
 
-				x + character.width, y, 1.0f, 1.0f,
-				x + character.width, y + character.height, 1.0f, 0.0f,
-				x, y + character.height, 0.0f, 0.0f,
-			};
+				s_NextVertex++;
+			}
 
-			glBindVertexArray(vao);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-			glUseProgram(shader);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, character.textureID);
-
-			glDrawArrays(GL_TRIANGLES, 0, 12);
+			s_CharacterCount++;
 		}
 
-		void drawString(float x, float y, const std::string& string, const Font& font)
+		void drawString(float x, float y, float z, const std::string& string, const Font& font, const Color& color)
 		{
-			int size = string.size();
+			int size = static_cast<int>(string.size());
 			float kerning = 0.0f;
 			for (int i = 0; i < size; i++)
 			{
 				char c = string[i];
 				Character ch = font.GetCharacter(c);
 
-				drawCharacter(x + ch.bearingX + kerning, y - (ch.height - ch.bearingY), c, font);
+				drawCharacter(x + ch.bearingX + kerning, y - (ch.height - ch.bearingY), z, c, font, color);
 				x += ch.advanceX + kerning;
 
 				if (i + 1 < size)

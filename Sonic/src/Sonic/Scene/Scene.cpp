@@ -9,6 +9,7 @@
 #include "Components.h"
 
 static Sonic::Font* font;
+static Sonic::Font* font1;
 
 namespace Sonic {
 
@@ -19,6 +20,7 @@ namespace Sonic {
 		AddListener(this, &Scene::OnMouseMoved);
 
 		font = new Font("C:\\dev\\Sonic\\Sonic\\res\\fonts\\arial.ttf", 120);
+		font1 = new Font("C:\\dev\\Sonic\\Sonic\\res\\fonts\\calibri.ttf", 40);
 	}
 
 	Entity Scene::AddEntity()
@@ -137,8 +139,10 @@ namespace Sonic {
 			//UIRenderer::drawElement(c->x, c->y, c->zIndex, c->width, c->height, *sprite, *color, borderWeight, *borderColor, edgeRadius);
 		}
 
-		FontRenderer::drawCharacter(100, 100, '+', *font);
-		FontRenderer::drawString(0, 0, "Test", *font);
+		FontRenderer::startScene();
+		//FontRenderer::drawString(100, 100, 0.0f, "Calibri", *font1, Colors::Black);
+		FontRenderer::drawString(0, 0, 0.0f, "Arial", *font, Colors::Cyan);
+		FontRenderer::endScene();
 
 		UIRenderer::endScene();
 	}
