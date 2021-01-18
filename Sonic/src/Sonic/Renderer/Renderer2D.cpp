@@ -92,6 +92,7 @@ namespace Sonic {
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
     void Renderer2D::drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color)

@@ -2,6 +2,8 @@
 #include <glfw/glfw3.h>
 #include <iostream>
 #include <string>
+#include "Renderer/Font/Font.h"
+#include "Renderer/Font/FontRenderer.h"
 #include "Renderer/Renderer2D.h"
 #include "UI/UIRenderer.h"
 #include "Window/Window.h"
@@ -18,7 +20,6 @@ struct InitialWindowData
 static InitialWindowData s_InitialWindowData;
 
 namespace Sonic {
-    
     App* App::m_Instance;
 
     App::App(int width, int height, const char* title, bool windowResizable)
@@ -49,6 +50,8 @@ namespace Sonic {
 
         Renderer2D::init();
         UIRenderer::init();
+        Font::init();
+        FontRenderer::init();
 
         m_Scene = OnInit();
         m_Scene->AddListener(this, &App::OnWindowClosed);
@@ -129,6 +132,7 @@ namespace Sonic {
 
     App::~App()
     { 
+        Font::destroy();
         Window::destroy();
 
         if (m_Scene) 

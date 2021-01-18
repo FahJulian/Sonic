@@ -6,18 +6,18 @@ in float f_TextureSlot;
 in vec2 f_RectPosition;
 in vec2 f_RectScale;
 in vec4 f_BorderColor;
-in float f_BorderWidth;
+in float f_BorderWeight;
 in float f_EdgeRadius;
 
 out vec4 out_Color;
 
 uniform sampler2D u_Textures[16];
 
+
 void main()
 {   
 	vec2 innerPos = gl_FragCoord.xy - f_RectPosition;
 
-	// Check if in border radius area -> make transparent
 	vec2 bottomLeft = vec2(f_EdgeRadius, f_EdgeRadius);
 	vec2 bottomRight = vec2(f_RectScale.x - f_EdgeRadius, f_EdgeRadius);
 	vec2 topLeft = vec2(f_EdgeRadius, f_RectScale.y - f_EdgeRadius);
@@ -30,7 +30,7 @@ void main()
 			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
 			return;
 		}
-		else if (distance(innerPos, bottomLeft) >= f_EdgeRadius - f_BorderWidth)
+		else if (distance(innerPos, bottomLeft) >= f_EdgeRadius - f_BorderWeight)
 		{
 			out_Color = f_BorderColor;
 			return;
@@ -44,7 +44,7 @@ void main()
 			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
 			return;
 		}
-		else if (distance(innerPos, bottomRight) >= f_EdgeRadius - f_BorderWidth)
+		else if (distance(innerPos, bottomRight) >= f_EdgeRadius - f_BorderWeight)
 		{
 			out_Color = f_BorderColor;
 			return;
@@ -58,7 +58,7 @@ void main()
 			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
 			return;
 		}
-		else if (distance(innerPos, topLeft) >= f_EdgeRadius - f_BorderWidth)
+		else if (distance(innerPos, topLeft) >= f_EdgeRadius - f_BorderWeight)
 		{
 			out_Color = f_BorderColor;
 			return;
@@ -72,15 +72,15 @@ void main()
 			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
 			return;
 		}
-		else if (distance(innerPos, topRight) >= f_EdgeRadius - f_BorderWidth)
+		else if (distance(innerPos, topRight) >= f_EdgeRadius - f_BorderWeight)
 		{
 			out_Color = f_BorderColor;
 			return;
 		}
 	}
 
-	if (innerPos.x < f_BorderWidth || f_RectScale.x - innerPos.x < f_BorderWidth || 
-		innerPos.y < f_BorderWidth || f_RectScale.y - innerPos.y < f_BorderWidth)
+	if (innerPos.x < f_BorderWeight || f_RectScale.x - innerPos.x < f_BorderWeight || 
+		innerPos.y < f_BorderWeight || f_RectScale.y - innerPos.y < f_BorderWeight)
 	{
 		out_Color = f_BorderColor;
 		return;

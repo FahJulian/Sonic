@@ -22,6 +22,8 @@
 #include "Sonic/Renderer/Spritesheet.h"
 #include "Sonic/Renderer/Buffer/VertexArray.h"
 #include "Sonic/Renderer/Buffer/VertexBuffer.h"
+#include "Sonic/Renderer/Font/Font.h"
+#include "Sonic/Renderer/Font/FontRenderer.h"
 
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/Entity.h"

@@ -9,8 +9,14 @@ out vec4 out_Color;
 uniform sampler2D u_Textures[16];
 
 void main()
-{   
+{
     int textureSlot = int(f_TextureSlot);
+
+    if (textureSlot != -1)
+    {
+        out_Color = f_Color * vec4(1.0, 1.0, 1.0, texture(u_Textures[0], f_TextureCoords).r);
+        return;
+    }
 
     switch (textureSlot)
     {

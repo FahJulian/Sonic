@@ -1,10 +1,14 @@
 #pragma once
 #include "Sonic/Renderer/Renderer2D.h"
+#include "Sonic/Renderer/Font/FontRenderer.h"
+#include "Sonic/Renderer/Font/Font.h"
 #include "Sonic/UI/UIComponents.h"
 #include "Sonic/UI/UIRenderer.h"
 #include "Scene.h"
 #include "Entity.h"
 #include "Components.h"
+
+static Sonic::Font* font;
 
 namespace Sonic {
 
@@ -13,6 +17,8 @@ namespace Sonic {
 	{
 		AddListener(this, &Scene::OnMouseButtonReleased);
 		AddListener(this, &Scene::OnMouseMoved);
+
+		font = new Font("C:\\dev\\Sonic\\Sonic\\res\\fonts\\arial.ttf", 120);
 	}
 
 	Entity Scene::AddEntity()
@@ -88,7 +94,7 @@ namespace Sonic {
 		for (auto [entity, component] : View<Renderer2DComponent>())
 		{
 			auto* t = GetComponent<Transform2DComponent>(entity);
-			Renderer2D::drawRect(t->position, t->scale, t->rotation, component->sprite, component->color);
+			//Renderer2D::drawRect(t->position, t->scale, t->rotation, component->sprite, component->color);
 		}
 
 		Renderer2D::endScene();
@@ -128,8 +134,11 @@ namespace Sonic {
 				edgeRadius = r->edgeRadius;
 			}
 
-			UIRenderer::drawElement(c->x, c->y, c->zIndex, c->width, c->height, *sprite, *color, borderWeight, *borderColor, edgeRadius);
+			//UIRenderer::drawElement(c->x, c->y, c->zIndex, c->width, c->height, *sprite, *color, borderWeight, *borderColor, edgeRadius);
 		}
+
+		FontRenderer::drawCharacter(100, 100, '+', *font);
+		FontRenderer::drawString(0, 0, "Test", *font);
 
 		UIRenderer::endScene();
 	}

@@ -8,18 +8,11 @@ namespace Sonic {
 
 	namespace UI {
 
-		/*Entity createButton(Scene* scene, float x, float y, float width, float height, const Color& color, ClickListenerComponent::ClickListener onClick);
+		Entity createButton(Scene* scene, float x, float y, float zIndex, float width, float height, const Color& color, 
+			const Color& hoverColor, float borderWeight, const Color& borderColor, float edgeRadius, EventListener<MouseButtonReleasedEvent> onClick);
 
-		template<typename F>
-		Entity createButton(Scene* scene, float x, float y, float width, float height, F* obj, const Color& color, void(F::* listener)(const MouseButtonReleasedEvent&))
-		{
-			Entity entity = scene->AddEntity();
-			entity.AddComponent<Transform2DComponent>(x, y, width, height);
-			entity.AddComponent<ColorComponent>(color);
-			entity.AddComponent<ClickListenerComponent>(obj, listener);
-			return entity;
-		}*/
-
+		Entity createButton(Scene* scene, float x, float y, float width, float height,
+			const Color& color, const Color& hoverColor, EventListener<MouseButtonReleasedEvent> onClick);
 	}
 
 }

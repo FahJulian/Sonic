@@ -10,6 +10,8 @@
 #include "Behaviour.h"
 #include "BehaviourPool.h"
 
+#include "Sonic/Renderer/Sprite.h"
+
 namespace Sonic {
 
 	class Entity;

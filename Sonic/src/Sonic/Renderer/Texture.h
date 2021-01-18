@@ -28,6 +28,9 @@ namespace Sonic {
         {
         }
 
+        Texture(unsigned int id, int w, int h)
+            : m_OpenGL_ID(id), m_Width(w), m_Height(h) {}
+
         /**
         * Binds the texture to OpenGLs Texture2D Texture slots
         * 
@@ -45,7 +48,7 @@ namespace Sonic {
 
         bool operator==(const Texture& other) const { return other.m_OpenGL_ID == this->m_OpenGL_ID; }
 
-    private:
+    //private:
         unsigned int m_OpenGL_ID;
         int m_Width;
         int m_Height;

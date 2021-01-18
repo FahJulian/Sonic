@@ -47,24 +47,16 @@ void GameScene::Load()
 		tailElement.AddBehaviour<SnakeTailBehaviour>();
 	}
 
-	for (int i = 0; i < 5000; i++)
-	{
-		Entity e = AddEntity();
-		e.AddComponent<Transform2DComponent>(0, 0, 50, 50);
-		e.AddComponent<Renderer2DComponent>(Colors::DarkBlue);
-	}
-
 	EventListener<MouseButtonReleasedEvent> listener = [](const MouseButtonReleasedEvent& e) {
 		std::cout << "CLICKED!" << std::endl;
 	};
 
-	Entity uiTest = AddEntity();
-	uiTest.AddComponent<UIConstraintsComponent>(100, 100, 100, 100);
-	uiTest.AddComponent<UIRendererComponent>(Colors::Yellow);
-	uiTest.AddComponent<UIBorderComponent>(2.0f, Colors::Black);
-	uiTest.AddComponent<UIRoundedEdgeComponent>(10.0f);
-	uiTest.AddComponent<UIHoverComponent>(Colors::DarkGray);
-	uiTest.AddComponent<UIClickListenerComponent>(listener);
+	Entity button = UI::createButton(this, 150, 250, 75, 40, Colors::LightGreen, Colors::DarkGreen, 
+		[](const MouseButtonReleasedEvent& e) {
+			std::cout << "Clicked 2" << std::endl;
+		});
+
+	Entity uiTest = UI::createButton(this, 100, 100, 0, 100, 100, Colors::Yellow, Colors::DarkGray, 1.0f, Colors::Black, 10.0f, listener);
 }
 
 void GameScene::OnInit()
