@@ -155,6 +155,7 @@ namespace Sonic {
 			s_Data.vbo.SetData(reinterpret_cast<float*>(s_Data.vertices), 4 * s_Data.elementCount * sizeof(Vertex));
 
 			s_Data.vao.Bind();
+			s_Shader.Bind();
 
 			for (int i = 0; i < s_Data.textures.size(); i++)
 				s_Data.textures.at(i).Bind(i);

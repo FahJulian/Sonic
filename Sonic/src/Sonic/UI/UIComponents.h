@@ -1,10 +1,22 @@
 #pragma once
+#include <string>
+#include "Sonic/Renderer/Font/Font.h"
 #include "Sonic/Renderer/Sprite.h"
 #include "Sonic/Renderer/Color.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Event/Events.h"
 
 namespace Sonic {
+
+	struct TextComponent
+	{
+		Font font;
+		std::string text;
+		Color color;
+
+		TextComponent(Font font, const std::string& text, const Color& color)
+			: font(font), text(text), color(color) {}
+	};
 
 	struct UIConstraintsComponent
 	{

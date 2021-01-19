@@ -89,11 +89,13 @@ namespace Sonic {
 			s_Shader.Bind();
 			s_Shader.UniformFloat("u_WindowWidth", Window::getWidth());
 			s_Shader.UniformFloat("u_WindowHeight", Window::getHeight());
+			s_Shader.UniformIntArray("u_Textures", s_TextureSlots, MAX_FONTS);
 		}
 
 		void endScene()
 		{
 			s_VAO.Bind();
+			s_Shader.Bind();
 			s_VBO.SetData(s_Vertices, 4 * s_CharacterCount * sizeof(Vertex));
 
 			for (int i = 0; i < s_Fonts.size(); i++)
@@ -138,7 +140,7 @@ namespace Sonic {
 		void drawString(float x, float y, float z, const std::string& string, const Font& font, const Color& color)
 		{
 			int size = static_cast<int>(string.size());
-			float kerning = 0.0f;
+			int kerning = 0;
 			for (int i = 0; i < size; i++)
 			{
 				char c = string[i];

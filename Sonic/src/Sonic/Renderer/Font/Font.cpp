@@ -22,6 +22,7 @@ namespace Sonic {
 	}
 
 	Font::Font(const std::string& filePath, int size)
+		: m_Characters(std::make_shared<std::unordered_map<unsigned char, Character>>())
 	{
 		if (FT_New_Face(ft, filePath.c_str(), 0, &m_Face) != FT_Err_Ok)
 			SONIC_LOG_DEBUG("Error initializing font face");
@@ -76,12 +77,12 @@ namespace Sonic {
 			float x0 = static_cast<float>(currentX) / totalWidth;
 			float x1 = static_cast<float>(currentX + width) / totalWidth;
 			float y0 = 0.0f;
-			float y1 = static_cast<float>(height) / maxHeight;
+			float y1 = static_cast<float>(height + 1) / maxHeight;
 
-			m_Characters.emplace(c, Character{ width, height, 
+			m_Characters->emplace(c, Character{ width, height, 
 				bearingX, bearingY, advanceX, x0, x1, y0, y1 });
 
-			currentX += glyph->bitmap.width + 1;
+			currentX += glyph->bitmap.width;
 		}
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -96,16 +97,16 @@ namespace Sonic {
 
 	Font::~Font()
 	{
-		/*if (m_Face)
-			FT_Done_Face(m_Face);*/
+		if (m_Characters.use_count() == 1)
+			FT_Done_Face(m_Face);
 	}
 
 	const Character& Font::GetCharacter(unsigned char c) const
 	{
-		return m_Characters.at(c);
+		return m_Characters->at(c);
 	}
 
-	float Font::GetKerning(unsigned char c1, unsigned char c2) const
+	int Font::GetKerning(unsigned char c1, unsigned char c2) const
 	{
 		auto glyphIndex1 = FT_Get_Char_Index(m_Face, c1);
 		auto glyphIndex2 = FT_Get_Char_Index(m_Face, c2);
@@ -114,7 +115,38 @@ namespace Sonic {
 		if (FT_Get_Kerning(m_Face, glyphIndex1, glyphIndex2, FT_KERNING_DEFAULT, &kerning) != FT_Err_Ok)
 			SONIC_LOG_DEBUG("Error getting kerning");
 
-		return static_cast<float>(kerning.x >> 6);
+		return static_cast<int>(kerning.x >> 6);
+	}
+
+	int Font::StringWidth(const std::string& string)
+	{
+		int width = 0;
+
+		int size = static_cast<int>(string.size());
+		int kerning = 0;
+
+		for (int i = 0; i < size; i++)
+		{
+			width += GetCharacter(string[i]).advanceX + kerning;
+			if (i + 1 < size)
+				kerning = GetKerning(string[i], string[i + 1]);
+		}
+
+		return width;
+	}
+
+	int Font::StringHeight(const std::string& string)
+	{
+		int maxHeight = 0;
+
+		for (char c : string)
+		{
+			int height = GetCharacter(c).height;
+			if (height > maxHeight)
+				maxHeight = height;
+		}
+
+		return maxHeight;
 	}
 
 }

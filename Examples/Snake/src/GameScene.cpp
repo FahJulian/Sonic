@@ -4,7 +4,7 @@
 #include "Behaviours.h"
 #include "Events.h"
 
-Spritesheet* spritesheet;
+Font* font;
 
 static bool isOutsideBorders(const glm::vec3& position)
 {
@@ -46,17 +46,6 @@ void GameScene::Load()
 		tailElement.AddComponent<Renderer2DComponent>(TAIL_COLOR);
 		tailElement.AddBehaviour<SnakeTailBehaviour>();
 	}
-
-	EventListener<MouseButtonReleasedEvent> listener = [](const MouseButtonReleasedEvent& e) {
-		std::cout << "CLICKED!" << std::endl;
-	};
-
-	Entity button = UI::createButton(this, 150, 250, 75, 40, Colors::LightGreen, Colors::DarkGreen, 
-		[](const MouseButtonReleasedEvent& e) {
-			std::cout << "Clicked 2" << std::endl;
-		});
-
-	Entity uiTest = UI::createButton(this, 100, 100, 0, 100, 100, Colors::Yellow, Colors::DarkGray, 1.0f, Colors::Black, 10.0f, listener);
 }
 
 void GameScene::OnInit()

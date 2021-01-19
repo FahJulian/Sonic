@@ -8,8 +8,6 @@
 #include "Entity.h"
 #include "Components.h"
 
-static Sonic::Font* font;
-static Sonic::Font* font1;
 
 namespace Sonic {
 
@@ -18,9 +16,6 @@ namespace Sonic {
 	{
 		AddListener(this, &Scene::OnMouseButtonReleased);
 		AddListener(this, &Scene::OnMouseMoved);
-
-		font = new Font("C:\\dev\\Sonic\\Sonic\\res\\fonts\\arial.ttf", 120);
-		font1 = new Font("C:\\dev\\Sonic\\Sonic\\res\\fonts\\calibri.ttf", 40);
 	}
 
 	Entity Scene::AddEntity()
@@ -92,16 +87,14 @@ namespace Sonic {
 	void Scene::Render()
 	{
 		Renderer2D::startScene(&m_Camera);
+		UIRenderer::startScene();
+		FontRenderer::startScene();
 
 		for (auto [entity, component] : View<Renderer2DComponent>())
 		{
 			auto* t = GetComponent<Transform2DComponent>(entity);
-			//Renderer2D::drawRect(t->position, t->scale, t->rotation, component->sprite, component->color);
+			Renderer2D::drawRect(t->position, t->scale, t->rotation, component->sprite, component->color);
 		}
-
-		Renderer2D::endScene();
-
-		UIRenderer::startScene();
 
 		for (auto [entity, component] : View<UIRendererComponent>())
 		{
@@ -136,15 +129,21 @@ namespace Sonic {
 				edgeRadius = r->edgeRadius;
 			}
 
-			//UIRenderer::drawElement(c->x, c->y, c->zIndex, c->width, c->height, *sprite, *color, borderWeight, *borderColor, edgeRadius);
+			if (HasComponent<TextComponent>(entity))
+			{
+				auto* t = GetComponent<TextComponent>(entity);
+				int width = t->font.StringWidth(t->text);
+				int height = t->font.StringHeight(t->text);
+
+				FontRenderer::drawString(c->x + (c->width - width) / 2, c->y + (c->height - height) / 2, c->zIndex, t->text, t->font, t->color);
+			}
+
+			UIRenderer::drawElement(c->x, c->y, c->zIndex, c->width, c->height, *sprite, *color, borderWeight, *borderColor, edgeRadius);
 		}
 
-		FontRenderer::startScene();
-		//FontRenderer::drawString(100, 100, 0.0f, "Calibri", *font1, Colors::Black);
-		FontRenderer::drawString(0, 0, 0.0f, "Arial", *font, Colors::Cyan);
-		FontRenderer::endScene();
-
+		Renderer2D::endScene();
 		UIRenderer::endScene();
+		FontRenderer::endScene();
 	}
 
 	void Scene::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)

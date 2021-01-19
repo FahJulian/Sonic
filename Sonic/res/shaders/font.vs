@@ -17,5 +17,5 @@ void main()
 	f_Color = v_Color;
 	f_FontIndex = v_FontIndex;
 	f_TextureCoords = v_TextureCoords;
-	gl_Position = vec4(v_Position.x / u_WindowWidth - 1, v_Position.y / u_WindowHeight - 1, 0.0, 1.0);
+	gl_Position = vec4(2 * v_Position.x / u_WindowWidth - 1, 2 * v_Position.y / u_WindowHeight - 1, 0.0, 1.0);
 };

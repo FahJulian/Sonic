@@ -11,12 +11,7 @@ public:
 		: Sonic::App(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, false), gameScene(NULL), startScene(NULL) {}
 
 private:
-	Scene* OnInit() override
-	{
-		gameScene = new GameScene();
-		startScene = new StartScene(gameScene);
-		return gameScene;
-	}
+	Scene* OnInit() override;
 
 	GameScene* gameScene;
 	StartScene* startScene;

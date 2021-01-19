@@ -155,6 +155,7 @@ namespace Sonic {
 
     void Renderer2D::endScene()
     {
+        s_Shader.Bind();
         s_Data.vertexBuffer.SetData(reinterpret_cast<float*>(s_Data.vertices), 4 * s_Data.rectCount * sizeof(Vertex));
 
         s_Data.vertexArray.Bind();

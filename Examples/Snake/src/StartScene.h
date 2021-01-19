@@ -6,20 +6,11 @@ class StartScene : public Scene
 {
 public:
 	StartScene(GameScene* gameScene)
-		: gameScene(gameScene), spritesheet(nullptr) {}
+		: gameScene(gameScene), font(nullptr) {}
 
 private:
-	void Load() override
-	{
-		Renderer2D::setClearColor(Colors::White);
+	void Load() override;
 
-		spritesheet = new Spritesheet(resourceDir() + "textures\\mario_sheet.png", 1, 14, 16, 16, 1);
-
-		Entity startButton = AddEntity();
-		startButton.AddComponent<Transform2DComponent>((Window::getWidth() - 100) / 2, (Window::getHeight() - 40) / 2, 100, 40);
-		startButton.AddComponent<Renderer2DComponent>(Colors::LightGray);
-	}
-
+	Font* font;
 	GameScene* gameScene;
-	Spritesheet* spritesheet;
 };
