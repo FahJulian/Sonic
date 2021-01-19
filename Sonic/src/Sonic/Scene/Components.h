@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "../Renderer/Sprite.h"
-#include "../Renderer/Color.h"
+#include "Sonic/Graphics/Color.h"
+#include "Sonic/Graphics/Graphics2D/Sprite.h"
 
 namespace Sonic {
 

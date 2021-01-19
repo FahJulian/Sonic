@@ -2,8 +2,8 @@
 #include <glfw/glfw3.h>
 #include <iostream>
 #include <string>
-#include "Renderer/Font/Font.h"
-#include "Renderer/Font/FontRenderer.h"
+#include "Graphics/Font/Font.h"
+#include "Graphics/Font/FontRenderer.h"
 #include "Renderer/Renderer2D.h"
 #include "UI/UIRenderer.h"
 #include "Window/Window.h"

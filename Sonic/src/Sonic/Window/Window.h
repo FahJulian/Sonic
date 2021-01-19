@@ -3,7 +3,7 @@
 #include "Mouse.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Event/EventDispatcher.h"
-#include "Sonic/Renderer/Color.h"
+#include "Sonic/Graphics/Color.h"
 
 namespace Sonic {
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "Sonic/Renderer/Color.h"
-#include "Sonic/Renderer/Sprite.h"
+#include "Sonic/Graphics/Color.h"
+#include "Sonic/Graphics/Graphics2D/Sprite.h"
 
 namespace Sonic {
 

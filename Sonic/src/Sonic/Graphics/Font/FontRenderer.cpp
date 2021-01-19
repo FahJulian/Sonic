@@ -1,9 +1,9 @@
 #include <vector>
 #include <gl/glew.h>
 #include "Sonic/Base.h"
-#include "Sonic/Renderer/Shader.h"
-#include "Sonic/Renderer/Buffer/VertexBuffer.h"
-#include "Sonic/Renderer/Buffer/VertexArray.h"
+#include "Sonic/Graphics/Shader.h"
+#include "Sonic/Graphics/Buffer/VertexBuffer.h"
+#include "Sonic/Graphics/Buffer/VertexArray.h"
 #include "Sonic/Window/Window.h"
 #include "Sonic/Log/Log.h"
 #include "Font.h"
@@ -17,20 +17,19 @@ struct Vertex
 	float fontIndex;
 };
 
-const int MAX_CHARACTERS = 10000;
-const int MAX_FONTS = 16;
+static const int MAX_CHARACTERS = 10000;
+static const int MAX_FONTS = 16;
 
-Sonic::Shader s_Shader = Sonic::Shader::Null();
-Sonic::VertexBuffer s_VBO = Sonic::VertexBuffer::Null();
-Sonic::VertexArray s_VAO = Sonic::VertexArray::Null();
+static Sonic::Shader s_Shader = Sonic::Shader::Null();
+static Sonic::VertexBuffer s_VBO = Sonic::VertexBuffer::Null();
+static Sonic::VertexArray s_VAO = Sonic::VertexArray::Null();
 
-int s_CharacterCount;
-Vertex s_Vertices[MAX_CHARACTERS * 4];
-Vertex* s_NextVertex;
+static int s_CharacterCount;
+static Vertex s_Vertices[MAX_CHARACTERS * 4];
+static Vertex* s_NextVertex;
 
-std::vector<Sonic::Font> s_Fonts;
-
-int s_TextureSlots[MAX_FONTS];
+static std::vector<Sonic::Font> s_Fonts;
+static int s_TextureSlots[MAX_FONTS];
 
 static float indexOf(const Sonic::Font& font)
 {

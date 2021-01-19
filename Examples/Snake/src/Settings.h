@@ -1,5 +1,5 @@
 #pragma once
-#include <Sonic/Renderer/Color.h>
+#include <Sonic/Graphics/Color.h>
 
 const float TIME_STEP = 0.25f;
 

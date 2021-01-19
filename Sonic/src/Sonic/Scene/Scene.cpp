@@ -1,7 +1,7 @@
 #pragma once
 #include "Sonic/Renderer/Renderer2D.h"
-#include "Sonic/Renderer/Font/FontRenderer.h"
-#include "Sonic/Renderer/Font/Font.h"
+#include "Sonic/Graphics/Font/FontRenderer.h"
+#include "Sonic/Graphics/Font/Font.h"
 #include "Sonic/UI/UIComponents.h"
 #include "Sonic/UI/UIRenderer.h"
 #include "Scene.h"

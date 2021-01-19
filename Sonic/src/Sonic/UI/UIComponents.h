@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
-#include "Sonic/Renderer/Font/Font.h"
-#include "Sonic/Renderer/Sprite.h"
-#include "Sonic/Renderer/Color.h"
+#include "Sonic/Graphics/Font/Font.h"
+#include "Sonic/Graphics/Graphics2D/Sprite.h"
+#include "Sonic/Graphics/Color.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Event/Events.h"
 
@@ -14,7 +14,7 @@ namespace Sonic {
 		std::string text;
 		Color color;
 
-		TextComponent(Font font, const std::string& text, const Color& color)
+		TextComponent(Font font, const Color& color, const std::string& text)
 			: font(font), text(text), color(color) {}
 	};
 
