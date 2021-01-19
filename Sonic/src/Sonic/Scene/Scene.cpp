@@ -72,15 +72,13 @@ namespace Sonic {
 
 	void Scene::UpdateComponents(float deltaTime)
 	{
-		for (auto [entity, component] : View<Camera2DComponent>())
+		for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
 		{
-			if (!HasComponent<Transform2DComponent>(entity))
-				return;
+			cameraComponent->camera.SetPosition(t->position);
+			cameraComponent->camera.SetRotation(t->rotation);
 
-			auto* t = GetComponent<Transform2DComponent>(entity);
-			component->camera.SetPosition(t->position);
-			component->camera.SetRotation(t->rotation);
-			m_Camera = component->camera;
+			if (cameraComponent->isSceneCamera)
+				m_Camera = cameraComponent->camera;
 		}
 	}
 
@@ -90,25 +88,20 @@ namespace Sonic {
 		UIRenderer::startScene();
 		FontRenderer::startScene();
 
-		for (auto [entity, component] : View<Renderer2DComponent>())
-		{
-			auto* t = GetComponent<Transform2DComponent>(entity);
-			Renderer2D::drawRect(t->position, t->scale, t->rotation, component->sprite, component->color);
-		}
+		for (auto [e, r, t] : Group<Renderer2DComponent, Transform2DComponent>())
+			Renderer2D::drawRect(t->position, t->scale, t->rotation, r->sprite, r->color);
 
-		for (auto [entity, component] : View<UIRendererComponent>())
+		for (auto [e, r, c] : Group<UIRendererComponent, UIConstraintsComponent>())
 		{
-			auto* c = GetComponent<UIConstraintsComponent>(entity);
-
-			Sprite* sprite = &component->sprite;
-			Color* color = &component->color;
-			Color* borderColor = &component->color;
+			Sprite* sprite = &r->sprite;
+			Color* color = &r->color;
+			Color* borderColor = &r->color;
 			float borderWeight = 0;
 			float edgeRadius = 0;
 
-			if (HasComponent<UIHoverComponent>(entity))
+			if (HasComponent<UIHoverComponent>(e))
 			{
-				auto* h = GetComponent<UIHoverComponent>(entity);
+				auto* h = GetComponent<UIHoverComponent>(e);
 				if (h->hovered)
 				{
 					sprite = &h->sprite;
@@ -116,22 +109,22 @@ namespace Sonic {
 				}
 			}
 
-			if (HasComponent<UIBorderComponent>(entity))
+			if (HasComponent<UIBorderComponent>(e))
 			{
-				auto* b = GetComponent<UIBorderComponent>(entity);
+				auto* b = GetComponent<UIBorderComponent>(e);
 				borderColor = &b->color;
 				borderWeight = b->weight;
 			}
 
-			if (HasComponent<UIRoundedEdgeComponent>(entity))
+			if (HasComponent<UIRoundedEdgeComponent>(e))
 			{
-				auto* r = GetComponent<UIRoundedEdgeComponent>(entity);
+				auto* r = GetComponent<UIRoundedEdgeComponent>(e);
 				edgeRadius = r->edgeRadius;
 			}
 
-			if (HasComponent<TextComponent>(entity))
+			if (HasComponent<TextComponent>(e))
 			{
-				auto* t = GetComponent<TextComponent>(entity);
+				auto* t = GetComponent<TextComponent>(e);
 				int width = t->font.StringWidth(t->text);
 				int height = t->font.StringHeight(t->text);
 
@@ -148,21 +141,15 @@ namespace Sonic {
 
 	void Scene::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 	{
-		for (auto [entity, component] : View<UIClickListenerComponent>())
-		{
-			auto* c = GetComponent<UIConstraintsComponent>(entity);
+		for (auto [entity, clickListener, c] : Group<UIClickListenerComponent, UIConstraintsComponent>())
 			if (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->width)
-				component->listener(e);
-		}
+				clickListener->listener(e);
 	}
 
 	void Scene::OnMouseMoved(const MouseMovedEvent& e)
 	{
-		for (auto [entity, component] : View<UIHoverComponent>())
-		{
-			auto* c = GetComponent<UIConstraintsComponent>(entity);
+		for (auto [entity, h, c] : Group<UIHoverComponent, UIConstraintsComponent>())
 			GetComponent<UIHoverComponent>(entity)->hovered = (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->width);
-		}
 	}
 
 }

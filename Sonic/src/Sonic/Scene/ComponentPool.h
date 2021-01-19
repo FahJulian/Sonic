@@ -71,6 +71,7 @@ namespace Sonic {
 		template<typename> friend class EntityView;
 		template<typename> friend class ComponentView;
 		template<typename> friend class PairView;
+		template<typename, typename> friend class GroupView;
 	};
 
 }

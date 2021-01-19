@@ -9,7 +9,7 @@ void StartScene::Load()
 
 	int buttonWidth = 200;
 	int buttonHeight = 80;
-	Entity button = UI::createButton(this, (WINDOW_WIDTH - buttonWidth) / 2, (WINDOW_HEIGHT - buttonHeight) / 2, 0.0f, buttonWidth, buttonHeight,
+	Entity button = UI::createButton(this, (WINDOW_WIDTH - buttonWidth) / 2.0f, (WINDOW_HEIGHT - buttonHeight) / 2.0f, 0.0f, (float)buttonWidth, (float)buttonHeight,
 		Colors::LightGray, Colors::DarkGray, 1.0f, Colors::Black, 5.0f, [this](const MouseButtonReleasedEvent& e) { App::get()->SetScene(gameScene); });
 	button.AddComponent<TextComponent>(*font, "Start", Colors::Black);
 }

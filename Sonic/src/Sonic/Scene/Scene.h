@@ -7,6 +7,7 @@
 #include "EntityView.h"
 #include "ComponentView.h"
 #include "PairView.h"
+#include "GroupView.h"
 #include "Behaviour.h"
 #include "BehaviourPool.h"
 
@@ -97,6 +98,12 @@ namespace Sonic {
 		PairView<Component> View()
 		{
 			return PairView<Component>(GetComponentPool<Component>());
+		}
+
+		template<typename Component1, typename Component2>
+		GroupView<Component1, Component2> Group()
+		{
+			return GroupView<Component1, Component2>(GetComponentPool<Component1>(), GetComponentPool<Component2>());
 		}
 
 	private:

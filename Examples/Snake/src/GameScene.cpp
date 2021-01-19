@@ -40,7 +40,7 @@ void GameScene::Load()
 
 	for (int i = 0; i < SNAKE_START_LENGTH; i++)
 	{
-		Entity tailElement = AddEntity();
+		Entity tailElement = AddEntity();		
 		tailElement.AddComponent<Transform2DComponent>(0, 0, CELL_SIZE, CELL_SIZE);
 		tailElement.AddComponent<SnakeTailComponent>(snakeHead, i + 1);
 		tailElement.AddComponent<Renderer2DComponent>(TAIL_COLOR);
@@ -73,18 +73,14 @@ void GameScene::OnUpdate(float deltaTime)
 
 void GameScene::PollCollisionEvents()
 {
-	for (auto [entity, component] : View<SnakeHeadComponent>())
+	for (auto [entity, component, transform] : Group<SnakeHeadComponent, Transform2DComponent>())
 	{
-		auto* transform = GetComponent<Transform2DComponent>(entity);
-
-		for (auto foodEntity : ViewEntities<FoodComponent>())
-		{
-			if (GetComponent<Transform2DComponent>(foodEntity)->position == transform->position)
+		for (auto [foodEntity, f, t] : Group<FoodComponent, Transform2DComponent>())
+			if (t->position == transform->position)
 				DispatchEvent(SnakeEatEvent{ entity, foodEntity });
-		}
 
-		for (auto tailEntity : ViewEntities<SnakeTailComponent>())
-			if (GetComponent<Transform2DComponent>(tailEntity)->position == transform->position)
+		for (auto [tailEntity, st, t] : Group<SnakeTailComponent, Transform2DComponent>())
+			if (t->position == transform->position)
 				DispatchEvent(SnakeResetEvent{ entity });
 
 		if (isOutsideBorders(transform->position))
