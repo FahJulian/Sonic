@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include "Sonic/Renderer/Renderer2D.h"
 #include "Sonic/Graphics/Font/FontRenderer.h"
 #include "Sonic/Graphics/Font/Font.h"
@@ -15,7 +16,9 @@ namespace Sonic {
 		: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())) 
 	{
 		AddListener(this, &Scene::OnMouseButtonReleased);
+		AddListener(this, &Scene::OnMouseButtonPressed);
 		AddListener(this, &Scene::OnMouseMoved);
+		AddListener(this, &Scene::OnMouseDragged);
 	}
 
 	Entity Scene::AddEntity()
@@ -102,6 +105,15 @@ namespace Sonic {
 			if (HasComponent<UIHoverComponent>(e))
 			{
 				auto* h = GetComponent<UIHoverComponent>(e);
+
+				if (HasComponent<ResizableComponent>(e))
+				{
+					auto* r = GetComponent<ResizableComponent>(e);
+					for (int i = 0; i < 8; i++)
+						if (r->dragged[i])
+							h->hovered = true;
+				}
+
 				if (h->hovered)
 				{
 					sprite = &h->sprite;
@@ -139,17 +151,92 @@ namespace Sonic {
 		FontRenderer::endScene();
 	}
 
+	void Scene::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
+	{
+		if (e.button != Buttons::Left)
+			return;
+
+		for (auto [entity, r, c] : Group<ResizableComponent, UIConstraintsComponent>())
+		{
+			if (r->edges[0] && e.x >= c->x - r->grabSize && e.x < c->x + c->width + r->grabSize && e.y >= c->y - r->grabSize && e.y < c->y + r->grabSize)
+				r->dragged[0] = true;
+			else if (r->edges[2] && e.x >= c->x - r->grabSize && e.x < c->x + c->width + r->grabSize && e.y >= c->y + c->height - r->grabSize && e.y < c->y + c->height + r->grabSize)
+				r->dragged[2] = true;
+			
+			if (r->edges[1] && e.x >= c->x + c->width - r->grabSize && e.x < c->x + c->width + r->grabSize && e.y >= c->y - r->grabSize && e.y < c->y + c->height + r->grabSize)
+				r->dragged[1] = true;
+			else if (r->edges[3] && e.x >= c->x - r->grabSize && e.x < c->x + r->grabSize && e.y >= c->y - r->grabSize && e.y < c->y + c->height + r->grabSize)
+				r->dragged[3] = true;
+		}
+	}
+
 	void Scene::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 	{
+		if (e.button != Buttons::Left)
+			return;
+
 		for (auto [entity, clickListener, c] : Group<UIClickListenerComponent, UIConstraintsComponent>())
-			if (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->width)
+		{
+			if (HasComponent<ResizableComponent>(entity))
+			{
+				auto* r = GetComponent<ResizableComponent>(entity);
+				for (int i = 0; i < 8; i++)
+					if (r->dragged[i])
+						goto skip;
+			}
+
+			if (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->height)
 				clickListener->listener(e);
+
+		skip:;
+		}
+		
+		for (auto c : ViewComponents<ResizableComponent>())
+		{
+			c->dragged[0] = false;
+			c->dragged[1] = false;
+			c->dragged[2] = false;
+			c->dragged[3] = false;
+		}
 	}
 
 	void Scene::OnMouseMoved(const MouseMovedEvent& e)
 	{
 		for (auto [entity, h, c] : Group<UIHoverComponent, UIConstraintsComponent>())
-			GetComponent<UIHoverComponent>(entity)->hovered = (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->width);
+			h->hovered = (e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->height);
+	}
+
+	void Scene::OnMouseDragged(const MouseDraggedEvent& e)
+	{
+		if (e.button != Buttons::Left)
+			return;
+
+		for (auto [entity, r, c] : Group<ResizableComponent, UIConstraintsComponent>())
+		{
+			if (r->dragged[0])
+			{
+				float dy = std::clamp<float>(c->y - e.y, r->minHeight - c->height, r->maxHeight - c->height);
+				c->y -= dy;
+				c->height += dy;
+			}
+			else if (r->dragged[2])
+			{
+				float dy = std::clamp<float>(e.y - (c->y + c->height), r->minHeight - c->height, r->maxHeight - c->height);
+				c->height += dy;
+			}
+
+			if (r->dragged[1])
+			{
+				float dx = std::clamp<float>(e.x - (c->x + c->width), r->minWidth - c->width, r->maxWidth - c->width);
+				c->width += dx;
+			} 
+			else if (r->dragged[3])
+			{
+				float dx = std::clamp<float>(c->x - e.x, r->minWidth - c->width, r->maxWidth - c->width);
+				c->x -= dx;
+				c->width += dx;
+			}
+		}
 	}
 
 }

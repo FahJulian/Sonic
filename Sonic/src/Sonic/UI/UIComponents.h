@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <string>
 #include "Sonic/Graphics/Font/Font.h"
 #include "Sonic/Graphics/Graphics2D/Sprite.h"
@@ -7,6 +8,20 @@
 #include "Sonic/Event/Events.h"
 
 namespace Sonic {
+
+	struct ResizableComponent
+	{
+		bool edges[4];
+		bool dragged[8];
+		float grabSize;
+		float minWidth;
+		float minHeight;
+		float maxWidth;
+		float maxHeight;
+
+		ResizableComponent(bool bottom, bool right, bool top, bool left, float grabSize, float minWidth, float minHeight, float maxWidth, float maxHeight)
+			: edges{ bottom, right, top, left }, dragged{ false }, grabSize(grabSize), minWidth(minWidth), minHeight(minHeight), maxWidth(maxWidth), maxHeight(maxHeight) {}
+	};
 
 	struct TextComponent
 	{
@@ -30,9 +45,9 @@ namespace Sonic {
 			: x(x), y(y), zIndex(0.0f), width(width), height(height) {}
 		UIConstraintsComponent(float x, float y, float zIndex, float width, float height)
 			: x(x), y(y), zIndex(zIndex), width(width), height(height) {}
-		UIConstraintsComponent(int x, int y, int width, int height)
+		UIConstraintsComponent(unsigned int x, unsigned int y, unsigned int width, unsigned int height)
 			: x((float)x), y((float)y), zIndex(0.0f), width((float)width), height((float)height) {}
-		UIConstraintsComponent(int x, int y, int zIndex, int width, int height)
+		UIConstraintsComponent(unsigned int x, unsigned int y, unsigned int zIndex, unsigned int width, unsigned int height)
 			: x((float)x), y((float)y), zIndex((float)zIndex), width((float)width), height((float)height) {}
 	};
 

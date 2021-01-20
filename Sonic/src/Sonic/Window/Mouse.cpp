@@ -21,11 +21,11 @@ namespace Sonic {
         float x = static_cast<float>(posX);
         float y = static_cast<float>(height) - static_cast<float>(posY);
 
-        App::get()->GetActiveScene()->DispatchEvent(MouseMovedEvent(x, y, x - s_Data.m_X, y - s_Data.m_Y));
-
         for (int button = 0; button < GLFW_MOUSE_BUTTON_LAST; button++)
             if (s_Data.m_PressedButtons[button])
                 App::get()->GetActiveScene()->DispatchEvent(MouseDraggedEvent(button, x, y, x - s_Data.m_X, y - s_Data.m_Y));
+
+        App::get()->GetActiveScene()->DispatchEvent(MouseMovedEvent(x, y, x - s_Data.m_X, y - s_Data.m_Y));
 
         s_Data.m_X = x;
         s_Data.m_Y = y;

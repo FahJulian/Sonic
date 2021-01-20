@@ -29,8 +29,10 @@ namespace Sonic {
 		void UpdateComponents(float deltaTime);
 		void UpdateBehaviours(float deltaTime);
 
+		void OnMouseButtonPressed(const MouseButtonPressedEvent& e);
 		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
 		void OnMouseMoved(const MouseMovedEvent& e);
+		void OnMouseDragged(const MouseDraggedEvent& e);
 
 	protected:
 		virtual void Load() = 0;
