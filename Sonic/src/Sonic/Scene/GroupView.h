@@ -1,4 +1,5 @@
 #pragma once
+#include "Sonic/Debug/Profiler/Profiler.h"
 #include <iterator>
 #include <unordered_set>
 #include "EntityID.h"

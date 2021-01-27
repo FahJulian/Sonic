@@ -87,4 +87,3 @@ void GameScene::PollCollisionEvents()
 			DispatchEvent(SnakeResetEvent{ entity });
 	}
 }
-

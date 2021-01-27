@@ -16,74 +16,77 @@ uniform sampler2D u_Textures[16];
 
 void main()
 {   
-	vec2 innerPos = gl_FragCoord.xy - f_RectPosition;
-
-	vec2 bottomLeft = vec2(f_EdgeRadius, f_EdgeRadius);
-	vec2 bottomRight = vec2(f_RectScale.x - f_EdgeRadius, f_EdgeRadius);
-	vec2 topLeft = vec2(f_EdgeRadius, f_RectScale.y - f_EdgeRadius);
-	vec2 topRight = vec2(f_RectScale.x - f_EdgeRadius, f_RectScale.y - f_EdgeRadius);
-
-	if (innerPos.x <= bottomLeft.x && innerPos.y <= bottomLeft.y)
+	if (f_BorderWeight != 0 || f_EdgeRadius != 0)
 	{
-		if (distance(innerPos, bottomLeft) >= f_EdgeRadius)
+		vec2 innerPos = gl_FragCoord.xy - f_RectPosition;
+
+		vec2 bottomLeft = vec2(f_EdgeRadius, f_EdgeRadius);
+		vec2 bottomRight = vec2(f_RectScale.x - f_EdgeRadius, f_EdgeRadius);
+		vec2 topLeft = vec2(f_EdgeRadius, f_RectScale.y - f_EdgeRadius);
+		vec2 topRight = vec2(f_RectScale.x - f_EdgeRadius, f_RectScale.y - f_EdgeRadius);
+
+		if (innerPos.x <= bottomLeft.x && innerPos.y <= bottomLeft.y)
 		{
-			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
-			return;
+			if (distance(innerPos, bottomLeft) >= f_EdgeRadius)
+			{
+				out_Color = vec4(0.0, 0.0, 0.0, 0.0);
+				return;
+			}
+			else if (distance(innerPos, bottomLeft) >= f_EdgeRadius - f_BorderWeight)
+			{
+				out_Color = f_BorderColor;
+				return;
+			}
 		}
-		else if (distance(innerPos, bottomLeft) >= f_EdgeRadius - f_BorderWeight)
+
+		if (innerPos.x >= bottomRight.x && innerPos.y <= bottomRight.y)
+		{
+			if (distance(innerPos, bottomRight) >= f_EdgeRadius)
+			{
+				out_Color = vec4(0.0, 0.0, 0.0, 0.0);
+				return;
+			}
+			else if (distance(innerPos, bottomRight) >= f_EdgeRadius - f_BorderWeight)
+			{
+				out_Color = f_BorderColor;
+				return;
+			}
+		}
+
+		if (innerPos.x <= topLeft.x && innerPos.y >= topLeft.y)
+		{
+			if (distance(innerPos, topLeft) >= f_EdgeRadius)
+			{
+				out_Color = vec4(0.0, 0.0, 0.0, 0.0);
+				return;
+			}
+			else if (distance(innerPos, topLeft) >= f_EdgeRadius - f_BorderWeight)
+			{
+				out_Color = f_BorderColor;
+				return;
+			}
+		}
+
+		if (innerPos.x >= topRight.x && innerPos.y >= topRight.y)
+		{
+			if (distance(innerPos, topRight) >= f_EdgeRadius)
+			{
+				out_Color = vec4(0.0, 0.0, 0.0, 0.0);
+				return;
+			}
+			else if (distance(innerPos, topRight) >= f_EdgeRadius - f_BorderWeight)
+			{
+				out_Color = f_BorderColor;
+				return;
+			}
+		}
+
+		if (innerPos.x < f_BorderWeight || f_RectScale.x - innerPos.x < f_BorderWeight || 
+			innerPos.y < f_BorderWeight || f_RectScale.y - innerPos.y < f_BorderWeight)
 		{
 			out_Color = f_BorderColor;
 			return;
 		}
-	}
-
-	if (innerPos.x >= bottomRight.x && innerPos.y <= bottomRight.y)
-	{
-		if (distance(innerPos, bottomRight) >= f_EdgeRadius)
-		{
-			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
-			return;
-		}
-		else if (distance(innerPos, bottomRight) >= f_EdgeRadius - f_BorderWeight)
-		{
-			out_Color = f_BorderColor;
-			return;
-		}
-	}
-
-	if (innerPos.x <= topLeft.x && innerPos.y >= topLeft.y)
-	{
-		if (distance(innerPos, topLeft) >= f_EdgeRadius)
-		{
-			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
-			return;
-		}
-		else if (distance(innerPos, topLeft) >= f_EdgeRadius - f_BorderWeight)
-		{
-			out_Color = f_BorderColor;
-			return;
-		}
-	}
-
-	if (innerPos.x >= topRight.x && innerPos.y >= topRight.y)
-	{
-		if (distance(innerPos, topRight) >= f_EdgeRadius)
-		{
-			out_Color = vec4(0.0, 0.0, 0.0, 0.0);
-			return;
-		}
-		else if (distance(innerPos, topRight) >= f_EdgeRadius - f_BorderWeight)
-		{
-			out_Color = f_BorderColor;
-			return;
-		}
-	}
-
-	if (innerPos.x < f_BorderWeight || f_RectScale.x - innerPos.x < f_BorderWeight || 
-		innerPos.y < f_BorderWeight || f_RectScale.y - innerPos.y < f_BorderWeight)
-	{
-		out_Color = f_BorderColor;
-		return;
 	}
 
     int textureSlot = int(f_TextureSlot);

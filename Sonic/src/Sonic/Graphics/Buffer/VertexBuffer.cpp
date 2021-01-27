@@ -47,13 +47,13 @@ namespace Sonic {
 #ifdef SONIC_DEBUG
 		if (!m_Dynamic)
 		{
-			SONIC_LOG_DEBUG("Cant set Data of buffer: Buffer is not dynamic")
+			SONIC_LOG_DEBUG("Cant set Data of buffer: Buffer is not dynamic");
 			return;
 		}
 
 		if (size > m_Size)
 		{
-			SONIC_LOG_DEBUG("Cant set Data of buffer: Data size is bigger than buffer size")
+			SONIC_LOG_DEBUG("Cant set Data of buffer: Data size is bigger than buffer size");
 			return;
 		}
 #endif

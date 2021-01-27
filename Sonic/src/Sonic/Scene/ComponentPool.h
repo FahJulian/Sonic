@@ -39,7 +39,7 @@ namespace Sonic {
 #ifdef SONIC_DEBUG
 			if (IndexOf(entity) == -1)
 			{
-				SONIC_LOG_DEBUG("Critical: ComponentPool::GetComponent: No component exists for this entity")
+				SONIC_LOG_DEBUG("Critical: ComponentPool::GetComponent: No component exists for this entity");
 				return nullptr;
 			}
 #endif

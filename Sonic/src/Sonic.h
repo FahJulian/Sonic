@@ -37,4 +37,6 @@
 #include "Sonic/UI/UIComponents.h"
 #include "Sonic/UI/UIRenderer.h"
 
+#include "Sonic/Debug/Profiler/Profiler.h"
+
 using namespace Sonic;

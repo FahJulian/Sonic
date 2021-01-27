@@ -1,10 +1,13 @@
 #pragma once
+#include "Sonic/Scene/EntityID.h"
 #include "Sonic/Event/Events.h"
-#include "Sonic/Scene/Entity.h"
-#include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/Components.h"
+#include "UISize.h"
 
 namespace Sonic {
+
+	class Scene;
+	class Entity;
 
 	namespace UI {
 
@@ -13,6 +16,11 @@ namespace Sonic {
 
 		Entity createButton(Scene* scene, float x, float y, float width, float height,
 			const Color& color, const Color& hoverColor, EventListener<MouseButtonReleasedEvent> onClick);
+
+		float toAbsoluteX(Scene* scene, EntityID parent, const UISize& x);
+		float toAbsoluteY(Scene* scene, EntityID parent, const UISize& y);
+		float toAbsoluteWidth(Scene* scene, EntityID parent, const UISize& width);
+		float toAbsoluteHeight(Scene* scene, EntityID parent, const UISize& height);
 	}
 
 }

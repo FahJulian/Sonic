@@ -1,7 +1,9 @@
 #pragma once
+#include "Sonic/Graphics/Graphics2D/Sprite.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Renderer/Camera2D.h"
 #include "Sonic/Window/Window.h"
+#include "Sonic/UI/UIComponents.h"
 #include "EntityID.h"
 #include "ComponentPool.h"
 #include "EntityView.h"
@@ -13,16 +15,29 @@
 
 namespace Sonic {
 
+
 	class Entity;
 
 	class Scene : public EventDispatcher
 	{
+	public:
+		template<typename Component>
+		struct ComponentAddedEvent
+		{
+		};
+
+		template<typename Component>
+		struct ComponentRemovedEvent
+		{
+		};
+
 	protected:
 		Scene();
 
 	private:
 		void Init();
 		void Update(float deltaTime);
+		void Draw();
 		void Render();
 
 		void UpdatePools();
@@ -33,6 +48,11 @@ namespace Sonic {
 		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
 		void OnMouseMoved(const MouseMovedEvent& e);
 		void OnMouseDragged(const MouseDraggedEvent& e);
+
+		void OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e);
+		void OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e);
+
+		void RenderUIEntity(EntityID entity, Sprite* sprite, Color* color, float x, float y, float zIndex, float width, float height);
 
 	protected:
 		virtual void Load() = 0;
@@ -49,7 +69,9 @@ namespace Sonic {
 		template<typename Component, typename... Args>
 		void AddComponent(EntityID entity, Args&&... args)
 		{
-			GetComponentPool<Component>()->AddComponent(entity, std::forward<Args>(args)...);
+			ComponentPool<Component>* pool = GetComponentPool<Component>();
+			pool->AddComponent(entity, std::forward<Args>(args)...);
+			DispatchEvent(ComponentAddedEvent<Component>());
 		}
 
 		template<typename DerivedBehaviour, typename... Args>
@@ -139,6 +161,8 @@ namespace Sonic {
 		std::vector<BaseBehaviourPool*> m_BehaviourPools;
 
 		Camera2D m_Camera;
+
+		EntityID m_ResizingUIEntity = 0;
 
 		friend class App;
 		friend class Entity;

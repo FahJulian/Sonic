@@ -27,6 +27,8 @@ namespace Sonic {
                 std::cout << "GLFW Error: [" << errorCode << "] " <<  description << std::endl;
             }
         );
+
+        Cursors::init();
         
         s_Data.width = static_cast<float>(width);
         s_Data.height = static_cast<float>(height);
@@ -40,6 +42,8 @@ namespace Sonic {
             destroy();
             return false;
         }
+
+        glfwSetCursor(s_Data.glfwID, Cursors::IBeam);
 
         glfwMakeContextCurrent(s_Data.glfwID);
 
@@ -113,5 +117,10 @@ namespace Sonic {
     double Window::getTime()
     {
         return glfwGetTime();
+    }
+
+    void Window::setCursor(Cursor cursor)
+    {
+        glfwSetCursor(s_Data.glfwID, cursor);
     }
 }

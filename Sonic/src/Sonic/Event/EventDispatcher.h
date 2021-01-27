@@ -60,15 +60,15 @@ namespace Sonic {
 		template<typename Event>
 		std::vector<EventListener<Event>>& GetListeners()
 		{
-			static std::vector<EventListener<Event>> listeners;
-			return listeners;
+			static std::unordered_map<EventDispatcher*, std::vector<EventListener<Event>>> listeners;
+			return listeners[this];
 		}
 
 		template<typename Event>
 		std::unordered_map<intptr_t, unsigned int>& GetKeys()
 		{
-			static std::unordered_map<intptr_t, unsigned int> keys;
-			return keys;
+			static std::unordered_map<EventDispatcher*, std::unordered_map<intptr_t, unsigned int>> keys;
+			return keys[this];
 		}
 	};
 

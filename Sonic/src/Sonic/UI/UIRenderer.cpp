@@ -1,5 +1,6 @@
 #include <vector>
 #include "Sonic/Base.h"
+#include "Sonic/Debug/Profiler/Profiler.h"
 #include "Sonic/Window/Window.h"
 #include "Sonic/Graphics/Buffer/VertexArray.h"
 #include "Sonic/Graphics/Buffer/VertexBuffer.h"
@@ -90,6 +91,8 @@ namespace Sonic {
 
 		void drawElement(float x, float y, float zIndex, float width, float height, const Sprite& sprite, const Color& color, float borderWeight, const Color& borderColor, float edgeRadius)
 		{
+			SONIC_PROFILE_FUNCTION("UIRenderer::drawElement");
+
 			if (s_ElementCount == MAX_ELEMENTS)
 				return;
 
@@ -128,6 +131,8 @@ namespace Sonic {
 
 		void startScene()
 		{
+			SONIC_PROFILE_FUNCTION("UIRenderer::startScene");
+
 			s_NextVertex = &s_Vertices[0];
 			s_ElementCount = 0;
 
@@ -139,6 +144,9 @@ namespace Sonic {
 
 		void endScene()
 		{
+			SONIC_PROFILE_FUNCTION("UIRenderer::endScene");
+
+			s_Shader.Bind();
 			s_VBO.SetData(reinterpret_cast<float*>(s_Vertices), 4 * s_ElementCount * sizeof(Vertex));
 
 			s_VAO.Bind();

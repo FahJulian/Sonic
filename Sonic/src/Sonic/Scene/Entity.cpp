@@ -1,7 +1,7 @@
 #pragma once
 #include "Entity.h"
 
-static Sonic::EntityID nextID = 0;
+static Sonic::EntityID nextID = 1;
 
 namespace Sonic {
 
