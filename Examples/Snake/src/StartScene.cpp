@@ -24,7 +24,7 @@ void StartScene::Load()
 	e2.AddComponent<UIRendererComponent>(Colors::DarkBlue);
 	e2.AddComponent<ResizableComponent>(UISize::Mode::Absolute, 0, 0, 500, 500, 5);
 
-	for (int i = 0; i < 620; i++)
+	for (int i = 0; i < 300; i++)
 	{
 		Entity e = AddEntity();
 		e.AddComponent<UIComponent>(UISize::Mode::RelativeToEntity, 0.25f, 0.25f, 0.5f, 0.5f, button);

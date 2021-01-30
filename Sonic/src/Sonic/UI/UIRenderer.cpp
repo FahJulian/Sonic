@@ -24,7 +24,7 @@ struct Vertex
 	float edgeRadius;
 };
 
-static const int MAX_ELEMENTS = 500;
+static const int MAX_ELEMENTS = 15000;
 static const int MAX_TEXTURES = 16;
 
 static Sonic::Shader s_Shader = Sonic::Shader::Null();
@@ -91,8 +91,6 @@ namespace Sonic {
 
 		void drawElement(float x, float y, float zIndex, float width, float height, const Sprite& sprite, const Color& color, float borderWeight, const Color& borderColor, float edgeRadius)
 		{
-			SONIC_PROFILE_FUNCTION("UIRenderer::drawElement");
-
 			if (s_ElementCount == MAX_ELEMENTS)
 				return;
 

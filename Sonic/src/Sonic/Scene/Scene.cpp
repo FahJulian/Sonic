@@ -113,7 +113,7 @@ namespace Sonic {
 
 	void Scene::RenderUIEntity(EntityID entity, Sprite* sprite, Color* color, float x, float y, float zIndex, float width, float height)
 	{
-		SONIC_PROFILE_FUNCTION("Scene::RenderUIEntity");
+		//SONIC_PROFILE_FUNCTION("Scene::RenderUIEntity");
 
 		const Color* borderColor = color;
 		float borderWeight = 0;
@@ -173,11 +173,6 @@ namespace Sonic {
 		for (auto [e, r, t] : Group<Renderer2DComponent, Transform2DComponent>())
 			Renderer2D::drawRect(t->position, t->scale, t->rotation, r->sprite, r->color);
 
-		/*for (auto [e, r] : View<UIRendererComponent>())
-		{
-			auto* c = GetComponent<UIComponent>(e);
-			RenderUIEntity(e, &r->sprite, &r->color, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight());
-		}*/
 		for (auto [e, r, c] : Group<UIRendererComponent, UIComponent>())
 			RenderUIEntity(e, &r->sprite, &r->color, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight());
 	}
@@ -368,7 +363,7 @@ namespace Sonic {
 	
 	void Scene::OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e)
 	{
-		std::cout << "UI Component added" << std::endl;
+		//std::cout << "UI Component added" << std::endl;
 	}
 
 	void Scene::OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e)

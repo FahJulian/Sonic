@@ -2,6 +2,8 @@
 #include <iostream>
 #include "Sonic/Window/Window.h"
 
+#define SONIC_PROFILE
+
 namespace Sonic
 {
 	class Profiler
@@ -54,8 +56,8 @@ namespace Sonic
 			{
 				std::cout << "Function " << name << "():" << std::endl;
 				std::cout << "    Ran: " << function.runs << (function.runs == 1 ? " time" : " times") << std::endl;
-				std::cout << "    Total duration: " << function.duration << "s" << std::endl;
-				std::cout << "    Average duration: " << function.duration / function.runs << "s" << std::endl;
+				std::cout << "    Total duration: " << function.duration * 1000 << "ms" << std::endl;
+				std::cout << "    Average duration: " << function.duration / function.runs * 1000 << "ms" << std::endl;
 				std::cout << std::endl;
 			}
 		}
