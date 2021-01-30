@@ -35,12 +35,13 @@ namespace Sonic {
 
 
 	template<typename DerivedBehaviour>
-	class BehaviourPool : private BaseBehaviourPool
+	class BehaviourPool : public BaseBehaviourPool
 	{
-	private:
+	public:
 		BehaviourPool(Scene* scene)
 			: BaseBehaviourPool(scene) {}
 
+	private:
 		template<typename... Args>
 		void AddBehaviour(EntityID entity, Args&&... args)
 		{

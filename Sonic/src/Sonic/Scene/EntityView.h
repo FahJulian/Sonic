@@ -1,18 +1,20 @@
 #pragma once
 #include <vector>
-#include "EntityID.h"
+#include "Sonic/Util/GenericContainer.h"
 #include "ComponentPool.h"
+#include "EntityID.h"
 
 namespace Sonic {
+
+	class Scene;
 
 	template<typename Component>
 	class EntityView
 	{
-	private:
-		EntityView(ComponentPool<Component>* pool)
-			: m_Pool(pool) {}
-
 	public:
+		EntityView(Scene* scene)
+			: m_Pool(GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(scene)) {}
+
 		std::vector<EntityID>::const_iterator begin() { return m_Pool->m_Entities.cbegin(); }
 		std::vector<EntityID>::const_iterator end() { return m_Pool->m_Entities.cend(); }
 
@@ -20,8 +22,6 @@ namespace Sonic {
 
 	private:
 		ComponentPool<Component>* m_Pool;
-
-		friend class Scene;
 	};
 
 }

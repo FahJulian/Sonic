@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <string>
+#include "Sonic/Base.h"
 #include "Sonic/Log/Log.h"
 #include "Sonic/Graphics/Font/Font.h"
 #include "Sonic/Graphics/Graphics2D/Sprite.h"
@@ -32,6 +33,7 @@ namespace Sonic {
 		float absoluteHeight = 0;
 
 		bool dirty = true;
+		bool* rendererDirty = nullptr;
 
 	public:
 		UIComponent(float x, float y, float width, float height)
@@ -74,6 +76,8 @@ namespace Sonic {
 			absoluteHeight = UI::toAbsoluteHeight(scene, parent, height);
 
 			dirty = false;
+			if (rendererDirty) 
+				*rendererDirty = true;
 		}
 
 		void SetX(float newX) { x.value = newX; dirty = true; }
@@ -144,45 +148,57 @@ namespace Sonic {
 
 	struct UIRendererComponent
 	{
+	//private:
 		Sprite sprite;
 		Color color;
 
+	public:
+		Ref<bool> dirty;
+
 		UIRendererComponent(const Sprite& sprite, const Color& color)
-			: sprite(sprite), color(color) 
+			: sprite(sprite), color(color), dirty(new bool(true))
 		{
 		}
 
 		UIRendererComponent(const Sprite& sprite)
-			: sprite(sprite), color(Colors::White) 
+			: sprite(sprite), color(Colors::White), dirty(new bool(true))
 		{
 		}
 
 		UIRendererComponent(const Color& color)
-			: sprite(Sprite()), color(color) 
+			: sprite(Sprite()), color(color), dirty(new bool(true))
 		{
 		}
-			};
+	};
 
 	struct UIHoverComponent
 	{
-		bool hovered;
 		Sprite sprite;
 		Color color;
 
+	//private:
+		bool hovered;
+
+	public:
+		bool* rendererDirty;
+
 		UIHoverComponent(const Sprite& sprite, const Color& color)
-			: hovered(false), sprite(sprite), color(color) 
+			: hovered(false), sprite(sprite), color(color), rendererDirty(nullptr)
 		{
 		}
 
 		UIHoverComponent(const Sprite& sprite)
-			: hovered(false), sprite(sprite), color(Colors::White) 
+			: hovered(false), sprite(sprite), color(Colors::White), rendererDirty(nullptr)
 		{
 		}
 
 		UIHoverComponent(const Color& color)
-			: hovered(false), sprite(Sprite()), color(color) 
+			: hovered(false), sprite(Sprite()), color(color), rendererDirty(nullptr)
 		{
 		}
+
+		void SetHovererd(bool b) { hovered = b; if(rendererDirty) *rendererDirty = true; }
+		bool IsHovered() const { return hovered; }
 	};
 
 	struct UIBorderComponent

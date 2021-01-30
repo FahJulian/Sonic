@@ -1,9 +1,10 @@
 #pragma once
-#include "Sonic/Debug/Profiler/Profiler.h"
 #include <iterator>
 #include <unordered_set>
-#include "EntityID.h"
+#include "Sonic/Util/GenericContainer.h"
 #include "ComponentPool.h"
+#include "EntityID.h"
+#include "Scene.h"
 
 namespace Sonic {
 
@@ -46,31 +47,48 @@ namespace Sonic {
 			ComponentPool<Component2>* pool2;
 		};
 
-	private:
-		GroupView(ComponentPool<Component1>* pool1, ComponentPool<Component2>* pool2)
-			: pool1(pool1), pool2(pool2) 
+	public:
+		GroupView(Scene* scene)
+			: m_Pool1(GenericContainer::Get<ComponentPool<Component1>, BaseComponentPool>(scene)), m_Pool2(GenericContainer::Get<ComponentPool<Component2>, BaseComponentPool>(scene))
 		{
-			for (EntityID e1 : pool1->m_Entities)
-			{
-				for (EntityID e2 : pool2->m_Entities)
-				{
-					if (e2 == e1)
-					{
-						entities.insert(e1);
-						break;
-					}
-				}
-			}
+			for (EntityID e1 : m_Pool1->m_Entities)
+				if (m_Pool2->HasEntity(e1) || m_Pool2->m_ToAdd.find(e1) != m_Pool2->m_ToAdd.end())
+					m_Entities.insert(e1);
+
+			for (auto [e1, _] : m_Pool1->m_ToAdd)
+				if (m_Pool2->HasEntity(e1) || m_Pool2->m_ToAdd.find(e1) != m_Pool2->m_ToAdd.end())
+					m_Entities.insert(e1);
+
+			scene->AddListener<Scene::ComponentAddedEvent<Component1>>([this, scene](const Scene::ComponentAddedEvent<Component1>& e) {
+				if (scene->HasComponent<Component2>(e.entity))
+					m_Entities.insert(e.entity);
+			});
+
+			scene->AddListener<Scene::ComponentAddedEvent<Component2>>([this, scene](const Scene::ComponentAddedEvent<Component2>& e) {
+				if (scene->HasComponent<Component1>(e.entity))
+					m_Entities.insert(e.entity);
+			});
+
+			scene->AddListener<Scene::ComponentRemovedEvent<Component1>>([this, scene](const Scene::ComponentRemovedEvent<Component1>& e) {
+				std::unordered_set<EntityID>::iterator it = m_Entities.find(e.entity);
+				if (it != m_Entities.end())
+					m_Entities.erase(it);
+			});
+
+			scene->AddListener<Scene::ComponentRemovedEvent<Component2>>([this, scene](const Scene::ComponentRemovedEvent<Component2>& e) {
+				std::unordered_set<EntityID>::iterator it = m_Entities.find(e.entity);
+				if (it != m_Entities.end())
+					m_Entities.erase(it);
+			});
 		}
 
-	public:
-		Iterator begin() { return Iterator(entities.cbegin(), pool1, pool2); }
-		Iterator end() { return Iterator(entities.cend(), pool1, pool2); }
+		Iterator begin() { return Iterator(m_Entities.cbegin(), m_Pool1, m_Pool2); }
+		Iterator end() { return Iterator(m_Entities.cend(), m_Pool1, m_Pool2); }
 
 	private:
-		std::unordered_set<EntityID> entities;
-		ComponentPool<Component1>* pool1;
-		ComponentPool<Component2>* pool2;
+		std::unordered_set<EntityID> m_Entities;
+		ComponentPool<Component1>* m_Pool1;
+		ComponentPool<Component2>* m_Pool2;
 
 		friend class Scene;
 	};

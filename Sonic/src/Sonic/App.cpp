@@ -73,7 +73,7 @@ namespace Sonic {
         double deltaSeconds = 0.0;
         double dueUpdates = 0.0;
 
-        double startTime = 0.0;
+        double startTime = Window::getTime();
         double lastUpdate = 0.0;
 
 #ifdef SONIC_DEBUG

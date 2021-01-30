@@ -11,6 +11,10 @@
 #include "Scene.h"
 #include "Entity.h"
 #include "Components.h"
+#include "PairView.h"
+#include "ComponentView.h"
+#include "EntityView.h"
+#include "GroupView.h"
 
 
 namespace Sonic {
@@ -34,11 +38,11 @@ namespace Sonic {
 
 	void Scene::RemoveEntity(EntityID entity)
 	{
-		for (BaseBehaviourPool* pool : m_BehaviourPools)
+		for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(this))
 			if (pool->HasEntity(entity))
 				pool->RemoveEntity(entity);
 
-		for (BaseComponentPool* pool : m_ComponentPools)
+		for (BaseComponentPool* pool : GenericContainer::GetAll<BaseComponentPool>(this))
 			if (pool->HasEntity(entity))
 				pool->RemoveEntity(entity);
 	}
@@ -74,10 +78,10 @@ namespace Sonic {
 	{
 		SONIC_PROFILE_FUNCTION("Scene::UpdatePools");
 
-		for (BaseBehaviourPool* pool : m_BehaviourPools)
+		for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(this))
 			pool->UpdatePool();
 
-		for (BaseComponentPool* pool : m_ComponentPools)
+		for (BaseComponentPool* pool : GenericContainer::GetAll<BaseComponentPool>(this))
 			pool->OnUpdate();
 	}
 
@@ -85,7 +89,7 @@ namespace Sonic {
 	{
 		SONIC_PROFILE_FUNCTION("Scene::UpdateBehaviours");
 
-		for (BaseBehaviourPool* pool : m_BehaviourPools)
+		for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(this))
 			pool->UpdateBehaviours(deltaTime);
 	}
 
@@ -111,7 +115,7 @@ namespace Sonic {
 	{
 		SONIC_PROFILE_FUNCTION("Scene::RenderUIEntity");
 
-		Color* borderColor = color;
+		const Color* borderColor = color;
 		float borderWeight = 0;
 		float edgeRadius = 0;
 
@@ -169,11 +173,13 @@ namespace Sonic {
 		for (auto [e, r, t] : Group<Renderer2DComponent, Transform2DComponent>())
 			Renderer2D::drawRect(t->position, t->scale, t->rotation, r->sprite, r->color);
 
-		for (auto [e, r] : View<UIRendererComponent>())
+		/*for (auto [e, r] : View<UIRendererComponent>())
 		{
 			auto* c = GetComponent<UIComponent>(e);
 			RenderUIEntity(e, &r->sprite, &r->color, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight());
-		}
+		}*/
+		for (auto [e, r, c] : Group<UIRendererComponent, UIComponent>())
+			RenderUIEntity(e, &r->sprite, &r->color, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight());
 	}
 
 	void Scene::Render()

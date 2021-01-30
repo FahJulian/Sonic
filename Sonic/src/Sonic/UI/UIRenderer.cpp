@@ -8,6 +8,7 @@
 #include "Sonic/Graphics/Shader.h"
 #include "Sonic/Renderer/Renderer2D.h"
 #include "UIRenderer.h"
+#include "UIComponents.h"
 
 struct Vertex
 {
@@ -36,7 +37,6 @@ static Vertex* s_NextVertex;
 
 static std::vector<Sonic::Texture> s_Textures;
 static int s_TextureSlots[MAX_TEXTURES];
-
 
 static float textureSlotOf(const Sonic::Texture& texture)
 {

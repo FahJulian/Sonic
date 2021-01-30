@@ -1,10 +1,13 @@
 #pragma once
 #include <vector>
 #include <iterator>
-#include "EntityID.h"
+#include "Sonic/Util/GenericContainer.h"
 #include "ComponentPool.h"
+#include "EntityID.h"
 
 namespace Sonic {
+
+	class Scene;
 
 	template<typename Component>
 	class PairView
@@ -42,11 +45,10 @@ namespace Sonic {
 			ComponentIterator m_ComponentIterator;
 		};	
 
-	private:
-		PairView(ComponentPool<Component>* pool)
-			: m_Pool(pool) {}
-
 	public:
+		PairView(Scene* scene)
+			: m_Pool(GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(scene)) {}
+
 		Iterator begin() { return Iterator(m_Pool->m_Entities.cbegin(), m_Pool->m_Components.begin()); }
 		Iterator end() { return Iterator(m_Pool->m_Entities.cend(), m_Pool->m_Components.end()); }
 

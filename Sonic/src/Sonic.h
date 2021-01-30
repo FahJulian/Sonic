@@ -29,7 +29,10 @@
 #include "Sonic/Scene/Entity.h"
 #include "Sonic/Scene/EntityID.h"
 #include "Sonic/Scene/Components.h"
+#include "Sonic/Scene/PairView.h"
+#include "Sonic/Scene/EntityView.h"
 #include "Sonic/Scene/ComponentView.h"
+#include "Sonic/Scene/GroupView.h"
 #include "Sonic/Scene/Behaviour.h"
 #include "Sonic/Scene/Behaviours.h"
 

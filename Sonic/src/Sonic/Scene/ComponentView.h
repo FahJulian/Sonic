@@ -1,9 +1,12 @@
 #pragma once
 #include <vector>
 #include <iterator>
+#include "Sonic/Util/GenericContainer.h"
 #include "ComponentPool.h"
 
 namespace Sonic {
+
+	class Scene;
 
 	template<typename Component>
 	class ComponentView
@@ -32,11 +35,10 @@ namespace Sonic {
 			ComponentIterator m_ComponentIterator;
 		};
 
-	private:
-		ComponentView(ComponentPool<Component>* pool)
-			: m_Pool(pool) {}
-
 	public:
+		ComponentView(Scene* scene)
+			: m_Pool(GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(scene)) {}
+
 		Iterator begin() { return { m_Pool->m_Components.begin() }; }
 		Iterator end() { return { m_Pool->m_Components.end() };
 	}

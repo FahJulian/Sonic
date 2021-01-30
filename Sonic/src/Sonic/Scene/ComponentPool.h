@@ -24,7 +24,7 @@ namespace Sonic {
 
 
 	template<typename Component>
-	class ComponentPool : private BaseComponentPool
+	class ComponentPool : public BaseComponentPool
 	{
 		template<typename... Args>
 		void AddComponent(EntityID entity, Args&&... args)
