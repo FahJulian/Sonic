@@ -28,7 +28,7 @@ namespace Sonic {
             }
         );
 
-        Cursors::init();
+        StandardCursors::init();
         
         s_Data.width = static_cast<float>(width);
         s_Data.height = static_cast<float>(height);
@@ -43,7 +43,7 @@ namespace Sonic {
             return false;
         }
 
-        glfwSetCursor(s_Data.glfwID, Cursors::IBeam);
+        setCursor(StandardCursors::Arrow);
 
         glfwMakeContextCurrent(s_Data.glfwID);
 

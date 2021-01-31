@@ -1,5 +1,5 @@
+#include <stb/stb_image.h>
 #include "Texture.h"
-#include "stb/stb_image.h"
 
 namespace Sonic {
 

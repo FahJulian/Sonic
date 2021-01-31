@@ -1,0 +1,13 @@
+{
+    "textures":
+    {
+        "Arrow": "textures/arrow.png",
+        "Crosshair": "textures/crosshair.png",
+        "IBeam": "textures/ibeam.png",
+        "Move": "textures/move.png",
+        "ResizeDiagonalLeft": "textures/resize_diagonal_left.png",
+        "ResizeDiagonalRight": "textures/resize_diagonal_right.png",
+        "ResizeHorizontal": "textures/resize_horizontal.png",
+        "ResizeVertical": "textures/resize_vertical.png"
+    }
+}

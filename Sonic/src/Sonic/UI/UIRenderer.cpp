@@ -41,6 +41,8 @@ static Vertex s_Vertices[MAX_ELEMENTS * 4];
 static std::vector<Sonic::Texture> s_Textures;
 static int s_TextureSlots[MAX_TEXTURES];
 
+static bool s_Rebuffer = true;
+
 
 static float textureSlotOf(const Sonic::Texture& texture)
 {
@@ -187,6 +189,7 @@ namespace Sonic {
 				{
 					drawEntity(scene, e, r->GetSprite(), r->GetColor(), i);
 					*(r->dirty.get()) = false;
+					s_Rebuffer = true;
 				}
 
 				i++;
@@ -198,10 +201,16 @@ namespace Sonic {
 			SONIC_PROFILE_FUNCTION("UIRenderer::endScene");
 
 			s_Shader.Bind();
-			s_VBO.SetData(reinterpret_cast<float*>(s_Vertices), 4 * s_ElementCount * sizeof(Vertex));
-
 			s_VAO.Bind();
-			s_Shader.Bind();
+
+			if (s_Rebuffer)
+			{
+				s_VBO.Bind();
+				s_VBO.SetData(s_Vertices, 4 * s_ElementCount * sizeof(Vertex));
+				s_VBO.Unbind();
+
+				s_Rebuffer = false;
+			}
 
 			for (int i = 0; i < s_Textures.size(); i++)
 				s_Textures.at(i).Bind(i);

@@ -70,7 +70,7 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 		UpdatePools();
 		PollCollisionEvents();
 
-		Window::setCursor(Cursors::Crosshair);
+		//Window::setCursor(Cursors::Crosshair);
 
 		Draw();
 	}
