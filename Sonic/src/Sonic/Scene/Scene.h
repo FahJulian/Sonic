@@ -1,6 +1,7 @@
 #pragma once
 #include "Sonic/Util/GenericContainer.h"
 #include "Sonic/Graphics/Graphics2D/Sprite.h"
+#include "Sonic/Event/Events.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Renderer/Camera2D.h"
 #include "Sonic/Window/Window.h"
@@ -29,19 +30,6 @@ namespace Sonic {
 	class Scene : public EventDispatcher
 	{
 	protected:
-		template<typename Component>
-		struct ComponentAddedEvent
-		{
-			EntityID entity;
-		};
-
-		template<typename Component>
-		struct ComponentRemovedEvent
-		{
-			EntityID entity;
-		};
-
-	protected:
 		Scene();
 
 	private:
@@ -60,9 +48,10 @@ namespace Sonic {
 		void OnMouseDragged(const MouseDraggedEvent& e);
 
 		void OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e);
-		void OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e);
+		void OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>& e);
+		void OnUIHoverComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e);
 
-		void RenderUIEntity(EntityID entity, Sprite* sprite, Color* color, float x, float y, float zIndex, float width, float height);
+		void RenderUIEntity(EntityID entity, const Sprite* sprite, const Color* color, float x, float y, float zIndex, float width, float height);
 
 	protected:
 		virtual void Load() = 0;
@@ -79,64 +68,62 @@ namespace Sonic {
 		template<typename Component, typename... Args>
 		void AddComponent(EntityID entity, Args&&... args)
 		{
-			ComponentPool<Component>* pool = GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(this);
+			ComponentPool<Component>* pool = GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this);
 			pool->AddComponent(entity, std::forward<Args>(args)...);
-			DispatchEvent(ComponentAddedEvent<Component>{ entity });
 		}
 
 		template<typename DerivedBehaviour, typename... Args>
 		void AddBehaviour(EntityID entity, Args&&... args)
 		{
-			GenericContainer::Get<BehaviourPool<DerivedBehaviour>, BaseBehaviourPool>(this, this)->AddBehaviour(entity, std::forward<Args>(args)...);
+			GenericContainer::GetOrAddWithBase<BehaviourPool<DerivedBehaviour>, BaseBehaviourPool>(this, this)->AddBehaviour(entity, std::forward<Args>(args)...);
 		}
 
 		template<typename Component>
 		bool HasComponent(EntityID entity)
 		{
-			return GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(this)->HasEntity(entity);
+			return GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->HasEntity(entity);
 		}
 
 		template<typename Component>
 		Component* GetComponent(EntityID entity)
 		{
-			return GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(this)->GetComponent(entity);
+			return GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->GetComponent(entity);
 		}
 
 		template<typename Component>
 		void RemoveComponent(EntityID entity)
 		{
-			GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(this)->RemoveEntity(entity);
-			DispatchEvent(ComponentRemovedEvent<Component>{ entity });
+			GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->RemoveEntity(entity);
 		}
 
 		template<typename DerivedBehaviour>
 		void RemoveBehaviour(EntityID entity)
 		{
-			GenericContainer::Get<BehaviourPool<DerivedBehaviour>, BaseBehaviourPool>(this, this)->RemoveEntity(entity);
+			GenericContainer::GetOrAddWithBase<BehaviourPool<DerivedBehaviour>, BaseBehaviourPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->RemoveEntity(entity);
 		}
 
 		template<typename Component>
 		EntityView<Component>& ViewEntities()
 		{
-			return *GenericContainer::Get<EntityView<Component>>(this, this);
+			return *GenericContainer::GetOrAdd<EntityView<Component>>(this, this);
 		}
 
 		template<typename Component>
 		ComponentView<Component>& ViewComponents()
 		{
-			return *GenericContainer::Get<ComponentView<Component>>(this, this);
+			return *GenericContainer::GetOrAdd<ComponentView<Component>>(this, this);
 		}
 
 		template<typename Component>
 		PairView<Component>& View()
 		{
-			return *GenericContainer::Get<PairView<Component>>(this, this);
+			return *GenericContainer::GetOrAdd<PairView<Component>>(this, this);
 		}
 
 		template<typename Component1, typename Component2>
 		GroupView<Component1, Component2>& Group()
 		{
-			return *GenericContainer::Get<GroupView<Component1, Component2>>(this, this);
+			return *GenericContainer::GetOrAdd<GroupView<Component1, Component2>>(this, this);
 		}
 
 	private:

@@ -2,7 +2,7 @@
 #include <iostream>
 #include "Sonic/Window/Window.h"
 
-#define SONIC_PROFILE
+//#define SONIC_PROFILE
 
 namespace Sonic
 {

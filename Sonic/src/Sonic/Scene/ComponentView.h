@@ -22,7 +22,9 @@ namespace Sonic {
 			using reference = Component*&;
 
 			Iterator(ComponentIterator componentIterator)
-				: m_ComponentIterator(componentIterator) {}
+				: m_ComponentIterator(componentIterator) 
+			{
+			}
 
 			value_type operator*() { return &(*m_ComponentIterator); }
 
@@ -37,7 +39,9 @@ namespace Sonic {
 
 	public:
 		ComponentView(Scene* scene)
-			: m_Pool(GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(scene)) {}
+			: m_Pool(GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(scene, (EventDispatcher*)scene))
+		{
+		}
 
 		Iterator begin() { return { m_Pool->m_Components.begin() }; }
 		Iterator end() { return { m_Pool->m_Components.end() };

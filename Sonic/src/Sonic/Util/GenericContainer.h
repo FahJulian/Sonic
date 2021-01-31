@@ -7,7 +7,7 @@ namespace Sonic {
 	namespace GenericContainer {
 
 		template<typename T, typename F, typename... Args>
-		T* Get(F* key, Args&&... args)
+		T* GetOrAdd(F* key, Args&&... args)
 		{
 			static std::unordered_map<F*, T*> instances;
 
@@ -29,7 +29,7 @@ namespace Sonic {
 		}
 
 		template<typename T, typename Base, typename F, typename... Args>
-		T* Get(F* key, Args&&... args)
+		T* GetOrAddWithBase(F* key, Args&&... args)
 		{
 			static std::unordered_map<F*, T*> instances;
 
@@ -45,5 +45,9 @@ namespace Sonic {
 			return it->second;
 		}
 	}
+
+	//>	Snake.exe!Sonic::GenericContainer::GetOrAddWithBase<Sonic::ComponentPool<Sonic::UIRendererComponent>,Sonic::BaseComponentPool,Sonic::Scene,Sonic::Scene *>(Sonic::Scene * key, Sonic::Scene * && <args_0>) Line 36	C++
+	//>	Snake.exe!Sonic::GenericContainer::GetOrAddWithBase<Sonic::ComponentPool<Sonic::UIRendererComponent>,Sonic::BaseComponentPool,Sonic::Scene,Sonic::Scene * &>(Sonic::Scene * key, Sonic::Scene * & <args_0>) Line 36	C++
+
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <iterator>
+#include <functional>
 #include "Sonic/Util/GenericContainer.h"
 #include "ComponentPool.h"
 #include "EntityID.h"
@@ -31,7 +32,9 @@ namespace Sonic {
 			using Reference = Pair&;
 
 			Iterator(const EntityIterator& entityIterator, const ComponentIterator& componentIterator)
-				: m_EntityIterator(entityIterator), m_ComponentIterator(componentIterator) {}
+				: m_EntityIterator(entityIterator), m_ComponentIterator(componentIterator) 
+			{
+			}
 
 			value_type operator*() { return { *m_EntityIterator, &(*m_ComponentIterator) }; }
 
@@ -47,10 +50,27 @@ namespace Sonic {
 
 	public:
 		PairView(Scene* scene)
-			: m_Pool(GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(scene)) {}
+			: m_Pool(GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(scene, (EventDispatcher*)scene))
+		{
+		}
 
 		Iterator begin() { return Iterator(m_Pool->m_Entities.cbegin(), m_Pool->m_Components.begin()); }
 		Iterator end() { return Iterator(m_Pool->m_Entities.cend(), m_Pool->m_Components.end()); }
+
+		void ForEach(std::function<void(EntityID entity, Component* component)> function)
+		{
+			Iterator end = end();
+			for (Iterator iter = begin(); iter != end; iter++)
+			{
+				Pair pair = *iter;
+				function(pair->entity, pair->component);
+			}
+		}
+
+		int Size()
+		{
+			return static_cast<int>(m_Pool->m_Entities.size());
+		}
 
 	private:
 		ComponentPool<Component>* m_Pool;

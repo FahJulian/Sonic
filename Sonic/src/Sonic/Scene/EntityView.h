@@ -13,7 +13,9 @@ namespace Sonic {
 	{
 	public:
 		EntityView(Scene* scene)
-			: m_Pool(GenericContainer::Get<ComponentPool<Component>, BaseComponentPool>(scene)) {}
+			: m_Pool(GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(scene, (EventDispatcher*)scene))
+		{
+		}
 
 		std::vector<EntityID>::const_iterator begin() { return m_Pool->m_Entities.cbegin(); }
 		std::vector<EntityID>::const_iterator end() { return m_Pool->m_Entities.cend(); }

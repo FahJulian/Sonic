@@ -1,7 +1,9 @@
 #pragma once
 #include <iterator>
 #include <unordered_map>
+#include <functional>
 #include "Sonic/Util/GenericContainer.h"
+#include "Sonic/Event/Events.h"
 #include "ComponentPool.h"
 #include "EntityID.h"
 #include "Scene.h"
@@ -36,7 +38,9 @@ namespace Sonic {
 			using Reference = Group&;
 
 			Iterator(const MapIterator& mapIterator, ComponentPool<Component1>* pool1, ComponentPool<Component2>* pool2)
-				: mapIterator(mapIterator), pool1(pool1), pool2(pool2) {}
+				: mapIterator(mapIterator), pool1(pool1), pool2(pool2) 
+			{
+			}
 
 			value_type operator*() { return { mapIterator->first, &pool1->m_Components.at(mapIterator->second.index1), &pool2->m_Components.at(mapIterator->second.index2) }; }
 
@@ -56,7 +60,8 @@ namespace Sonic {
 
 	public:
 		GroupView(Scene* scene)
-			: m_Pool1(GenericContainer::Get<ComponentPool<Component1>, BaseComponentPool>(scene)), m_Pool2(GenericContainer::Get<ComponentPool<Component2>, BaseComponentPool>(scene))
+			: m_Pool1(GenericContainer::GetOrAddWithBase<ComponentPool<Component1>, BaseComponentPool, Scene, EventDispatcher*>(scene, (EventDispatcher*)scene)),
+			m_Pool2(GenericContainer::GetOrAddWithBase<ComponentPool<Component2>, BaseComponentPool, Scene, EventDispatcher*>(scene, (EventDispatcher*)scene))
 		{
 			for (int idx1 = 0; idx1 < m_Pool1->m_Entities.size(); idx1++)
 			{
@@ -67,35 +72,46 @@ namespace Sonic {
 					m_Elements.emplace(e1, IndexPair{ idx1, idx2 });
 			}
 
-			scene->AddListener<Scene::ComponentAddedEvent<Component1>>([this](const Scene::ComponentAddedEvent<Component1>& e) {
+			scene->AddListener<ComponentAddedEvent<Component1>>([this](const ComponentAddedEvent<Component1>& e) {
 				if (m_Pool2->HasEntity(e.entity))
 					m_Elements.emplace(e.entity, IndexPair{ m_Pool1->IndexOf(e.entity), m_Pool2->IndexOf(e.entity) });
 			});
 
-			scene->AddListener<Scene::ComponentAddedEvent<Component2>>([this](const Scene::ComponentAddedEvent<Component2>& e) {
+			scene->AddListener<ComponentAddedEvent<Component2>>([this](const ComponentAddedEvent<Component2>& e) {
 				if (m_Pool1->HasEntity(e.entity))
 					m_Elements.emplace(e.entity, IndexPair{ m_Pool1->IndexOf(e.entity), m_Pool2->IndexOf(e.entity) });
 			});
 
-			scene->AddListener<Scene::ComponentRemovedEvent<Component1>>([this](const Scene::ComponentRemovedEvent<Component1>& e) {
+			scene->AddListener<ComponentRemovedEvent<Component1>>([this](const ComponentRemovedEvent<Component1>& e) {
 				typename std::unordered_map<EntityID, IndexPair>::iterator it = m_Elements.find(e.entity);
 				if (it != m_Elements.end())
 					m_Elements.erase(it);
 			});
 
-			scene->AddListener<Scene::ComponentRemovedEvent<Component2>>([this](const Scene::ComponentRemovedEvent<Component2>& e) {
+			scene->AddListener<ComponentRemovedEvent<Component2>>([this](const ComponentRemovedEvent<Component2>& e) {
 				typename std::unordered_map<EntityID, IndexPair>::iterator it = m_Elements.find(e.entity);
 				if (it != m_Elements.end())
 					m_Elements.erase(it);
 			});
 		}
 
-		Iterator begin() 
-		{ 
-			return Iterator(m_Elements.cbegin(), m_Pool1, m_Pool2);
-		}
-
+		Iterator begin() { return Iterator(m_Elements.cbegin(), m_Pool1, m_Pool2); }
 		Iterator end() { return Iterator(m_Elements.cend(), m_Pool1, m_Pool2); }
+
+		void ForEach(std::function<void(EntityID e, Component1* c1, Component2* c2)> function)
+		{
+			Iterator end = end();
+			for (Iterator iter = begin(); iter != end; iter++)
+			{
+				Group group = *iter;
+				function(group->entity, group->component1, group->component2);
+			}
+		}
+
+		int Size()
+		{
+			return static_cast<int>(m_Elements.size());
+		}
 
 	private:
 		std::unordered_map<EntityID, IndexPair> m_Elements;

@@ -3,8 +3,8 @@
 #include <algorithm>
 #include "Sonic/Debug/Profiler/Profiler.h"
 #include "Sonic/Renderer/Renderer2D.h"
-#include "Sonic/Graphics/Font/FontRenderer.h"
-#include "Sonic/Graphics/Font/Font.h"
+#include "Sonic/UI/Font/FontRenderer.h"
+#include "Sonic/UI/Font/Font.h"
 #include "Sonic/UI/UI.h"
 #include "Sonic/UI/UIComponents.h"
 #include "Sonic/UI/UIRenderer.h"
@@ -27,8 +27,9 @@ namespace Sonic {
 		AddListener(this, &Scene::OnMouseMoved);
 		AddListener(this, &Scene::OnMouseDragged);
 
-		AddListener(this, &Scene::OnUIComponentAdded);
-		AddListener(this, &Scene::OnUIComponentRemoved);
+AddListener(this, &Scene::OnUIComponentAdded);
+AddListener(this, &Scene::OnUIHoverComponentAdded);
+AddListener(this, &Scene::OnUIRendererComponentAdded);
 	}
 
 	Entity Scene::AddEntity()
@@ -111,70 +112,25 @@ namespace Sonic {
 		}
 	}
 
-	void Scene::RenderUIEntity(EntityID entity, Sprite* sprite, Color* color, float x, float y, float zIndex, float width, float height)
-	{
-		//SONIC_PROFILE_FUNCTION("Scene::RenderUIEntity");
-
-		const Color* borderColor = color;
-		float borderWeight = 0;
-		float edgeRadius = 0;
-
-		if (HasComponent<UIHoverComponent>(entity))
-		{
-			auto* h = GetComponent<UIHoverComponent>(entity);
-
-			if (HasComponent<ResizableComponent>(entity))
-			{
-				auto* r = GetComponent<ResizableComponent>(entity);
-				if (r->dragged.bottom || r->dragged.top || r->dragged.right || r->dragged.left)
-					h->hovered = true;
-			}
-
-			if (h->hovered)
-			{
-				sprite = &h->sprite;
-				color = &h->color;
-			}
-		}
-
-		if (HasComponent<UIBorderComponent>(entity))
-		{
-			auto* b = GetComponent<UIBorderComponent>(entity);
-			borderColor = &b->color;
-			borderWeight = b->weight;
-		}
-
-		if (HasComponent<UIRoundedEdgeComponent>(entity))
-		{
-			auto* r = GetComponent<UIRoundedEdgeComponent>(entity);
-			edgeRadius = r->edgeRadius;
-		}
-
-		if (HasComponent<TextComponent>(entity))
-		{
-			auto* t = GetComponent<TextComponent>(entity);
-			int textWidth = t->font.StringWidth(t->text);
-			int textHeight = t->font.StringHeight(t->text);
-
-			FontRenderer::drawString(x + (width - textWidth) / 2, y + (height - textHeight) / 2, zIndex, t->text, t->font, t->color);
-		}
-
-		UIRenderer::drawElement(x, y, zIndex, width, height, *sprite, *color, borderWeight, *borderColor, edgeRadius);
-	}
-
 	void Scene::Draw()
 	{
 		SONIC_PROFILE_FUNCTION("Scene::Draw");
 
 		Renderer2D::startScene(&m_Camera);
-		UIRenderer::startScene();
 		FontRenderer::startScene();
 
 		for (auto [e, r, t] : Group<Renderer2DComponent, Transform2DComponent>())
 			Renderer2D::drawRect(t->position, t->scale, t->rotation, r->sprite, r->color);
 
-		for (auto [e, r, c] : Group<UIRendererComponent, UIComponent>())
-			RenderUIEntity(e, &r->sprite, &r->color, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight());
+		UIRenderer::update(this);
+
+		for (auto [e, t, c] : Group<TextComponent, UIComponent>())
+		{
+			int textWidth = t->font.StringWidth(t->text);
+			int textHeight = t->font.StringHeight(t->text);
+
+			FontRenderer::drawString(c->GetX() + (c->GetWidth() - textWidth) / 2, c->GetY() + (c->GetHeight() - textHeight) / 2, c->GetZIndex(), t->text, t->font, t->color);
+		}
 	}
 
 	void Scene::Render()
@@ -182,7 +138,7 @@ namespace Sonic {
 		SONIC_PROFILE_FUNCTION("Scene::Render");
 
 		Renderer2D::endScene();
-		UIRenderer::endScene();
+		UIRenderer::render();
 		FontRenderer::endScene();
 	}
 
@@ -275,7 +231,7 @@ namespace Sonic {
 			float width = UI::toAbsoluteWidth(this, c->parent, c->width);
 			float height = UI::toAbsoluteHeight(this, c->parent, c->height);
 
-			h->hovered = (e.x >= x && e.x < x + width && e.y >= y && e.y < y + height);
+			h->SetHoverered(e.x >= x && e.x < x + width && e.y >= y && e.y < y + height);
 		}
 	}
 
@@ -363,11 +319,21 @@ namespace Sonic {
 	
 	void Scene::OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e)
 	{
-		//std::cout << "UI Component added" << std::endl;
+		if (HasComponent<UIRendererComponent>(e.entity))
+			GetComponent<UIComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
 	}
 
-	void Scene::OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e)
+	void Scene::OnUIHoverComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e)
 	{
-		std::cout << "UI Component removed" << std::endl;
+		if (HasComponent<UIRendererComponent>(e.entity))
+			GetComponent<UIHoverComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+	}
+
+	void Scene::OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>&e)
+	{
+		if (HasComponent<UIComponent>(e.entity))
+			GetComponent<UIComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+		if (HasComponent<UIHoverComponent>(e.entity))
+			GetComponent<UIHoverComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
 	}
 }

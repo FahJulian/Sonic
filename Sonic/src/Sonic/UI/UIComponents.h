@@ -3,7 +3,7 @@
 #include <string>
 #include "Sonic/Base.h"
 #include "Sonic/Log/Log.h"
-#include "Sonic/Graphics/Font/Font.h"
+#include "Sonic/UI/Font/Font.h"
 #include "Sonic/Graphics/Graphics2D/Sprite.h"
 #include "Sonic/Graphics/Color.h"
 #include "Sonic/Event/EventDispatcher.h"
@@ -33,7 +33,7 @@ namespace Sonic {
 		float absoluteHeight = 0;
 
 		bool dirty = true;
-		bool* rendererDirty = nullptr;
+		Ref<bool> rendererDirty = Ref<bool>(nullptr);
 
 	public:
 		UIComponent(float x, float y, float width, float height)
@@ -76,8 +76,7 @@ namespace Sonic {
 			absoluteHeight = UI::toAbsoluteHeight(scene, parent, height);
 
 			dirty = false;
-			if (rendererDirty) 
-				*rendererDirty = true;
+			*rendererDirty = true;
 		}
 
 		void SetX(float newX) { x.value = newX; dirty = true; }
@@ -148,7 +147,7 @@ namespace Sonic {
 
 	struct UIRendererComponent
 	{
-	//private:
+	private:
 		Sprite sprite;
 		Color color;
 
@@ -169,18 +168,24 @@ namespace Sonic {
 			: sprite(Sprite()), color(color), dirty(new bool(true))
 		{
 		}
+
+		void SetSprite(const Sprite& newSprite) { sprite = newSprite; *dirty = true; }
+		void SetColor(const Color& newColor) { color = newColor; *dirty = true; }
+
+		const Sprite* GetSprite() const { return &sprite; }
+		const Color* GetColor() const { return &color; }
 	};
 
 	struct UIHoverComponent
 	{
+	private:
 		Sprite sprite;
 		Color color;
 
-	//private:
 		bool hovered;
 
 	public:
-		bool* rendererDirty;
+		Ref<bool> rendererDirty;
 
 		UIHoverComponent(const Sprite& sprite, const Color& color)
 			: hovered(false), sprite(sprite), color(color), rendererDirty(nullptr)
@@ -197,7 +202,12 @@ namespace Sonic {
 		{
 		}
 
-		void SetHovererd(bool b) { hovered = b; if(rendererDirty) *rendererDirty = true; }
+		void SetSprite(const Sprite& newSprite) { sprite = newSprite; if (hovered) *rendererDirty = true; }
+		void SetColor(const Color& newColor) { color = newColor; if (hovered) *rendererDirty = true; }
+		void SetHoverered(bool b) { hovered = b; if(rendererDirty) *rendererDirty = true; }
+
+		const Sprite* GetSprite() const { return &sprite; }
+		const Color* GetColor() const { return &color; }
 		bool IsHovered() const { return hovered; }
 	};
 

@@ -7,6 +7,9 @@
 #include "Sonic/Graphics/Graphics2D/Texture.h"
 #include "Sonic/Graphics/Shader.h"
 #include "Sonic/Renderer/Renderer2D.h"
+#include "Sonic/Scene/PairView.h"
+#include "Sonic/UI/Font/FontRenderer.h"
+#include "Sonic/Scene/Scene.h"
 #include "UIRenderer.h"
 #include "UIComponents.h"
 
@@ -24,19 +27,20 @@ struct Vertex
 	float edgeRadius;
 };
 
-static const int MAX_ELEMENTS = 15000;
+static const int MAX_ELEMENTS = 20000;
 static const int MAX_TEXTURES = 16;
+
+static int s_ElementCount = 0;
 
 static Sonic::Shader s_Shader = Sonic::Shader::Null();
 static Sonic::VertexBuffer s_VBO = Sonic::VertexBuffer::Null();
 static Sonic::VertexArray s_VAO = Sonic::VertexArray::Null();
 
-static int s_ElementCount;
 static Vertex s_Vertices[MAX_ELEMENTS * 4];
-static Vertex* s_NextVertex;
 
 static std::vector<Sonic::Texture> s_Textures;
 static int s_TextureSlots[MAX_TEXTURES];
+
 
 static float textureSlotOf(const Sonic::Texture& texture)
 {
@@ -62,10 +66,12 @@ namespace Sonic {
 
 		void init()
 		{
-			s_ElementCount = 0;
-			s_NextVertex = &s_Vertices[0];
-
 			s_Shader = Shader(SONIC_RESOURCE_DIR + "shaders\\ui.vs", SONIC_RESOURCE_DIR + "shaders\\ui.fs");
+			s_Shader.Bind();
+			s_Shader.UniformFloat("u_WindowWidth", Window::getWidth());
+			s_Shader.UniformFloat("u_WindowHeight", Window::getHeight());
+			s_Shader.UniformIntArray("u_Textures", s_TextureSlots, MAX_TEXTURES);
+			s_Shader.Unbind();
 
 			int* indices = new int[6 * MAX_ELEMENTS];
 			for (int i = 0; i < MAX_ELEMENTS; i++)
@@ -89,58 +95,105 @@ namespace Sonic {
 				s_TextureSlots[i] = i;
 		}
 
-		void drawElement(float x, float y, float zIndex, float width, float height, const Sprite& sprite, const Color& color, float borderWeight, const Color& borderColor, float edgeRadius)
+		void drawElement(int index, float x, float y, float zIndex, float width, float height, const Sprite& sprite, const Color& color, float borderWeight, const Color& borderColor, float edgeRadius)
 		{
-			if (s_ElementCount == MAX_ELEMENTS)
-				return;
-
 			float textureSlot = sprite.IsNull() ? -1.0f : textureSlotOf(*sprite.texture);
 
+			Vertex* vertex = &s_Vertices[index * 4];
 			for (int i = 0; i < 4; i++)
 			{
-				s_NextVertex->x = x + (i % 2) * width;
-				s_NextVertex->y = y + (i / 2) * height;
-				s_NextVertex->zIndex = zIndex;
-				s_NextVertex->r = color.r;
-				s_NextVertex->g = color.g;
-				s_NextVertex->b = color.b;
-				s_NextVertex->a = color.a;
-				s_NextVertex->textureX = i % 2 == 0 ? sprite.x0 : sprite.x1;
-				s_NextVertex->textureY = i / 2 == 0 ? sprite.y0 : sprite.y1;
-				s_NextVertex->textureSlot = textureSlot;
-				
-				s_NextVertex->rectX = x;
-				s_NextVertex->rectY = y;
-				s_NextVertex->rectWidth = width;
-				s_NextVertex->rectHeight = height;
+				vertex->x = x + (i % 2) * width;
+				vertex->y = y + (i / 2) * height;
+				vertex->zIndex = zIndex;
+				vertex->r = color.r;
+				vertex->g = color.g;
+				vertex->b = color.b;
+				vertex->a = color.a;
+				vertex->textureX = i % 2 == 0 ? sprite.x0 : sprite.x1;
+				vertex->textureY = i / 2 == 0 ? sprite.y0 : sprite.y1;
+				vertex->textureSlot = textureSlot;
 
-				s_NextVertex->borderR = borderColor.r;
-				s_NextVertex->borderG = borderColor.g;
-				s_NextVertex->borderB = borderColor.b;
-				s_NextVertex->borderA = borderColor.a;
-				s_NextVertex->borderWeight = borderWeight;
-				s_NextVertex->edgeRadius = edgeRadius;
+				vertex->rectX = x;
+				vertex->rectY = y;
+				vertex->rectWidth = width;
+				vertex->rectHeight = height;
 
-				s_NextVertex++;
+				vertex->borderR = borderColor.r;
+				vertex->borderG = borderColor.g;
+				vertex->borderB = borderColor.b;
+				vertex->borderA = borderColor.a;
+				vertex->borderWeight = borderWeight;
+				vertex->edgeRadius = edgeRadius;
+
+				vertex++;
+			}
+		}
+
+		void drawEntity(Scene* scene, EntityID e, const Sprite* sprite, const Color* color, int index)
+		{
+			auto* c = scene->GetComponent<UIComponent>(e);
+
+			const Color* borderColor = color;
+			float borderWeight = 0;
+			float edgeRadius = 0;
+
+			if (scene->HasComponent<UIHoverComponent>(e))
+			{
+				auto* h = scene->GetComponent<UIHoverComponent>(e);
+
+				if (scene->HasComponent<ResizableComponent>(e))
+				{
+					auto* r = scene->GetComponent<ResizableComponent>(e);
+					if (r->dragged.bottom || r->dragged.top || r->dragged.right || r->dragged.left)
+						h->SetHoverered(true);
+				}
+
+				if (h->IsHovered())
+				{
+					sprite = h->GetSprite();
+					color = h->GetColor();
+				}
 			}
 
-			s_ElementCount++;
+			if (scene->HasComponent<UIBorderComponent>(e))
+			{
+				auto* b = scene->GetComponent<UIBorderComponent>(e);
+				borderColor = &b->color;
+				borderWeight = b->weight;
+			}
+
+			if (scene->HasComponent<UIRoundedEdgeComponent>(e))
+			{
+				auto* r = scene->GetComponent<UIRoundedEdgeComponent>(e);
+				edgeRadius = r->edgeRadius;
+			}
+
+			drawElement(index, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight(), *sprite, *color, borderWeight, *borderColor, edgeRadius);
 		}
 
-		void startScene()
+		void update(Scene* scene)
 		{
-			SONIC_PROFILE_FUNCTION("UIRenderer::startScene");
+			int i = 0;
 
-			s_NextVertex = &s_Vertices[0];
-			s_ElementCount = 0;
+			PairView<UIRendererComponent> entities = scene->View<UIRendererComponent>();
+			s_ElementCount = entities.Size();
 
-			s_Shader.Bind();
-			s_Shader.UniformFloat("u_WindowWidth", Window::getWidth());
-			s_Shader.UniformFloat("u_WindowHeight", Window::getHeight());
-			s_Shader.UniformIntArray("u_Textures", s_TextureSlots, MAX_TEXTURES);
+			for (auto [e, r] : entities)
+			{
+				if (i > MAX_ELEMENTS)
+					return;
+
+				if (*(r->dirty.get()))
+				{
+					drawEntity(scene, e, r->GetSprite(), r->GetColor(), i);
+					*(r->dirty.get()) = false;
+				}
+
+				i++;
+			}
 		}
 
-		void endScene()
+		void render()
 		{
 			SONIC_PROFILE_FUNCTION("UIRenderer::endScene");
 

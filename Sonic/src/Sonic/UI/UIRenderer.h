@@ -4,14 +4,14 @@
 
 namespace Sonic {
 
+	class Scene;
+
 	namespace UIRenderer {
 
 		void init();
+		void update(Scene* scene);
+		void render();
 
-		void drawElement(float x, float y, float zIndex, float width, float height, const Sprite& sprite, const Color& color, float borderWeight, const Color& borderColor, float edgeRadius);
-
-		void startScene();
-		void endScene();
 	}
 
 }

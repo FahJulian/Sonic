@@ -2,6 +2,8 @@
 #include <set>
 #include <vector>
 #include <unordered_map>
+#include "Sonic/Event/Events.h"
+#include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Log/Log.h"
 #include "EntityID.h"
 
@@ -26,6 +28,13 @@ namespace Sonic {
 	template<typename Component>
 	class ComponentPool : public BaseComponentPool
 	{
+	public:
+		ComponentPool(EventDispatcher* eventDispatcher)
+			: m_EventDispatcher(eventDispatcher) 
+		{
+		}
+
+	private:
 		template<typename... Args>
 		void AddComponent(EntityID entity, Args&&... args)
 		{
@@ -50,14 +59,17 @@ namespace Sonic {
 		{
 			for (int index : m_ToRemove)
 			{
+				EntityID entity = *(m_Entities.begin() + index);
 				m_Entities.erase(m_Entities.begin() + index);
 				m_Components.erase(m_Components.begin() + index);
+				m_EventDispatcher->DispatchEvent(ComponentRemovedEvent<Component>(entity));
 			}
 
 			for (auto& [entity, component] : m_ToAdd)
 			{
 				m_Entities.push_back(entity);
 				m_Components.push_back(component);
+				m_EventDispatcher->DispatchEvent(ComponentAddedEvent<Component>(entity));
 			}
 
 			m_ToRemove.clear();
@@ -66,6 +78,7 @@ namespace Sonic {
 
 		std::vector<Component> m_Components;
 		std::unordered_map<EntityID, Component> m_ToAdd;
+		EventDispatcher* m_EventDispatcher;
 
 		friend class Scene;
 		template<typename> friend class EntityView;

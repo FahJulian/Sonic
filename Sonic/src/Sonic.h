@@ -22,8 +22,8 @@
 #include "Sonic/Graphics/Graphics2D/Spritesheet.h"
 #include "Sonic/Graphics/Buffer/VertexArray.h"
 #include "Sonic/Graphics/Buffer/VertexBuffer.h"
-#include "Sonic/Graphics/Font/Font.h"
-#include "Sonic/Graphics/Font/FontRenderer.h"
+#include "Sonic/UI/Font/Font.h"
+#include "Sonic/UI/Font/FontRenderer.h"
 
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/Entity.h"

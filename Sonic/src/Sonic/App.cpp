@@ -2,8 +2,8 @@
 #include <glfw/glfw3.h>
 #include <iostream>
 #include <string>
-#include "Graphics/Font/Font.h"
-#include "Graphics/Font/FontRenderer.h"
+#include "Sonic/UI/Font/Font.h"
+#include "Sonic/UI/Font/FontRenderer.h"
 #include "Renderer/Renderer2D.h"
 #include "UI/UIRenderer.h"
 #include "Window/Window.h"
