@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <glm/glm.hpp>
+#include "Sonic/Base.h"
 #include "Color.h"
 
 namespace Sonic {
@@ -9,7 +10,7 @@ namespace Sonic {
     {
     private:
         Shader()
-            : m_OpenGL_ID(0xffffffff) {}
+            : m_OpenGL_ID(nullptr) {}
 
     public:
         /**
@@ -20,7 +21,7 @@ namespace Sonic {
         */
         Shader(const std::string& vertexSourcePath, const std::string& fragmentSourcePath);
 
-        bool IsNull() const { return m_OpenGL_ID == 0xffffffff; }
+        bool IsNull() const { return m_OpenGL_ID == nullptr; }
 
         static Shader Null() { return Shader(); }
 
@@ -99,7 +100,7 @@ namespace Sonic {
         */
         void UniformMat4(const std::string& name, const glm::mat4& value);
     private:
-        unsigned int m_OpenGL_ID;
+        Ref<unsigned int> m_OpenGL_ID;
     };
 
 }

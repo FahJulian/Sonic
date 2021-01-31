@@ -1,5 +1,6 @@
 #pragma once
 #include <initializer_list>
+#include "Sonic/Base.h"
 #include "VertexBuffer.h"
 
 namespace Sonic {
@@ -12,6 +13,7 @@ namespace Sonic {
 
 	public:
 		VertexArray(const int* indices, unsigned int elementCount, std::initializer_list<VertexBuffer> buffers);
+		~VertexArray();
 
 		void Bind() const;
 		void Unbind() const;
@@ -24,8 +26,8 @@ namespace Sonic {
 
 	private:
 		unsigned int m_ElementCount;
-		unsigned int m_Vao_OpenGL_ID;
-		unsigned int m_Ibo_OpenGL_ID;
+		Ref<unsigned int> m_Vao_OpenGL_ID;
+		Ref<unsigned int> m_Ibo_OpenGL_ID;
 	};
 
 }

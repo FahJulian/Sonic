@@ -5,12 +5,12 @@
 namespace Sonic {
 
 	VertexBuffer::VertexBuffer(int size, std::initializer_list<int> layout)
-		: m_Size(size), m_Stride(0)
+		: m_Size(size), m_Stride(0), m_OpenGL_ID(std::make_shared<unsigned int>(0))
 	{
 #ifdef SONIC_DEBUG
 		m_Dynamic = true;
 #endif
-		glGenBuffers(1, &m_OpenGL_ID);
+		glGenBuffers(1, m_OpenGL_ID.get());
 
 		for (int element : layout)
 		{
@@ -29,7 +29,7 @@ namespace Sonic {
 #ifdef SONIC_DEBUG
 		m_Dynamic = false;
 #endif
-		glGenBuffers(1, &m_OpenGL_ID);
+		glGenBuffers(1, m_OpenGL_ID.get());
 
 		for (int element : layout)
 		{
@@ -40,6 +40,12 @@ namespace Sonic {
 		Bind();
 		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 		Unbind();
+	}
+
+	VertexBuffer::~VertexBuffer()
+	{
+		if (m_OpenGL_ID.use_count() == 1)
+			glDeleteBuffers(1, m_OpenGL_ID.get());
 	}
 
 	void VertexBuffer::SetData(const void* data, int size)
@@ -65,7 +71,7 @@ namespace Sonic {
 
 	void VertexBuffer::Bind() const
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_OpenGL_ID);
+		glBindBuffer(GL_ARRAY_BUFFER, *m_OpenGL_ID);
 	}
 
 	void VertexBuffer::Unbind() const

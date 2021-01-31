@@ -4,11 +4,11 @@
 namespace Sonic {
 
 	VertexArray::VertexArray(const int* indices, unsigned int elementCount, std::initializer_list<VertexBuffer> buffers)
-		: m_ElementCount(elementCount)
+		: m_ElementCount(elementCount), m_Vao_OpenGL_ID(std::make_shared<unsigned int>(0)), m_Ibo_OpenGL_ID(std::make_shared<unsigned int>(0))
 	{
-		glGenVertexArrays(1, &m_Vao_OpenGL_ID);
+		glGenVertexArrays(1, m_Vao_OpenGL_ID.get());
 
-		glBindVertexArray(m_Vao_OpenGL_ID);
+		glBindVertexArray(*m_Vao_OpenGL_ID);
 
 		int attribPointerCount = 0;
 		for (auto& buffer : buffers)
@@ -28,18 +28,27 @@ namespace Sonic {
 			buffer.Unbind();
 		}
 
-		glGenBuffers(1, &m_Ibo_OpenGL_ID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Ibo_OpenGL_ID);
+		glGenBuffers(1, m_Ibo_OpenGL_ID.get());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *m_Ibo_OpenGL_ID);
 
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_ElementCount * sizeof(int), indices, GL_STATIC_DRAW);
 
 		Unbind();
 	}
 
+	VertexArray::~VertexArray()
+	{
+		if (m_Vao_OpenGL_ID.use_count() == 1)
+		{
+			glDeleteVertexArrays(1, m_Vao_OpenGL_ID.get());
+			glDeleteBuffers(1, m_Ibo_OpenGL_ID.get());
+		}
+	}
+
 	void VertexArray::Bind() const
 	{
-		glBindVertexArray(m_Vao_OpenGL_ID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Ibo_OpenGL_ID);
+			glBindVertexArray(*m_Vao_OpenGL_ID);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *m_Ibo_OpenGL_ID);
 	}
 
 	void VertexArray::Unbind() const

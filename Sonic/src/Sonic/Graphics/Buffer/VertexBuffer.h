@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <initializer_list>
+#include "Sonic/Base.h"
 
 namespace Sonic {
 	
@@ -18,6 +19,7 @@ namespace Sonic {
 	public:
 		VertexBuffer(int size, std::initializer_list<int> layout);
 		VertexBuffer(const float* data, unsigned int size, std::initializer_list<int> layout);
+		~VertexBuffer();
 
 		void Bind() const;
 		void Unbind() const;
@@ -29,7 +31,7 @@ namespace Sonic {
 		static VertexBuffer Null() { return VertexBuffer(); }
 
 	private:
-		unsigned int m_OpenGL_ID;
+		Ref<unsigned int> m_OpenGL_ID;
 		std::vector<int> m_Layout;
 		int m_Stride;
 		int m_Size;
