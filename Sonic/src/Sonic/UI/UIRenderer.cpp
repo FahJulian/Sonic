@@ -27,7 +27,7 @@ struct Vertex
 	float edgeRadius;
 };
 
-static const int MAX_ELEMENTS = 20000;
+static const int MAX_ELEMENTS = 5000;
 static const int MAX_TEXTURES = 16;
 
 static int s_ElementCount = 0;
@@ -37,11 +37,7 @@ static Sonic::VertexBuffer s_VBO = Sonic::VertexBuffer::Null();
 static Sonic::VertexArray s_VAO = Sonic::VertexArray::Null();
 
 static Vertex s_Vertices[MAX_ELEMENTS * 4];
-
 static std::vector<Sonic::Texture> s_Textures;
-static int s_TextureSlots[MAX_TEXTURES];
-
-static bool s_Rebuffer = true;
 
 
 static float textureSlotOf(const Sonic::Texture& texture)
@@ -72,8 +68,15 @@ namespace Sonic {
 			s_Shader.Bind();
 			s_Shader.UniformFloat("u_WindowWidth", Window::getWidth());
 			s_Shader.UniformFloat("u_WindowHeight", Window::getHeight());
-			s_Shader.UniformIntArray("u_Textures", s_TextureSlots, MAX_TEXTURES);
+
+			int textureSlots[MAX_TEXTURES];
+			for (int i = 0; i < MAX_TEXTURES; i++)
+				textureSlots[i] = i;
+
+			s_Shader.UniformIntArray("u_Textures", textureSlots, MAX_TEXTURES);
 			s_Shader.Unbind();
+
+			s_Textures.reserve(MAX_TEXTURES);
 
 			int* indices = new int[6 * MAX_ELEMENTS];
 			for (int i = 0; i < MAX_ELEMENTS; i++)
@@ -91,17 +94,13 @@ namespace Sonic {
 			s_VAO = Sonic::VertexArray(indices, MAX_ELEMENTS * 6, { s_VBO });
 
 			delete[] indices;
-
-			s_Textures.reserve(MAX_TEXTURES);
-			for (int i = 0; i < MAX_TEXTURES; i++)
-				s_TextureSlots[i] = i;
 		}
 
 		void drawElement(int index, float x, float y, float zIndex, float width, float height, const Sprite& sprite, const Color& color, float borderWeight, const Color& borderColor, float edgeRadius)
 		{
 			float textureSlot = sprite.IsNull() ? -1.0f : textureSlotOf(*sprite.texture);
 
-			Vertex* vertex = &s_Vertices[index * 4];
+			Vertex* vertex = s_Vertices + 4 * index;
 			for (int i = 0; i < 4; i++)
 			{
 				vertex->x = x + (i % 2) * width;
@@ -131,10 +130,12 @@ namespace Sonic {
 			}
 		}
 
-		void drawEntity(Scene* scene, EntityID e, const Sprite* sprite, const Color* color, int index)
+		void drawEntity(Scene* scene, EntityID e, UIRendererComponent* r, int index)
 		{
 			auto* c = scene->GetComponent<UIComponent>(e);
 
+			const Sprite* sprite = r->GetSprite();
+			const Color* color = r->GetColor();
 			const Color* borderColor = color;
 			float borderWeight = 0;
 			float edgeRadius = 0;
@@ -175,42 +176,39 @@ namespace Sonic {
 
 		void update(Scene* scene)
 		{
-			int i = 0;
+			bool rebuffer = false;
 
-			PairView<UIRendererComponent> entities = scene->View<UIRendererComponent>();
+			auto& entities = scene->View<UIRendererComponent>();
 			s_ElementCount = entities.Size();
 
+			int i = 0;
 			for (auto [e, r] : entities)
 			{
 				if (i > MAX_ELEMENTS)
 					return;
 
-				if (*(r->dirty.get()))
+				if (*r->dirty)
 				{
-					drawEntity(scene, e, r->GetSprite(), r->GetColor(), i);
-					*(r->dirty.get()) = false;
-					s_Rebuffer = true;
+					drawEntity(scene, e, r, i);
+					*r->dirty = false;
+					rebuffer = true;
 				}
 
 				i++;
+			}
+
+			if (rebuffer)
+			{
+				s_VBO.Bind();
+				s_VBO.SetData(s_Vertices, 4 * s_ElementCount * sizeof(Vertex));
+				s_VBO.Unbind();
 			}
 		}
 
 		void render()
 		{
-			SONIC_PROFILE_FUNCTION("UIRenderer::endScene");
-
 			s_Shader.Bind();
 			s_VAO.Bind();
-
-			if (s_Rebuffer)
-			{
-				s_VBO.Bind();
-				s_VBO.SetData(s_Vertices, 4 * s_ElementCount * sizeof(Vertex));
-				s_VBO.Unbind();
-
-				s_Rebuffer = false;
-			}
 
 			for (int i = 0; i < s_Textures.size(); i++)
 				s_Textures.at(i).Bind(i);
@@ -220,8 +218,8 @@ namespace Sonic {
 			for (int i = 0; i < s_Textures.size(); i++)
 				s_Textures.at(i).Unbind();
 
-			s_Shader.Unbind();
 			s_VAO.Unbind();
+			s_Shader.Unbind();
 		}
 
 	}

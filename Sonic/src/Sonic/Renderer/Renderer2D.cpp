@@ -88,8 +88,6 @@ namespace Sonic {
 
         void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color)
         {
-            SONIC_PROFILE_FUNCTION("Renderer2D::drawRect");
-
             if (s_RectCount == MAX_RECTS)
                 return;
 
@@ -137,8 +135,6 @@ namespace Sonic {
 
         void startScene(const Camera2D* camera)
         {
-            SONIC_PROFILE_FUNCTION("Renderer2D::startScene");
-
             s_NextVertex = &s_Vertices[0];
             s_RectCount = 0;
 
@@ -150,8 +146,6 @@ namespace Sonic {
 
         void endScene()
         {
-            SONIC_PROFILE_FUNCTION("Renderer2D::endScene");
-
             s_Shader.Bind();
             s_VBO.SetData(reinterpret_cast<float*>(s_Vertices), 4 * s_RectCount * sizeof(Vertex));
 

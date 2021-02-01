@@ -14,6 +14,37 @@
 
 namespace Sonic {
 
+	struct UIRendererComponent
+	{
+	private:
+		Sprite sprite;
+		Color color;
+
+	public:
+		Ref<bool> dirty;
+
+		UIRendererComponent(const Sprite& sprite, const Color& color)
+			: sprite(sprite), color(color), dirty(new bool(true))
+		{
+		}
+
+		UIRendererComponent(const Sprite& sprite)
+			: sprite(sprite), color(Colors::White), dirty(new bool(true))
+		{
+		}
+
+		UIRendererComponent(const Color& color)
+			: sprite(Sprite()), color(color), dirty(new bool(true))
+		{
+		}
+
+		void SetSprite(const Sprite& newSprite) { sprite = newSprite; *dirty = true; }
+		void SetColor(const Color& newColor) { color = newColor; *dirty = true; }
+
+		const Sprite* GetSprite() const { return &sprite; }
+		const Color* GetColor() const { return &color; }
+	};
+
 	struct UIComponent
 	{
 	private:
@@ -33,7 +64,8 @@ namespace Sonic {
 		float absoluteHeight = 0;
 
 		bool dirty = true;
-		Ref<bool> rendererDirty = Ref<bool>(nullptr);
+		Ref<bool> uiRendererDirty = Ref<bool>(nullptr);
+		Ref<bool> fontRendererDirty = Ref<bool>(nullptr);
 
 	public:
 		UIComponent(float x, float y, float width, float height)
@@ -76,7 +108,10 @@ namespace Sonic {
 			absoluteHeight = UI::toAbsoluteHeight(scene, parent, height);
 
 			dirty = false;
-			*rendererDirty = true;
+			if (uiRendererDirty)
+				*uiRendererDirty = true;
+			if (fontRendererDirty)
+				*fontRendererDirty = true;
 		}
 
 		void SetX(float newX) { x.value = newX; dirty = true; }
@@ -137,43 +172,26 @@ namespace Sonic {
 
 	struct TextComponent
 	{
-		Font font;
-		std::string text;
-		Color color;
-
-		TextComponent(Font font, const Color& color, const std::string& text)
-			: font(font), text(text), color(color) {}
-	};
-
-	struct UIRendererComponent
-	{
 	private:
-		Sprite sprite;
+		Font font;
 		Color color;
+		std::string text;
 
 	public:
 		Ref<bool> dirty;
 
-		UIRendererComponent(const Sprite& sprite, const Color& color)
-			: sprite(sprite), color(color), dirty(new bool(true))
+		TextComponent(Font font, const Color& color, const std::string& text)
+			: font(font), color(color), text(text), dirty(new bool(true))
 		{
 		}
 
-		UIRendererComponent(const Sprite& sprite)
-			: sprite(sprite), color(Colors::White), dirty(new bool(true))
-		{
-		}
+		const Font& GetFont() const { return font; }
+		const Color& GetColor() const { return color; }
+		const std::string& GetText() const { return text; }
 
-		UIRendererComponent(const Color& color)
-			: sprite(Sprite()), color(color), dirty(new bool(true))
-		{
-		}
-
-		void SetSprite(const Sprite& newSprite) { sprite = newSprite; *dirty = true; }
+		void SetFont(const Font& newFont) { font = newFont; *dirty = true; }
 		void SetColor(const Color& newColor) { color = newColor; *dirty = true; }
-
-		const Sprite* GetSprite() const { return &sprite; }
-		const Color* GetColor() const { return &color; }
+		void SetText(const std::string& newText) { text = newText; *dirty = true; }
 	};
 
 	struct UIHoverComponent
@@ -185,26 +203,26 @@ namespace Sonic {
 		bool hovered;
 
 	public:
-		Ref<bool> rendererDirty;
+		Ref<bool> uiRendererDirty;
 
 		UIHoverComponent(const Sprite& sprite, const Color& color)
-			: hovered(false), sprite(sprite), color(color), rendererDirty(nullptr)
+			: hovered(false), sprite(sprite), color(color), uiRendererDirty(nullptr)
 		{
 		}
 
 		UIHoverComponent(const Sprite& sprite)
-			: hovered(false), sprite(sprite), color(Colors::White), rendererDirty(nullptr)
+			: hovered(false), sprite(sprite), color(Colors::White), uiRendererDirty(nullptr)
 		{
 		}
 
 		UIHoverComponent(const Color& color)
-			: hovered(false), sprite(Sprite()), color(color), rendererDirty(nullptr)
+			: hovered(false), sprite(Sprite()), color(color), uiRendererDirty(nullptr)
 		{
 		}
 
-		void SetSprite(const Sprite& newSprite) { sprite = newSprite; if (hovered) *rendererDirty = true; }
-		void SetColor(const Color& newColor) { color = newColor; if (hovered) *rendererDirty = true; }
-		void SetHoverered(bool b) { hovered = b; if(rendererDirty) *rendererDirty = true; }
+		void SetSprite(const Sprite& newSprite) { sprite = newSprite; if (uiRendererDirty && hovered) *uiRendererDirty = true; }
+		void SetColor(const Color& newColor) { color = newColor; if (uiRendererDirty && hovered) *uiRendererDirty = true; }
+		void SetHoverered(bool b) { hovered = b; if (uiRendererDirty) *uiRendererDirty = true; }
 
 		const Sprite* GetSprite() const { return &sprite; }
 		const Color* GetColor() const { return &color; }

@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <unordered_map>
 #include <vector>
 #include <gl/glew.h>
@@ -22,7 +20,9 @@ namespace Sonic {
 	}
 
 	Font::Font(const std::string& filePath, int size)
-		: m_Characters(std::make_shared<std::unordered_map<unsigned char, Character>>())
+		: m_TextureID(std::make_shared<unsigned int>()),
+		m_Characters(std::make_shared<std::unordered_map<unsigned char, Character>>()),
+		m_KnownKerning(std::make_shared<std::unordered_map<unsigned short, int>>())
 	{
 		if (FT_New_Face(ft, filePath.c_str(), 0, &m_Face) != FT_Err_Ok)
 			SONIC_LOG_DEBUG("Error initializing font face");
@@ -86,8 +86,8 @@ namespace Sonic {
 		}
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glGenTextures(1, &m_TextureID);
-		glBindTexture(GL_TEXTURE_2D, m_TextureID);
+		glGenTextures(1, m_TextureID.get());
+		glBindTexture(GL_TEXTURE_2D, *m_TextureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, totalWidth, maxHeight, 0, GL_RED, GL_UNSIGNED_BYTE, giantBitmap);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -99,6 +99,19 @@ namespace Sonic {
 	{
 		if (m_Characters.use_count() == 1)
 			FT_Done_Face(m_Face);
+		if (m_TextureID.use_count() == 1)
+			glDeleteTextures(1, m_TextureID.get());
+	}
+
+	void Font::Bind(int slot) const
+	{
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D, *m_TextureID);
+	}
+
+	void Font::Unbind() const
+	{
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	const Character& Font::GetCharacter(unsigned char c) const
@@ -108,6 +121,12 @@ namespace Sonic {
 
 	int Font::GetKerning(unsigned char c1, unsigned char c2) const
 	{
+		unsigned short index = c1 > c2 ? c1 << 8 | c2 : c2 << 8 | c1;
+
+		auto known = m_KnownKerning->find(index);
+		if (known != m_KnownKerning->end())
+			return known->second;
+
 		auto glyphIndex1 = FT_Get_Char_Index(m_Face, c1);
 		auto glyphIndex2 = FT_Get_Char_Index(m_Face, c2);
 
@@ -115,10 +134,12 @@ namespace Sonic {
 		if (FT_Get_Kerning(m_Face, glyphIndex1, glyphIndex2, FT_KERNING_DEFAULT, &kerning) != FT_Err_Ok)
 			SONIC_LOG_DEBUG("Error getting kerning");
 
-		return static_cast<int>(kerning.x >> 6);
+		int k = static_cast<int>(kerning.x >> 6);
+		m_KnownKerning->emplace(index, k);
+		return k;
 	}
 
-	int Font::StringWidth(const std::string& string)
+	int Font::StringWidth(const std::string& string) const
 	{
 		int width = 0;
 
@@ -135,7 +156,7 @@ namespace Sonic {
 		return width;
 	}
 
-	int Font::StringHeight(const std::string& string)
+	int Font::StringHeight(const std::string& string) const
 	{
 		int maxHeight = 0;
 

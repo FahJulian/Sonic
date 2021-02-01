@@ -56,7 +56,9 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	void Scene::Init()
 	{
 		Load();
+
 		UpdatePools();
+
 		OnInit();
 	}
 
@@ -65,14 +67,16 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 		SONIC_PROFILE_FUNCTION("Scene::Update");
 
 		OnUpdate(deltaTime);
+
 		UpdateComponents(deltaTime);
+
 		UpdateBehaviours(deltaTime);
+
 		UpdatePools();
+
 		PollCollisionEvents();
 
-		//Window::setCursor(Cursors::Crosshair);
-
-		Draw();
+		UpdateRenderers();
 	}
 
 	void Scene::UpdatePools()
@@ -112,25 +116,17 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 		}
 	}
 
-	void Scene::Draw()
+	void Scene::UpdateRenderers()
 	{
-		SONIC_PROFILE_FUNCTION("Scene::Draw");
+		SONIC_PROFILE_FUNCTION("Scene::UpdateRenderers");
 
 		Renderer2D::startScene(&m_Camera);
-		FontRenderer::startScene();
 
 		for (auto [e, r, t] : Group<Renderer2DComponent, Transform2DComponent>())
 			Renderer2D::drawRect(t->position, t->scale, t->rotation, r->sprite, r->color);
 
 		UIRenderer::update(this);
-
-		for (auto [e, t, c] : Group<TextComponent, UIComponent>())
-		{
-			int textWidth = t->font.StringWidth(t->text);
-			int textHeight = t->font.StringHeight(t->text);
-
-			FontRenderer::drawString(c->GetX() + (c->GetWidth() - textWidth) / 2, c->GetY() + (c->GetHeight() - textHeight) / 2, c->GetZIndex(), t->text, t->font, t->color);
-		}
+		FontRenderer::update(this);
 	}
 
 	void Scene::Render()
@@ -139,7 +135,7 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 
 		Renderer2D::endScene();
 		UIRenderer::render();
-		FontRenderer::endScene();
+		FontRenderer::render();
 	}
 
 	void Scene::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
@@ -320,20 +316,28 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	void Scene::OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e)
 	{
 		if (HasComponent<UIRendererComponent>(e.entity))
-			GetComponent<UIComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+			GetComponent<UIComponent>(e.entity)->uiRendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+		if (HasComponent<TextComponent>(e.entity))
+			GetComponent<UIComponent>(e.entity)->fontRendererDirty = GetComponent<TextComponent>(e.entity)->dirty;
 	}
 
 	void Scene::OnUIHoverComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e)
 	{
 		if (HasComponent<UIRendererComponent>(e.entity))
-			GetComponent<UIHoverComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+			GetComponent<UIHoverComponent>(e.entity)->uiRendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
 	}
 
-	void Scene::OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>&e)
+	void Scene::OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>& e)
 	{
 		if (HasComponent<UIComponent>(e.entity))
-			GetComponent<UIComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+			GetComponent<UIComponent>(e.entity)->uiRendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
 		if (HasComponent<UIHoverComponent>(e.entity))
-			GetComponent<UIHoverComponent>(e.entity)->rendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+			GetComponent<UIHoverComponent>(e.entity)->uiRendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+	}
+
+	void Scene::OnTextComponentAdded(const ComponentAddedEvent<TextComponent>& e) 
+	{
+		if (HasComponent<UIComponent>(e.entity))
+			GetComponent<UIComponent>(e.entity)->fontRendererDirty = GetComponent<TextComponent>(e.entity)->dirty;
 	}
 }

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "Sonic/Base.h"
 
 namespace Sonic {
 
@@ -24,19 +25,21 @@ namespace Sonic {
 		static void init();
 		static void destroy();
 
-		int StringWidth(const std::string& string);
+		void Bind(int slot) const;
+		void Unbind() const;
 
-		int StringHeight(const std::string& string);
+		int StringWidth(const std::string& string) const;
+		int StringHeight(const std::string& string) const;
 
 		const Character& GetCharacter(unsigned char c) const;
-
 		int GetKerning(unsigned char c1, unsigned char c2) const;
 
-		bool operator==(const Font& other) { return m_TextureID == other.m_TextureID; }
+		bool operator==(const Font& other) const { return m_TextureID == other.m_TextureID; }
 
 		FT_Face m_Face;
-		unsigned int m_TextureID;
-		std::shared_ptr<std::unordered_map<unsigned char, Character>> m_Characters;
+		Ref<unsigned int> m_TextureID;
+		Ref<std::unordered_map<unsigned char, Character>> m_Characters;
+		Ref<std::unordered_map<unsigned short, int>> m_KnownKerning;
 	};
 
 }

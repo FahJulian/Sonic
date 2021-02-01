@@ -1,7 +1,7 @@
 #pragma once
 #include "Sonic/Scene/EntityID.h"
-#include "Sonic/Window/MouseButtons.h"
-#include "Sonic/Window/Keys.h"
+#include "Sonic/Window/Input/MouseButtons.h"
+#include "Sonic/Window/Input/Keys.h"
 
 namespace Sonic {
 

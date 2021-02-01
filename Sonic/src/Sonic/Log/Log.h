@@ -15,9 +15,11 @@ namespace Sonic {
     #define SONIC_LOG_DEBUG(x) Sonic::Log::debug(x)
     #define SONIC_LOG_DEBUG_ASSERT(b, x) Sonic::Log::debugAssert(b, x)
     #define SONIC_LOG_ERROR(x) SONIC_LOG_DEBUG(x)
+    #define SONIC_LOG_WARN(x) SONIC_LOG_DEBUG(x)    
 #else
     #define SONIC_LOG_DEBUG(x) 
     #define SONIC_LOG_DEBUG_ASSERT(x) 
     #define SONIC_LOG_ERROR(x)
+    #define SONIC_LOG_WARN(x)   
 #endif
 

@@ -28,7 +28,7 @@ namespace Sonic {
             }
         );
 
-        StandardCursors::init();
+        DefaultCursorsSet::initStandardCursorSets();
         
         s_Data.width = static_cast<float>(width);
         s_Data.height = static_cast<float>(height);
@@ -43,7 +43,7 @@ namespace Sonic {
             return false;
         }
 
-        setCursor(StandardCursors::Arrow);
+        setCursor(DefaultCursors::Arrow);
 
         glfwMakeContextCurrent(s_Data.glfwID);
 
@@ -122,5 +122,15 @@ namespace Sonic {
     void Window::setCursor(Cursor cursor)
     {
         glfwSetCursor(s_Data.glfwID, cursor);
+    }
+
+    void Window::setCursor(DefaultCursors cursor)
+    {
+        glfwSetCursor(s_Data.glfwID, DefaultCursorsSet::getCurrent(cursor));
+    }
+
+    void Window::setDefaultCursorSet(DefaultCursorSets cursorSet)
+    {
+        DefaultCursorsSet::setStandardCursorSet(cursorSet);
     }
 }

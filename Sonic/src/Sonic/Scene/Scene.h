@@ -35,7 +35,7 @@ namespace Sonic {
 	private:
 		void Init();
 		void Update(float deltaTime);
-		void Draw();
+		void UpdateRenderers();
 		void Render();
 
 		void UpdatePools();
@@ -50,6 +50,7 @@ namespace Sonic {
 		void OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e);
 		void OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>& e);
 		void OnUIHoverComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e);
+		void OnTextComponentAdded(const ComponentAddedEvent<TextComponent>& e);
 
 		void RenderUIEntity(EntityID entity, const Sprite* sprite, const Color* color, float x, float y, float zIndex, float width, float height);
 

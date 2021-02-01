@@ -1,7 +1,7 @@
 #pragma once
-#include "Cursors.h"
-#include "Keyboard.h"
-#include "Mouse.h"
+#include "Input/Keyboard.h"
+#include "Input/Mouse.h"
+#include "Cursor/Cursors.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Graphics/Color.h"
@@ -62,6 +62,10 @@ namespace Sonic {
         static void setTitle(const std::string& title);
 
         static void setCursor(Cursor cursor);
+
+        static void setCursor(DefaultCursors cursor);
+
+        static void setDefaultCursorSet(DefaultCursorSets cursorSet);
 
     private:
         static void windowCloseCallback(GLFWwindow* window);

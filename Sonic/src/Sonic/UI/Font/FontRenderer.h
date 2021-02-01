@@ -4,6 +4,8 @@
 
 namespace Sonic {
 
+	class Scene;
+
 	namespace FontRenderer
 	{
 		void init();
@@ -12,9 +14,9 @@ namespace Sonic {
 
 		void drawString(float x, float y, float z, const std::string& string, const Font& font, const Color& color);
 
-		void startScene();
+		void update(Scene* scene);
 
-		void endScene();
+		void render();
 	}
 
 }
