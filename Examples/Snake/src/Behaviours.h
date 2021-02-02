@@ -26,8 +26,8 @@ class SnakeTailBehaviour : public Behaviour
 		}
 
 		auto* transform = GetEntity().GetComponent<Transform2DComponent>();
-		transform->position.x = static_cast<float>(SNAKE_START_X);
-		transform->position.y = static_cast<float>(SNAKE_START_Y - component->tailIndex * CELL_SIZE);
+		transform->SetX(static_cast<float>(SNAKE_START_X));
+		transform->SetY(static_cast<float>(SNAKE_START_Y - component->tailIndex * CELL_SIZE));
 	}
 
 	void OnDestroy() override
@@ -62,8 +62,8 @@ class FoodBehaviour : public Behaviour
 		std::srand(static_cast<unsigned int>(std::time(0)));
 		auto* transform = GetEntity().GetComponent<Transform2DComponent>();
 
-		transform->position.x = static_cast<float>(X0 + (std::rand() % COLS) * CELL_SIZE);
-		transform->position.y = static_cast<float>(Y0 + (std::rand() % ROWS) * CELL_SIZE);
+		transform->SetX(static_cast<float>(X0 + (std::rand() % COLS) * CELL_SIZE));
+		transform->SetY(static_cast<float>(Y0 + (std::rand() % ROWS) * CELL_SIZE));
 	}
 
 	void OnDestroy() override
@@ -99,8 +99,8 @@ class SnakeHeadBehaviour : public Behaviour
 			newTailElement.AddComponent<Renderer2DComponent>(TAIL_COLOR);
 			newTailElement.AddBehaviour<SnakeTailBehaviour>();
 
-			transform->position.x += static_cast<float>(static_cast<int>(direction->direction) % 2 * CELL_SIZE);
-			transform->position.y += static_cast<float>(static_cast<int>(direction->direction) / 2 * CELL_SIZE);
+			transform->SetX(transform->GetX() + static_cast<float>(static_cast<int>(direction->direction) % 2 * CELL_SIZE));
+			transform->SetY(transform->GetY() + static_cast<float>(static_cast<int>(direction->direction) / 2 * CELL_SIZE));
 			direction->lastDirection = direction->direction;
 		}
 	}
@@ -119,8 +119,8 @@ class SnakeHeadBehaviour : public Behaviour
 		GetEntity().GetComponent<SnakeHeadComponent>()->snakeLength = SNAKE_START_LENGTH;
 
 		auto* t = GetEntity().GetComponent<Transform2DComponent>();
-		t->position.x = SNAKE_START_X;
-		t->position.y = SNAKE_START_Y;
+		t->SetX(SNAKE_START_X);
+		t->SetY(SNAKE_START_Y);
 
 		auto* d = GetEntity().GetComponent<Direction2DComponent>();
 		d->direction = Direction2DComponent::Direction::Up;

@@ -48,6 +48,8 @@ namespace Sonic {
         */
         static void pollEvents();
 
+        static void setClearColor(const Color& color);
+
         /**
         * @return The time that has since window initialization passed in seconds
         */
@@ -63,9 +65,9 @@ namespace Sonic {
 
         static void setCursor(Cursor cursor);
 
-        static void setCursor(DefaultCursors cursor);
+        static void setCursor(StandardCursor cursor);
 
-        static void setDefaultCursorSet(DefaultCursorSets cursorSet);
+        static void setDefaultCursorSet(StandardCursorSet cursorSet);
 
     private:
         static void windowCloseCallback(GLFWwindow* window);

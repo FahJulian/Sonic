@@ -5,7 +5,7 @@ namespace Sonic {
 	
 	namespace Util {
 
-		unsigned char* loadCursor(std::string filePath, int& width, int& height, int& offsetX, int& offsetY);
+		unsigned char* loadCursor(std::string filePath, int& width, int& height, int& offsetX, int& offsetY, bool flipVertically = true);
 
 	}
 

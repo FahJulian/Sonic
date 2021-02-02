@@ -60,40 +60,40 @@ namespace Sonic {
 		return m_Cursors->at(name);
 	}
 
-	DefaultCursorsSet DefaultCursorsSet::s_StandardCursorSets[STANDARD_CURSOR_SETS_AMOUNT];
-	DefaultCursorsSet* DefaultCursorsSet::s_CurrentStandardCursorSet = &s_StandardCursorSets[static_cast<uint8_t>(Sonic::DefaultCursorSets::Black)];
+	StandardCursors StandardCursors::s_StandardCursorSets[STANDARD_CURSOR_SETS_AMOUNT];
+	StandardCursors* StandardCursors::s_CurrentStandardCursorSet = &s_StandardCursorSets[static_cast<uint8_t>(Sonic::StandardCursors::Sets::Black)];
 
-	DefaultCursorsSet::DefaultCursorsSet(const std::string& folderPath)
+	StandardCursors::StandardCursors(const std::string& folderPath)
 		: CursorSet(folderPath)
 	{
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::Arrow)] = Get("Arrow");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::Alternate)] = Get("Alternate");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::IBeam)] = Get("IBeam");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::Crosshair)] = Get("Crosshair");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::ResizeHorizontal)] = Get("ResizeHorizontal");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::ResizeVertical)] = Get("ResizeVertical");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::ResizeDiagonalLeft)] = Get("ResizeDiagonalLeft");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::ResizeDiagonalRight)] = Get("ResizeDiagonalRight");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::Unavailable)] = Get("Unavailable");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::Pen)] = Get("Pen");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::Link)] = Get("Link");
-		m_StandardCursors[static_cast<uint8_t>(DefaultCursors::Help)] = Get("Help");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::Arrow)] = Get("Arrow");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::Alternate)] = Get("Alternate");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::IBeam)] = Get("IBeam");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::Crosshair)] = Get("Crosshair");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::ResizeHorizontal)] = Get("ResizeHorizontal");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::ResizeVertical)] = Get("ResizeVertical");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::ResizeDiagonalLeft)] = Get("ResizeDiagonalLeft");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::ResizeDiagonalRight)] = Get("ResizeDiagonalRight");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::Unavailable)] = Get("Unavailable");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::Pen)] = Get("Pen");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::Link)] = Get("Link");
+		m_StandardCursors[static_cast<uint8_t>(StandardCursors::Help)] = Get("Help");
 	}
 
-	void DefaultCursorsSet::initStandardCursorSets()
+	void StandardCursors::init()
 	{
-		s_StandardCursorSets[static_cast<uint8_t>(DefaultCursorSets::Black)] = DefaultCursorsSet(SONIC_RESOURCE_DIR + "cursors/default_black");
-		s_StandardCursorSets[static_cast<uint8_t>(DefaultCursorSets::BlackShadow)] = DefaultCursorsSet(SONIC_RESOURCE_DIR + "cursors/default_black_shadow");
-		s_StandardCursorSets[static_cast<uint8_t>(DefaultCursorSets::White)] = DefaultCursorsSet(SONIC_RESOURCE_DIR + "cursors/default_white");
-		s_StandardCursorSets[static_cast<uint8_t>(DefaultCursorSets::WhiteShadow)] = DefaultCursorsSet(SONIC_RESOURCE_DIR + "cursors/default_white_shadow");
+		s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::Black)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_black");
+		s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::BlackShadow)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_black_shadow");
+		s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::White)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_white");
+		s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::WhiteShadow)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_white_shadow");
 	}
 
-	Cursor DefaultCursorsSet::getCurrent(DefaultCursors cursor)
+	Cursor StandardCursors::getCurrent(StandardCursor cursor)
 	{
 		return s_CurrentStandardCursorSet->m_StandardCursors[static_cast<uint8_t>(cursor)];
 	}
 
-	void DefaultCursorsSet::setStandardCursorSet(DefaultCursorSets cursorSet)
+	void StandardCursors::setStandardCursorSet(StandardCursorSet cursorSet)
 	{
 		s_CurrentStandardCursorSet = &s_StandardCursorSets[static_cast<uint8_t>(cursorSet)];
 	}

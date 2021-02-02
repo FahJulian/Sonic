@@ -185,7 +185,7 @@ namespace Sonic {
 			for (auto [e, r] : entities)
 			{
 				if (i > MAX_ELEMENTS)
-					return;
+					break;
 
 				if (*r->dirty)
 				{

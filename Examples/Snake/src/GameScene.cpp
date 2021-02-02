@@ -13,7 +13,7 @@ static bool isOutsideBorders(const glm::vec3& position)
 
 void GameScene::Load()
 {
-	Renderer2D::setClearColor(Colors::White);
+	Window::setClearColor(Colors::White);
 
 	Entity borderEntities[4] = { AddEntity(), AddEntity(), AddEntity(), AddEntity() };
 	for (Entity e : borderEntities)
@@ -76,14 +76,14 @@ void GameScene::PollCollisionEvents()
 	for (auto [entity, component, transform] : Group<SnakeHeadComponent, Transform2DComponent>())
 	{
 		for (auto [foodEntity, f, t] : Group<FoodComponent, Transform2DComponent>())
-			if (t->position == transform->position)
+			if (t->GetPosition() == transform->GetPosition())
 				DispatchEvent(SnakeEatEvent{ entity, foodEntity });
 
 		for (auto [tailEntity, st, t] : Group<SnakeTailComponent, Transform2DComponent>())
-			if (t->position == transform->position)
+			if (t->GetPosition() == transform->GetPosition())
 				DispatchEvent(SnakeResetEvent{ entity });
 
-		if (isOutsideBorders(transform->position))
+		if (isOutsideBorders(transform->GetPosition()))
 			DispatchEvent(SnakeResetEvent{ entity });
 	}
 }

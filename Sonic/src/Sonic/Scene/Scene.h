@@ -51,6 +51,8 @@ namespace Sonic {
 		void OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>& e);
 		void OnUIHoverComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e);
 		void OnTextComponentAdded(const ComponentAddedEvent<TextComponent>& e);
+		void OnRenderer2DComponentAdded(const ComponentAddedEvent<Renderer2DComponent>& e);
+		void OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DComponent>& e);
 
 		void RenderUIEntity(EntityID entity, const Sprite* sprite, const Color* color, float x, float y, float zIndex, float width, float height);
 

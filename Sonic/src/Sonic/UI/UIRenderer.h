@@ -9,7 +9,9 @@ namespace Sonic {
 	namespace UIRenderer {
 
 		void init();
+
 		void update(Scene* scene);
+
 		void render();
 
 	}

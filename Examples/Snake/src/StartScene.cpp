@@ -3,7 +3,7 @@
 
 void StartScene::Load()
 {
-	Renderer2D::setClearColor(Colors::White);
+	Window::setClearColor(Colors::White);
 
 	font = new Font(SONIC_RESOURCE_DIR + "fonts/calibri.ttf", 50);
 
@@ -23,6 +23,10 @@ void StartScene::Load()
 	e2.AddComponent<UIComponent>(UISize::Mode::RelativeToEntity, 0.15f, 0.8f, 0.2f, 0.1f, e1);
 	e2.AddComponent<UIRendererComponent>(Colors::DarkBlue);
 	e2.AddComponent<ResizableComponent>(UISize::Mode::Absolute, 0, 0, 500, 500, 5);
+
+	Entity e3 = AddEntity();
+	e3.AddComponent<Renderer2DComponent>(Colors::DarkGreen);
+	e3.AddComponent<Transform2DComponent>(300, 300, 100, 80);
 
 	//for (int i = 0; i < 15990; i++)
 	//{

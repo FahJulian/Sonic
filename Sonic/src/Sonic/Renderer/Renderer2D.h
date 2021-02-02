@@ -10,39 +10,15 @@ static const Sonic::Color WHITE = Sonic::Color(0xffffffff);
 
 namespace Sonic {
 
+    class Scene;
+
     namespace Renderer2D {
 
-        void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color);
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, const Sprite& sprite, const Color& color);
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color);
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, const Sprite& sprite, const Color& color);
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Color& color);
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, const Color& color);
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const Color& color);
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, const Color& color);
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite);
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, const Sprite& sprite);
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const Sprite& sprite);
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, const Sprite& sprite);
-
         void init();
-        
-        void setClearColor(const Color& color);
 
-        void startScene(const Camera2D* camera);
+        void update(Scene* scene, const Camera2D* camera);
 
-        void endScene();
+        void render();
     };
 
 }

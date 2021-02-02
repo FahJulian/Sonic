@@ -108,8 +108,8 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 
 		for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
 		{
-			cameraComponent->camera.SetPosition(t->position);
-			cameraComponent->camera.SetRotation(t->rotation);
+			cameraComponent->camera.SetPosition(t->GetPosition());
+			cameraComponent->camera.SetRotation(t->GetRotation());
 
 			if (cameraComponent->isSceneCamera)
 				m_Camera = cameraComponent->camera;
@@ -120,11 +120,7 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	{
 		SONIC_PROFILE_FUNCTION("Scene::UpdateRenderers");
 
-		Renderer2D::startScene(&m_Camera);
-
-		for (auto [e, r, t] : Group<Renderer2DComponent, Transform2DComponent>())
-			Renderer2D::drawRect(t->position, t->scale, t->rotation, r->sprite, r->color);
-
+		Renderer2D::update(this, &m_Camera);
 		UIRenderer::update(this);
 		FontRenderer::update(this);
 	}
@@ -133,7 +129,7 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	{
 		SONIC_PROFILE_FUNCTION("Scene::Render");
 
-		Renderer2D::endScene();
+		Renderer2D::render();
 		UIRenderer::render();
 		FontRenderer::render();
 	}
@@ -339,5 +335,17 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	{
 		if (HasComponent<UIComponent>(e.entity))
 			GetComponent<UIComponent>(e.entity)->fontRendererDirty = GetComponent<TextComponent>(e.entity)->dirty;
+	}
+
+	void Scene::OnRenderer2DComponentAdded(const ComponentAddedEvent<Renderer2DComponent>& e)
+	{
+		if (HasComponent<Transform2DComponent>(e.entity))
+			GetComponent<Transform2DComponent>(e.entity)->rendererDirty = GetComponent<Renderer2DComponent>(e.entity)->dirty;
+	}
+
+	void Scene::OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DComponent>& e)
+	{
+		if (HasComponent<Renderer2DComponent>(e.entity))
+			GetComponent<Transform2DComponent>(e.entity)->rendererDirty = GetComponent<Renderer2DComponent>(e.entity)->dirty;
 	}
 }

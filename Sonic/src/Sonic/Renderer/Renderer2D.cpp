@@ -6,6 +6,8 @@
 #include "Sonic/Graphics/Buffer/VertexBuffer.h"
 #include "Sonic/Graphics/Graphics2D/Texture.h"
 #include "Sonic/Graphics/Shader.h"
+#include "Sonic/Scene/Scene.h"
+#include "Sonic/Scene/PairView.h"
 #include "Renderer2D.h"
 
 struct Vertex
@@ -19,16 +21,14 @@ struct Vertex
 static const int MAX_RECTS = 10000;
 static const int MAX_TEXTURES = 16;
 
+static int s_RectCount;
+
 static Sonic::Shader s_Shader = Sonic::Shader::Null();
 static Sonic::VertexBuffer s_VBO = Sonic::VertexBuffer::Null();
 static Sonic::VertexArray s_VAO = Sonic::VertexArray::Null();
 
-static int s_RectCount;
 static Vertex s_Vertices[MAX_RECTS * 4];
-static Vertex* s_NextVertex;
-
 static std::vector<Sonic::Texture> s_Textures;
-static int s_TextureSlots[16];
 
 
 static float textureSlotOf(const Sonic::Texture& texture)
@@ -55,10 +55,17 @@ namespace Sonic {
 
         void init()
         {
-            s_RectCount = 0;
-            s_NextVertex = &s_Vertices[0];
-
             s_Shader = Shader(SONIC_RESOURCE_DIR + "shaders\\rectangle.vs", SONIC_RESOURCE_DIR + "shaders\\rectangle.fs");
+            s_Shader.Bind();
+
+            int textureSlots[MAX_TEXTURES];
+            for (int i = 0; i < MAX_TEXTURES; i++)
+                textureSlots[i] = i;
+
+            s_Shader.UniformIntArray("u_Textures", textureSlots, MAX_TEXTURES);
+            s_Shader.Unbind();
+
+            s_Textures.reserve(MAX_TEXTURES);
 
             int* indices = new int[6 * MAX_RECTS];
             for (int i = 0; i < MAX_RECTS; i++)
@@ -76,39 +83,29 @@ namespace Sonic {
             s_VAO = Sonic::VertexArray(indices, MAX_RECTS * 6, { s_VBO });
 
             delete[] indices;
-
-            s_Textures.reserve(MAX_TEXTURES);
-            for (int i = 0; i < MAX_TEXTURES; i++)
-                s_TextureSlots[i] = i;
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }
 
-        void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color)
+        void drawRect(int index, const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color)
         {
-            if (s_RectCount == MAX_RECTS)
-                return;
-
             float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(*sprite.texture);
 
+            Vertex* vertex = s_Vertices + 4 * index;
             if (rotation == 0)
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    s_NextVertex->x = position.x + (i % 2) * size.x;
-                    s_NextVertex->y = position.y + (i / 2) * size.y;
-                    s_NextVertex->z = position.z;
-                    s_NextVertex->r = color.r;
-                    s_NextVertex->g = color.g;
-                    s_NextVertex->b = color.b;
-                    s_NextVertex->a = color.a;
-                    s_NextVertex->textureX = i % 2 == 0 ? sprite.x0 : sprite.x1;
-                    s_NextVertex->textureY = i / 2 == 0 ? sprite.y0 : sprite.y1;
-                    s_NextVertex->textureSlot = textureSlot;
+                    vertex->x = position.x + (i % 2) * size.x;
+                    vertex->y = position.y + (i / 2) * size.y;
+                    vertex->z = position.z;
+                    vertex->r = color.r;
+                    vertex->g = color.g;
+                    vertex->b = color.b;
+                    vertex->a = color.a;
+                    vertex->textureX = i % 2 == 0 ? sprite.x0 : sprite.x1;
+                    vertex->textureY = i / 2 == 0 ? sprite.y0 : sprite.y1;
+                    vertex->textureSlot = textureSlot;
 
-                    s_NextVertex++;
+                    vertex++;
                 }
             }
             else
@@ -129,26 +126,59 @@ namespace Sonic {
                 //    s_Data.nextVertex++;
                 //}
             }
-
-            s_RectCount++;
         }
 
         void startScene(const Camera2D* camera)
         {
-            s_NextVertex = &s_Vertices[0];
             s_RectCount = 0;
 
+        }
+
+        void drawEntity(Scene* scene, EntityID e, Renderer2DComponent* r, int index)
+        {
+            auto* t = scene->GetComponent<Transform2DComponent>(e);
+            drawRect(index, t->GetPosition(), t->GetScale(), t->GetRotation(), r->GetSprite(), r->GetColor());
+        }
+
+        void update(Scene* scene, const Camera2D* camera)
+        {
             s_Shader.Bind();
             s_Shader.UniformMat4("u_ViewMatrix", camera->GetView());
             s_Shader.UniformMat4("u_ProjectionMatrix", camera->GetProjection());
-            s_Shader.UniformIntArray("u_Textures", s_TextureSlots, MAX_TEXTURES);
+            s_Shader.Unbind();
+
+            bool rebuffer = false;
+
+            auto& entities = scene->View<Renderer2DComponent>();
+            s_RectCount = entities.Size();
+
+            int i = 0;
+            for (auto [e, r] : entities)
+            {
+                if (i > MAX_RECTS)
+                    break;
+
+                if (*r->dirty)
+                {
+                    drawEntity(scene, e, r, i);
+                    *r->dirty = false;
+                    rebuffer = true;
+                }
+
+                i++;
+            }
+
+            if (rebuffer)
+            {
+                s_VBO.Bind();
+                s_VBO.SetData(reinterpret_cast<float*>(s_Vertices), 4 * s_RectCount * sizeof(Vertex));
+                s_VBO.Unbind();
+            }
         }
 
-        void endScene()
+        void render()
         {
             s_Shader.Bind();
-            s_VBO.SetData(reinterpret_cast<float*>(s_Vertices), 4 * s_RectCount * sizeof(Vertex));
-
             s_VAO.Bind();
 
             for (int i = 0; i < s_Textures.size(); i++)
@@ -159,68 +189,8 @@ namespace Sonic {
             for (int i = 0; i < s_Textures.size(); i++)
                 s_Textures.at(i).Unbind();
 
-            s_Shader.Unbind();
             s_VAO.Unbind();
-        }
-
-        void setClearColor(const Color& color) 
-        { 
-            glClearColor(color.r, color.g, color.b, color.a); 
-        }
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, const Sprite& sprite, const Color& color)
-        {
-            drawRect(position, size, 0.0f, sprite, color);
-        }
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color)
-        {
-            drawRect(glm::vec3{ position, 0.0f }, size, rotation, sprite, color);
-        }
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, const Sprite& sprite, const Color& color)
-        {
-            drawRect(glm::vec3{ position, 0.0f }, size, 0.0f, sprite, color);
-        }
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Color& color)
-        {
-            drawRect(position, size, rotation, Sprite(), color);
-        }
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, const Color& color)
-        {
-            drawRect(position, size, 0.0f, Sprite(), color);
-        }
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const Color& color)
-        {
-            drawRect(glm::vec3{ position, 0.0f }, size, rotation, Sprite(), color);
-        }
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, const Color& color)
-        {
-            drawRect(glm::vec3{ position, 0.0f }, size, 0.0f, Sprite(), color);
-        }
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite)
-        {
-            drawRect(position, size, rotation, sprite, WHITE);
-        }
-
-        void drawRect(const glm::vec3& position, const glm::vec2& size, const Sprite& sprite)
-        {
-            drawRect(position, size, 0.0f, sprite, WHITE);
-        }
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, float rotation, const Sprite& sprite)
-        {
-            drawRect(glm::vec3{ position, 0.0f }, size, rotation, sprite, WHITE);
-        }
-
-        void drawRect(const glm::vec2& position, const glm::vec2& size, const Sprite& sprite)
-        {
-            drawRect(glm::vec3{ position, 0.0f }, size, 0.0f, sprite, WHITE);
+            s_Shader.Unbind();
         }
 
     }

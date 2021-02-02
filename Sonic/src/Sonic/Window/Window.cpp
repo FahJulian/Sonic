@@ -1,6 +1,7 @@
 #include <iostream>
 #include <gl/glew.h>
 #include <GLFW/glfw3.h>
+#include "Sonic/Graphics/Color.h"
 #include "Sonic/App.h"
 #include "Window.h"
 
@@ -28,7 +29,7 @@ namespace Sonic {
             }
         );
 
-        DefaultCursorsSet::initStandardCursorSets();
+        StandardCursors::init();
         
         s_Data.width = static_cast<float>(width);
         s_Data.height = static_cast<float>(height);
@@ -43,11 +44,11 @@ namespace Sonic {
             return false;
         }
 
-        setCursor(DefaultCursors::Arrow);
+        setCursor(StandardCursors::Arrow);
 
         glfwMakeContextCurrent(s_Data.glfwID);
 
-        glClearColor(0.5f, 0.0f, 0.5f, 1.0f);
+        setClearColor(Colors::DarkGray);
 
         glfwSetKeyCallback(s_Data.glfwID, Keyboard::keyCallback);
         glfwSetCursorPosCallback(s_Data.glfwID, Mouse::cursorPosCallback);
@@ -55,6 +56,10 @@ namespace Sonic {
         glfwSetScrollCallback(s_Data.glfwID, Mouse::scrollCallback);
         glfwSetWindowCloseCallback(s_Data.glfwID, Window::windowCloseCallback);
         glfwSetWindowSizeCallback(s_Data.glfwID, Window::windowResizeCallback);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         return true;
     }
@@ -108,6 +113,11 @@ namespace Sonic {
         return s_Data.title;
     }
 
+    void Window::setClearColor(const Color& newClearColor)
+    {
+        glClearColor(newClearColor.r, newClearColor.g, newClearColor.b, newClearColor.a);
+    }
+
     void Window::setTitle(const std::string& title)
     {
         glfwSetWindowTitle(s_Data.glfwID, title.c_str());
@@ -124,13 +134,13 @@ namespace Sonic {
         glfwSetCursor(s_Data.glfwID, cursor);
     }
 
-    void Window::setCursor(DefaultCursors cursor)
+    void Window::setCursor(StandardCursor cursor)
     {
-        glfwSetCursor(s_Data.glfwID, DefaultCursorsSet::getCurrent(cursor));
+        glfwSetCursor(s_Data.glfwID, StandardCursors::getCurrent(cursor));
     }
 
-    void Window::setDefaultCursorSet(DefaultCursorSets cursorSet)
+    void Window::setDefaultCursorSet(StandardCursorSet cursorSet)
     {
-        DefaultCursorsSet::setStandardCursorSet(cursorSet);
+        StandardCursors::setStandardCursorSet(cursorSet);
     }
 }

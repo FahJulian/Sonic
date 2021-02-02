@@ -7,6 +7,8 @@
 namespace Sonic {
 	
 	using Cursor = GLFWcursor*;
+	using StandardCursor = uint8_t;
+	using StandardCursorSet = uint8_t;
 
 	class CursorSet
 	{
@@ -22,49 +24,53 @@ namespace Sonic {
 	private:
 		Ref<std::unordered_map<std::string, Cursor>> m_Cursors;
 
-		friend class DefaultCursorsSet;
-	};
-
-	enum class DefaultCursorSets : uint8_t
-	{
-		Black, BlackShadow, White, WhiteShadow
-	};
-
-	enum class DefaultCursors : uint8_t
-	{
-		Arrow,
-		Alternate,
-		IBeam,
-		Crosshair,
-		ResizeHorizontal,
-		ResizeVertical,
-		ResizeDiagonalLeft,
-		ResizeDiagonalRight,
-		Unavailable,
-		Pen,
-		Link,
-		Help
+		friend class StandardCursors;
 	};
 
 	static const int STANDARD_CURSOR_SETS_AMOUNT = 4;
 	static const int STANDARD_CURSORS_AMOUNT = 12;
 
-	class DefaultCursorsSet : public CursorSet
+	class StandardCursors : public CursorSet
 	{
+	public:
+		enum : StandardCursor
+		{
+			Arrow,
+			Alternate,
+			IBeam,
+			Crosshair,
+			ResizeHorizontal,
+			ResizeVertical,
+			ResizeDiagonalLeft,
+			ResizeDiagonalRight,
+			Unavailable,
+			Pen,
+			Link,
+			Help
+		};
+
+		enum class Sets : StandardCursorSet
+		{
+			Black,
+			BlackShadow,
+			White,
+			WhiteShadow
+		};
+
 	private:
-		DefaultCursorsSet() = default;
-		DefaultCursorsSet(const std::string& folderPath);
+		StandardCursors() = default;
+		StandardCursors(const std::string& folderPath);
 
 		Cursor m_StandardCursors[STANDARD_CURSORS_AMOUNT];
 
-		static void initStandardCursorSets();
+		static void init();
 
-		static Cursor getCurrent(DefaultCursors cursor);
+		static Cursor getCurrent(StandardCursor cursor);
 
-		static void setStandardCursorSet(DefaultCursorSets cursorSet);
+		static void setStandardCursorSet(StandardCursorSet cursorSet);
 
-		static Sonic::DefaultCursorsSet s_StandardCursorSets[Sonic::STANDARD_CURSOR_SETS_AMOUNT];
-		static Sonic::DefaultCursorsSet* s_CurrentStandardCursorSet;
+		static StandardCursors s_StandardCursorSets[Sonic::STANDARD_CURSOR_SETS_AMOUNT];
+		static StandardCursors* s_CurrentStandardCursorSet;
 
 		friend class Window;
 	};
