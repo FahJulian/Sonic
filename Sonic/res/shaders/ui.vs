@@ -27,12 +27,12 @@ out vec2 f_BottomRight;
 out vec2 f_TopLeft;
 out vec2 f_TopRight;
 
-uniform float u_WindowWidth;
-uniform float u_WindowHeight;
+uniform float u_ViewportWidth;
+uniform float u_ViewportHeight;
 
 void main()
 {
-	gl_Position = vec4(2 * v_Position.x / u_WindowWidth - 1.0, 2 * v_Position.y /u_WindowHeight - 1.0, v_Position.z, 1-0);
+	gl_Position = vec4(2 * v_Position.x / u_ViewportWidth - 1.0, 2 * v_Position.y /u_ViewportHeight - 1.0, v_Position.z, 1-0);
 
 	f_Color = v_Color;
 	f_TextureCoords = v_TextureCoords;

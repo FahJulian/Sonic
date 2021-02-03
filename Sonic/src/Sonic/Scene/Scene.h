@@ -1,17 +1,16 @@
 #pragma once
 #include "Sonic/Util/GenericContainer.h"
-#include "Sonic/Graphics/Graphics2D/Sprite.h"
-#include "Sonic/Event/Events.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Renderer/Camera2D.h"
-#include "Sonic/Window/Window.h"
-#include "Sonic/UI/UIComponents.h"
+#include "Sonic/UI/SceneUIHandler.h"
 #include "EntityID.h"
 #include "ComponentPool.h"
 #include "Behaviour.h"
 #include "BehaviourPool.h"
 
 namespace Sonic {
+
+	class Camera2D;
 
 	template<typename Component>
 	class PairView;
@@ -25,6 +24,17 @@ namespace Sonic {
 	template<typename Component1, typename Component2>
 	class GroupView;
 
+	struct Renderer2DComponent;
+	struct Transform2DComponent;
+
+	template <typename Component>
+	struct ComponentAddedEvent;
+
+	template <typename Component>
+	struct ComponentRemovedEvent;
+
+	struct WindowResizedEvent;
+
 	class Entity;
 
 	class Scene : public EventDispatcher
@@ -35,27 +45,19 @@ namespace Sonic {
 	private:
 		void Init();
 		void Update(float deltaTime);
-		void UpdateRenderers();
+		void Rebuffer();
 		void Render();
 
 		void UpdatePools();
 		void UpdateComponents(float deltaTime);
 		void UpdateBehaviours(float deltaTime);
 
-		void OnMouseButtonPressed(const MouseButtonPressedEvent& e);
-		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
-		void OnMouseMoved(const MouseMovedEvent& e);
-		void OnMouseDragged(const MouseDraggedEvent& e);
-		void OnWindowResized(const WindowResizedEvent& e);
-
-		void OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e);
-		void OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>& e);
-		void OnUIHoverComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e);
-		void OnTextComponentAdded(const ComponentAddedEvent<TextComponent>& e);
 		void OnRenderer2DComponentAdded(const ComponentAddedEvent<Renderer2DComponent>& e);
 		void OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DComponent>& e);
 
 		void OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e);
+
+		void OnWindowResized(const WindowResizedEvent& e);
 
 	protected:
 		virtual void Load() = 0;
@@ -132,8 +134,7 @@ namespace Sonic {
 
 	private:
 		Camera2D m_Camera;
-
-		EntityID m_ResizingUIEntity = 0;
+		SceneUIHandler m_UIHandler;
 
 		friend class App;
 		friend class Entity;

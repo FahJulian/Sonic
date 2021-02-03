@@ -1,7 +1,6 @@
 #include <GL/glew.h>
-#include <glfw/glfw3.h>
-#include <iostream>
 #include <string>
+#include "Scene/Scene.h"
 #include "Sonic/UI/Font/Font.h"
 #include "Sonic/UI/Font/FontRenderer.h"
 #include "Renderer/Renderer2D.h"
@@ -9,133 +8,130 @@
 #include "Window/Window.h"
 #include "App.h"
 
-struct InitialWindowData
+using namespace Sonic;
+
+
+static const int INITIAL_UPDATE_CAP = 60;
+static double s_SecondsPerUpdate = 1.0 / INITIAL_UPDATE_CAP;
+
+static bool s_Running = false;
+
+static Sonic::Scene* s_Scene;
+
+
+bool App::init(const AppData& data)
 {
-    int width;
-    int height;
-    const char* title;
-    bool resizable;
-};
-
-static InitialWindowData s_InitialWindowData;
-
-namespace Sonic {
-    App* App::m_Instance;
-
-    App::App(int width, int height, const char* title, bool windowResizable)
-        : m_Scene(nullptr), m_Running(false)
+    if (!Sonic::Window::init(data.windowWidth, data.windowHeight,
+        data.windowTitle, data.windowResizable))
     {
-        if (m_Instance != nullptr)
-            return;
-       
-        App::m_Instance = this;
-
-        s_InitialWindowData.width = width;
-        s_InitialWindowData.height = height;
-        s_InitialWindowData.title = title;
-        s_InitialWindowData.resizable = windowResizable;
+        return false;
     }
 
-    bool App::Init()
+    if (glewInit() != GLEW_OK)
     {
-        if (!Sonic::Window::init(s_InitialWindowData.width, s_InitialWindowData.height, 
-                s_InitialWindowData.title, s_InitialWindowData.resizable))
-            return false;
+        Window::destroy();
+        return false;
+    }
 
-        if (glewInit() != GLEW_OK)
-        {
-            Window::destroy();
-            return false;
-        }
+    Renderer2D::init();
+    UIRenderer::init();
+    Font::init();
+    FontRenderer::init();
 
-        Renderer2D::init();
-        UIRenderer::init();
-        Font::init();
-        FontRenderer::init();
-
-        m_Scene = OnInit();
-        m_Scene->AddListener(this, &App::OnWindowClosed);
-        m_Scene->Init();
+    s_Scene = data.scene;
+    s_Scene->Init();
         
-        return true;
-    }
+    return true;
+}
 
-    void App::Exit()
-    {
-        OnExit();
-    }
+void App::run()
+{
+    s_Running = true;
 
-    void App::Run()
-    {
-        m_Running = true;
-
-        const double secondsPerUpdate = 1.0 / 60.0;
-        double deltaSeconds = 0.0;
-        double dueUpdates = 0.0;
-
-        double startTime = Window::getTime();
-        double lastUpdate = 0.0;
+    double totalDelta = 0.0;
+    double startTime = Window::getTime();
 
 #ifdef SONIC_DEBUG
-        double fpsTimer = 0.0f;
-        int frames = 0;
-        int lastFpsLength = 0;
+    double fpsTimer = 0.0f;
+    int frames = 0;
+    int lastFpsLength = 0;
 #endif
 
-        while (m_Running)
+    while (s_Running)
+    {
+        if (totalDelta >= s_SecondsPerUpdate)
         {
-            dueUpdates += deltaSeconds / secondsPerUpdate;
-            while (dueUpdates >= 1)
-            {
-                const double updateDeltaSeconds = startTime - lastUpdate;
-                m_Scene->Update(static_cast<float>(updateDeltaSeconds));
-                lastUpdate = startTime;
-                dueUpdates--;
-            }
+            s_Scene->Update(static_cast<float>(totalDelta));
+            s_Scene->Rebuffer();
+            Window::pollEvents();
 
-            glClear(GL_COLOR_BUFFER_BIT);
-            m_Scene->Render();
-            Window::swapBuffers();
-            frames++;
+            totalDelta = 0;
+        }
 
-            const double endTime = Window::getTime();
-            deltaSeconds = endTime - startTime;
-            startTime = endTime;
+        glClear(GL_COLOR_BUFFER_BIT);
+        s_Scene->Render();
+        Window::swapBuffers();
+
+        const double endTime = Window::getTime();
+        const double delta = endTime - startTime;
             
 #ifdef SONIC_DEBUG
-            fpsTimer += deltaSeconds;
-            if (fpsTimer > 1.0f)
-            {
-                fpsTimer -= 1.0f;
-                std::string oldTitle = std::string(Window::getTitle());
-                std::string framesStr = std::to_string(frames);
-                std::string sub = oldTitle.substr(0, oldTitle.length() - lastFpsLength);
-                Window::setTitle(oldTitle.substr(0, oldTitle.length() - lastFpsLength) + " (" + framesStr + ")");
-                lastFpsLength = static_cast<int>(framesStr.length()) + 3;
-                frames = 0;
-            }
+        frames++;
+        fpsTimer += delta;
+        if (fpsTimer >= 1.0f)
+        {
+            fpsTimer -= 1.0f;
+            std::string oldTitle = std::string(Window::getTitle());
+            std::string framesStr = std::to_string(frames);
+            std::string sub = oldTitle.substr(0, oldTitle.length() - lastFpsLength);
+            Window::setTitle(oldTitle.substr(0, oldTitle.length() - lastFpsLength) + " (" + framesStr + ")");
+            lastFpsLength = static_cast<int>(framesStr.length()) + 3;
+            frames = 0;
+        }
 #endif
 
-            //Window::pollEvents();
-        }
+        totalDelta += endTime - startTime;
+        startTime = endTime;
     }
+}
 
-    void App::OnWindowClosed(const WindowClosedEvent& event)
-    {
-        Stop();
-    }
+void App::setUpdateCap(double newCap)
+{
+    s_SecondsPerUpdate = 1.0 / newCap;
+}
 
-    void App::Stop()
-    {
-        m_Running = false;
-    }
+void App::stop()
+{
+    s_Running = false;
+}
 
-    App::~App()
-    { 
-        Font::destroy();
-        Window::destroy();
+void App::onWindowResized(const WindowResizedEvent& e)
+{
+    s_Scene->Rebuffer();
 
-        if (m_Scene) 
-            delete m_Scene;
-    }
+    Window::clear();
+    s_Scene->Render();
+    Window::swapBuffers();
+}
+
+void App::onWindowClosed(const WindowClosedEvent& e)
+{
+    App::stop();
+}
+
+Scene* App::getActiveScene()
+{
+    return s_Scene;
+}
+
+void App::setScene(Scene* scene)
+{
+    s_Scene = scene;
+    scene->Init();
+}
+
+void App::destroy()
+{ 
+    Font::destroy();
+    Window::destroy();
 }

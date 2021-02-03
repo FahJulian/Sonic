@@ -11,7 +11,7 @@ void StartScene::Load()
 	int buttonHeight = 80;
 	Entity button = UI::createButton(this, (WINDOW_WIDTH - buttonWidth) / 10.0f, (WINDOW_HEIGHT - buttonHeight) / 2.0f, 0.0f, (float)buttonWidth, (float)buttonHeight,
 		Colors::LightGray, Colors::DarkGray, 1.0f, Colors::Black, 5.0f, [this](const MouseButtonReleasedEvent& e) { /*App::get()->SetScene(gameScene);*/ });
-	button.AddComponent<TextComponent>(*font, Colors::Black, "Start");
+	button.AddComponent<UITextComponent>(*font, Colors::Black, "Start");
 	button.AddComponent<UIResizableComponent>(UISize::Mode::Absolute, 0, 0, 500, 500, 5);
 
 	Entity e1 = AddEntity();
@@ -30,6 +30,3 @@ void StartScene::Load()
 	e.AddComponent<UIResizableComponent>(UISize::Mode::Absolute, 0, 0, 500, 500, 5);
 
 }
-
-void Sonic::UIComponent::SetX(float newX) { x.value = x.value - (newX - absoluteX) * width.value / absoluteWidth; dirty = true; }
-void Sonic::UIComponent::SetY(float newY) { y.value = y.value - (newY - absoluteY) / absoluteHeight * height.value; dirty = true; }

@@ -1,10 +1,21 @@
 #pragma once
 #include "Sonic/main.h"
-#include "Application.h"
+#include "StartScene.h"
+#include "GameScene.h"
+#include "Settings.h"
 
-Sonic::App* Sonic::createApplication()
+Sonic::AppData Sonic::init()
 {
-	return new Application();
+	GameScene* gameScene = new GameScene();
+	StartScene* startScene = new StartScene(gameScene);
+
+	return {
+		WINDOW_WIDTH,
+		WINDOW_HEIGHT,
+		WINDOW_TITLE,
+		true,
+		startScene
+	};
 }
 
 const std::string& Sonic::resourceDir()

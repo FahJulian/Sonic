@@ -1,12 +1,10 @@
 #pragma once
-#include "Input/Keyboard.h"
-#include "Input/Mouse.h"
+#include <string>
 #include "Cursor/Cursors.h"
-#include "Sonic/Event/Events.h"
-#include "Sonic/Event/EventDispatcher.h"
-#include "Sonic/Graphics/Color.h"
 
 namespace Sonic {
+
+    struct Color;
 
     /**
     * Uninstantiable class that is responsible for initializing glfw windows, turning glfw 
@@ -26,7 +24,7 @@ namespace Sonic {
         * 
         * @return Whether the initialization was successful
         */
-        static bool init(int width, int height, const char* title, bool resizable = true);
+        static bool init(int width, int height, const std::string&, bool resizable = true);
 
         /**
         * Destroys the glfw window and frees all memory related to glfw
@@ -50,6 +48,8 @@ namespace Sonic {
 
         static void setClearColor(const Color& color);
 
+        static void clear();
+
         /**
         * @return The time that has since window initialization passed in seconds
         */
@@ -71,6 +71,7 @@ namespace Sonic {
 
     private:
         static void windowCloseCallback(GLFWwindow* window);
+
         static void windowResizeCallback(GLFWwindow* window, int width, int height);
     };
     

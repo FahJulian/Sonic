@@ -16,7 +16,7 @@ namespace Sonic {
 
         void init();
 
-        void update(Scene* scene, const Camera2D* camera);
+        void rebuffer(Scene* scene, const Camera2D* camera);
 
         void render();
     };

@@ -95,10 +95,10 @@ namespace Sonic {
 
     struct WindowResizedEvent
     {
-        int width;
-        int height;
+        float width;
+        float height;
 
-        WindowResizedEvent(int width, int height)
+        WindowResizedEvent(float width, float height)
             : width(width), height(height)
         {
         }

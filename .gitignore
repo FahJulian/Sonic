@@ -5,4 +5,4 @@ bin/
 *.vcxproj.filters
 *.vcxproj.user
 enc_temp_folder/
-.gimp/
+*/.gimp/*

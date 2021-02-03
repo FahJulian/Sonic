@@ -1,25 +1,42 @@
 #pragma once
+#include <iostream>
+#include "Sonic/App.h"
 
 namespace Sonic {
 
     class Log
     {
     public:
-        static void debugAssert(bool b, const char* msg);
-        static void debug(const char* msg);
+        template<typename Arg, typename... Args>
+        static void debugAssert(bool b, Arg&& arg, Args&&... args)
+        {
+            if (!b)
+            {
+                Log::debug(std::forward<Arg>(arg), std::forward<Args>(args)...);
+                App::stop();
+            }
+        }
+
+        template<typename Arg, typename... Args>
+        static void debug(Arg&& arg, Args&&... args)
+        {
+            std::cout << "[DEBUG] ";
+            std::cout << std::forward<Arg>(arg);
+            ((std::cout << ',' << std::forward<Args>(args)), ...);
+            std::cout << std::endl;
+        }
     };
 
 }
 
 #ifdef SONIC_DEBUG
-    #define SONIC_LOG_DEBUG(x) Sonic::Log::debug(x)
-    #define SONIC_LOG_DEBUG_ASSERT(b, x) Sonic::Log::debugAssert(b, x)
-    #define SONIC_LOG_ERROR(x) SONIC_LOG_DEBUG(x)
-    #define SONIC_LOG_WARN(x) SONIC_LOG_DEBUG(x)    
+    #define SONIC_LOG_DEBUG(...) Sonic::Log::debug(__VA_ARGS__)
+    #define SONIC_LOG_DEBUG_ASSERT(b, ...) Sonic::Log::debugAssert(b, __VA_ARGS__)
+    #define SONIC_LOG_ERROR(...) SONIC_LOG_DEBUG(__VA_ARGS__)
+    #define SONIC_LOG_WARN(...) SONIC_LOG_DEBUG(__VA_ARGS__)    
 #else
-    #define SONIC_LOG_DEBUG(x) 
-    #define SONIC_LOG_DEBUG_ASSERT(x) 
-    #define SONIC_LOG_ERROR(x)
-    #define SONIC_LOG_WARN(x)   
+    #define SONIC_LOG_DEBUG(...) 
+    #define SONIC_LOG_DEBUG_ASSERT(b, ...) 
+    #define SONIC_LOG_ERROR(...)
+    #define SONIC_LOG_WARN(...)   
 #endif
-

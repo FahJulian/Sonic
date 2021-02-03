@@ -1,8 +1,6 @@
 #pragma once
+#include <gl/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include "../Event/EventDispatcher.h"
-#include "../Event/Events.h"
 #include "MouseButtons.h"
 
 namespace Sonic {

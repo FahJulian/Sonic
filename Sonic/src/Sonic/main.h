@@ -17,16 +17,15 @@ namespace Sonic
     * return a pointer to the instance of the subclassed App that 
     * should be ran
     */
-    App* createApplication();
+    AppData init();
 }
 
 int main()
 {
-    Sonic::App* app = Sonic::createApplication();
-    app->Init();
+    Sonic::AppData data = Sonic::init();
+    Sonic::App::init(data);
 
-    app->Run();
+    Sonic::App::run();
 
-    app->Exit();
-    delete app;
+    Sonic::App::destroy();
 }

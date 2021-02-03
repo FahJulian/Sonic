@@ -14,9 +14,11 @@ namespace Sonic {
 
 		void drawString(float x, float y, float z, const std::string& string, const Font& font, const Color& color);
 
-		void update(Scene* scene);
+		void rebuffer(Scene* scene);
 
 		void render();
+
+		void setViewportSize(float width, float height);
 	}
 
 }

@@ -10,9 +10,11 @@ namespace Sonic {
 
 		void init();
 
-		void update(Scene* scene);
+		void rebuffer(Scene* scene);
 
 		void render();
+
+		void setViewportSize(float width, float height);
 
 	}
 

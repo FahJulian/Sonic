@@ -9,13 +9,13 @@ out vec4 f_Color;
 out vec2 f_TextureCoords;
 out float f_FontIndex;
 
-uniform float u_WindowWidth;
-uniform float u_WindowHeight;
+uniform float u_ViewportWidth;
+uniform float u_ViewportHeight;
 
 void main()
 {
 	f_Color = v_Color;
 	f_FontIndex = v_FontIndex;
 	f_TextureCoords = v_TextureCoords;
-	gl_Position = vec4(2 * v_Position.x / u_WindowWidth - 1, 2 * v_Position.y / u_WindowHeight - 1, 0.0, 1.0);
+	gl_Position = vec4(2 * v_Position.x / u_ViewportWidth - 1, 2 * v_Position.y / u_ViewportHeight - 1, 0.0, 1.0);
 };

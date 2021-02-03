@@ -11,6 +11,7 @@ namespace Sonic {
 	
 		Mode mode;
 		float value;
+		float absoluteValue;
 	};
 
 }
