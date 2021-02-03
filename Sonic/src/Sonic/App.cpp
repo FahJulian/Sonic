@@ -116,7 +116,7 @@ namespace Sonic {
             }
 #endif
 
-            Window::pollEvents();
+            //Window::pollEvents();
         }
     }
 

@@ -46,6 +46,7 @@ namespace Sonic {
 		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
 		void OnMouseMoved(const MouseMovedEvent& e);
 		void OnMouseDragged(const MouseDraggedEvent& e);
+		void OnWindowResized(const WindowResizedEvent& e);
 
 		void OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e);
 		void OnUIRendererComponentAdded(const ComponentAddedEvent<UIRendererComponent>& e);
@@ -54,7 +55,7 @@ namespace Sonic {
 		void OnRenderer2DComponentAdded(const ComponentAddedEvent<Renderer2DComponent>& e);
 		void OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DComponent>& e);
 
-		void RenderUIEntity(EntityID entity, const Sprite* sprite, const Color* color, float x, float y, float zIndex, float width, float height);
+		void OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e);
 
 	protected:
 		virtual void Load() = 0;

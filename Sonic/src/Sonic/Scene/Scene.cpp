@@ -4,8 +4,6 @@
 #include "Sonic/Debug/Profiler/Profiler.h"
 #include "Sonic/Renderer/Renderer2D.h"
 #include "Sonic/UI/Font/FontRenderer.h"
-#include "Sonic/UI/Font/Font.h"
-#include "Sonic/UI/UI.h"
 #include "Sonic/UI/UIComponents.h"
 #include "Sonic/UI/UIRenderer.h"
 #include "Scene.h"
@@ -13,7 +11,6 @@
 #include "Components.h"
 #include "PairView.h"
 #include "ComponentView.h"
-#include "EntityView.h"
 #include "GroupView.h"
 
 
@@ -27,9 +24,13 @@ namespace Sonic {
 		AddListener(this, &Scene::OnMouseMoved);
 		AddListener(this, &Scene::OnMouseDragged);
 
-AddListener(this, &Scene::OnUIComponentAdded);
-AddListener(this, &Scene::OnUIHoverComponentAdded);
-AddListener(this, &Scene::OnUIRendererComponentAdded);
+		AddListener(this, &Scene::OnUIComponentAdded);
+		AddListener(this, &Scene::OnUIHoverComponentAdded);
+		AddListener(this, &Scene::OnUIRendererComponentAdded);
+		AddListener(this, &Scene::OnTextComponentAdded);
+
+		AddListener(this, &Scene::OnRenderer2DComponentAdded);
+		AddListener(this, &Scene::OnTransform2DComponentAdded);
 	}
 
 	Entity Scene::AddEntity()
@@ -66,6 +67,7 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	{
 		SONIC_PROFILE_FUNCTION("Scene::Update");
 
+
 		OnUpdate(deltaTime);
 
 		UpdateComponents(deltaTime);
@@ -73,6 +75,8 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 		UpdateBehaviours(deltaTime);
 
 		UpdatePools();
+
+		Window::pollEvents();
 
 		PollCollisionEvents();
 
@@ -102,9 +106,57 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	{
 		SONIC_PROFILE_FUNCTION("Scene::UpdateComponents");
 
-		for (auto component : ViewComponents<UIComponent>())
-			if (component->IsDirty())
-				component->Recalculate(this);
+		for (auto c : ViewComponents<UIComponent>())
+		{
+			if (c->IsDirty())
+			{
+				UIComponent* parentComponent = c->parent != 0 ? GetComponent<UIComponent>(c->parent) : nullptr;
+
+				switch (c->x.mode)
+				{
+				case UISize::Mode::Absolute: c->absoluteX = c->x.value; break;
+				case UISize::Mode::RelativeToEntity: c->absoluteX = parentComponent->GetX() + c->x.value * parentComponent->GetWidth(); break;
+				case UISize::Mode::RelativeToWindow: c->absoluteX = c->x.value * Window::getWidth(); break;
+				}
+
+				switch (c->y.mode)
+				{
+				case UISize::Mode::Absolute: c->absoluteY = c->y.value; break;
+				case UISize::Mode::RelativeToEntity: c->absoluteY = parentComponent->GetY() + c->y.value * parentComponent->GetHeight(); break;
+				case UISize::Mode::RelativeToWindow: c->absoluteY = c->y.value * Window::getHeight(); break;
+				}
+
+				switch (c->width.mode)
+				{
+				case UISize::Mode::Absolute: c->absoluteWidth = c->width.value; break;
+				case UISize::Mode::RelativeToEntity: c->absoluteWidth = c->width.value * parentComponent->GetWidth(); break;
+				case UISize::Mode::RelativeToWindow: c->absoluteWidth = c->width.value * Window::getWidth(); break;
+				}
+
+				switch (c->height.mode)
+				{
+				case UISize::Mode::Absolute: c->absoluteHeight = c->height.value; break;
+				case UISize::Mode::RelativeToEntity: c->absoluteHeight = c->height.value * parentComponent->GetHeight(); break;
+				case UISize::Mode::RelativeToWindow: c->absoluteHeight = c->height.value * Window::getHeight(); break;
+				}
+
+				c->dirty = false;
+				c->SetRendererDirty();
+
+				for (EntityID child : *c->childs)
+				{
+					auto* childComponent = GetComponent<UIComponent>(child);
+					if (!childComponent->IsDirty())
+					{
+						if (childComponent->x.mode == UISize::Mode::RelativeToEntity) childComponent->absoluteX = c->absoluteX + childComponent->x.value * c->absoluteWidth;
+						if (childComponent->y.mode == UISize::Mode::RelativeToEntity) childComponent->absoluteY = c->absoluteY + childComponent->y.value * c->absoluteHeight;
+						if (childComponent->width.mode == UISize::Mode::RelativeToEntity) childComponent->absoluteWidth = childComponent->width.value * c->absoluteWidth;
+						if (childComponent->height.mode == UISize::Mode::RelativeToEntity) childComponent->absoluteHeight = childComponent->height.value * c->absoluteHeight;
+						childComponent->SetRendererDirty();
+					}
+				}
+			}
+		}
 
 		for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
 		{
@@ -141,35 +193,12 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 		if (e.button != Buttons::Left)
 			return;
 
-		for (auto [entity, r, c] : Group<ResizableComponent, UIComponent>())
+		for (auto [entity, r, c] : Group<UIResizableComponent, UIComponent>())
 		{
-			float x = c->GetX();
-			float y = c->GetY();
-			float width = c->GetWidth();
-			float height = c->GetHeight();
-
-			if (r->resizable.bottom && e.x >= x - r->grabSize && e.x < x + width + r->grabSize && e.y >= y - r->grabSize && e.y < y + r->grabSize)
-			{
-				r->dragged.bottom = true;
-				m_ResizingUIEntity = entity;
-			}
-			else if (r->resizable.top && e.x >= x - r->grabSize && e.x < x + width + r->grabSize && e.y >= y + height - r->grabSize && e.y < y + height + r->grabSize)
-			{
-				r->dragged.top = true;
-				m_ResizingUIEntity = entity;
-			}
-			
-			if (r->resizable.right && e.x >= x + width - r->grabSize && e.x < x + width + r->grabSize && e.y >= y - r->grabSize && e.y < y + height + r->grabSize)
-			{
-				r->dragged.right = true;
-				m_ResizingUIEntity = entity;
-
-			}
-			else if (r->resizable.left && e.x >= x - r->grabSize && e.x < x + r->grabSize && e.y >= y - r->grabSize && e.y < y + height + r->grabSize)
-			{
-				r->dragged.left = true;
-				m_ResizingUIEntity = entity;
-			}
+			r->dragged.bottom = r->hovered.bottom;
+			r->dragged.top = r->hovered.top && !r->hovered.bottom;
+			r->dragged.left = r->hovered.left;
+			r->dragged.right = r->hovered.right && !r->hovered.left;
 
 			if (m_ResizingUIEntity != 0)
 				break;
@@ -190,9 +219,9 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 			float width = c->GetWidth();
 			float height = c->GetHeight();
 
-			if (HasComponent<ResizableComponent>(entity))
+			if (HasComponent<UIResizableComponent>(entity))
 			{
-				auto* r = GetComponent<ResizableComponent>(entity);
+				auto* r = GetComponent<UIResizableComponent>(entity);
 				if (r->dragged.bottom || r->dragged.top || r->dragged.right || r->dragged.left)
 					continue;
 			}
@@ -201,7 +230,7 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 				clickListener->listener(e);
 		}
 		
-		for (auto c : ViewComponents<ResizableComponent>())
+		for (auto c : ViewComponents<UIResizableComponent>())
 		{
 			c->dragged.bottom = false;
 			c->dragged.right = false;
@@ -216,14 +245,54 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	{
 		SONIC_PROFILE_FUNCTION("Scene::OnMouseMoved");
 
-		for (auto [entity, h, c] : Group<UIHoverComponent, UIComponent>())
-		{
-			float x = UI::toAbsoluteX(this, c->parent, c->x);
-			float y = UI::toAbsoluteY(this, c->parent, c->y);
-			float width = UI::toAbsoluteWidth(this, c->parent, c->width);
-			float height = UI::toAbsoluteHeight(this, c->parent, c->height);
+		Window::setCursor(StandardCursors::Arrow);
 
-			h->SetHoverered(e.x >= x && e.x < x + width && e.y >= y && e.y < y + height);
+		for (auto [entity, h, c] : Group<UIHoverComponent, UIComponent>())
+			h->SetHoverered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
+
+		for (auto [entity, r, c] : Group<UIResizableComponent, UIComponent>())
+		{
+			r->hovered = { false, false, false, false };
+
+			if (r->resizable.bottom && e.x >= c->GetX() - r->grabSize && e.x < c->GetX() + c->GetWidth() + r->grabSize && e.y >= c->GetY() - r->grabSize && e.y < c->GetY() + r->grabSize)
+				r->hovered.bottom = true;
+			else if (r->resizable.top && e.x >= c->GetX() - r->grabSize && e.x < c->GetX() + c->GetWidth() + r->grabSize && e.y >= c->GetY() + c->GetHeight() - r->grabSize && e.y < c->GetY() + c->GetHeight() + r->grabSize)
+				r->hovered.top = true;
+
+			if (r->resizable.right && e.x >= c->GetX() + c->GetWidth() - r->grabSize && e.x < c->GetX() + c->GetWidth() + r->grabSize && e.y >= c->GetY() - r->grabSize && e.y < c->GetY() + c->GetHeight() + r->grabSize)
+				r->hovered.right = true;
+			else if (r->resizable.left && e.x >= c->GetX() - r->grabSize && e.x < c->GetX() + r->grabSize && e.y >= c->GetY() - r->grabSize && e.y < c->GetY() + c->GetHeight() + r->grabSize)
+				r->hovered.left = true;
+
+			if ((r->dragged.bottom && r->dragged.right) || (r->dragged.top && r->dragged.left))
+			{
+				Window::setCursor(StandardCursors::ResizeDiagonalLeft);
+				continue;
+			}
+			else if ((r->dragged.bottom && r->dragged.left) || (r->dragged.top && r->dragged.right))
+			{
+				Window::setCursor(StandardCursors::ResizeDiagonalRight);
+				continue;
+			}
+			else if (r->dragged.bottom || r->dragged.top)
+			{
+				Window::setCursor(StandardCursors::ResizeVertical);
+				continue;
+			}
+			else if (r->dragged.left || r->dragged.right)
+			{
+				Window::setCursor(StandardCursors::ResizeHorizontal);
+				continue;
+			}
+
+			if ((r->hovered.bottom && r->hovered.right) || (r->hovered.top && r->hovered.left))
+				Window::setCursor(StandardCursors::ResizeDiagonalLeft);
+			else if ((r->hovered.bottom && r->hovered.left) || (r->hovered.top && r->hovered.right))
+				Window::setCursor(StandardCursors::ResizeDiagonalRight);
+			else if (r->hovered.bottom || r->hovered.top)
+				Window::setCursor(StandardCursors::ResizeVertical);
+			else if (r->hovered.left || r->hovered.right)
+				Window::setCursor(StandardCursors::ResizeHorizontal);
 		}
 	}
 
@@ -234,87 +303,96 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 		if (e.button != Buttons::Left)
 			return;
 
-		if (m_ResizingUIEntity == 0)
-			return;
-
-		auto* r = GetComponent<ResizableComponent>(m_ResizingUIEntity);
-		auto* c = GetComponent<UIComponent>(m_ResizingUIEntity);
-
-		if (r->dragged.bottom)
+		for (auto [entity, r, c] : Group<UIResizableComponent, UIComponent>())
 		{
-			float y = c->GetY();
-			float height = c->GetHeight();
-			float dy = std::clamp<float>(y - e.y, UI::toAbsoluteHeight(this, c->parent, r->maxHeight) - height, UI::toAbsoluteHeight(this, c->parent, r->maxHeight) - height);
+			UIComponent* pc = c->parent != 0 ? pc = GetComponent<UIComponent>(c->parent) : nullptr;
 
-			if (c->y.mode == UISize::Mode::Absolute)
-				c->y.value -= dy;
-			else if (c->y.mode == UISize::Mode::RelativeToEntity)
-				c->y.value -= dy / height;
-			else if (c->y.mode == UISize::Mode::RelativeToWindow)
-				c->y.value -= dy / Window::getHeight();
+			if (r->dragged.bottom)
+			{
+				float dy = std::clamp<float>(c->GetY() - e.y, UI::toAbsoluteHeight(this, c->parent, r->minHeight) - c->GetHeight(), UI::toAbsoluteHeight(this, c->parent, r->maxHeight) - c->GetHeight());
 
-			if (c->height.mode == UISize::Mode::Absolute)
-				c->height.value += dy;
-			else if (c->height.mode == UISize::Mode::RelativeToEntity)
-				c->height.value += dy / height;
-			else if (c->height.mode == UISize::Mode::RelativeToWindow)
-				c->height.value += dy / Window::getHeight();
+				c->SetY(c->GetY() + dy);
+				c->SetHeight(c->GetHeight() + dy);
+
+
+				//if (c->y.mode == UISize::Mode::Absolute)
+				//	c->SetY(c->GetY() - dy);
+				//else if (c->y.mode == UISize::Mode::RelativeToEntity)
+				//	c->SetY(c->y.value - dy / pc->GetHeight());
+				//else if (c->y.mode == UISize::Mode::RelativeToWindow)
+				//	c->SetY(c->y.value - dy / Window::getHeight());
+
+				//if (c->height.mode == UISize::Mode::Absolute)
+				//	c->SetHeight(c->GetHeight() + dy);
+				//else if (c->height.mode == UISize::Mode::RelativeToEntity)
+				//	c->SetHeight(c->height.value + dy / pc->GetHeight());
+				//else if (c->height.mode == UISize::Mode::RelativeToWindow)
+				//	c->SetHeight(c->height.value + dy / Window::getHeight());
+			}
+			else if (r->dragged.top)
+			{
+				float dy = std::clamp<float>(e.y - (c->GetY() + c->GetHeight()), UI::toAbsoluteHeight(this, c->parent, r->minHeight) - c->GetHeight(), UI::toAbsoluteHeight(this, c->parent, r->maxHeight) - c->GetHeight());
+
+				c->SetHeight(c->GetHeight() + dy);
+				//if (c->height.mode == UISize::Mode::Absolute)
+				//	c->SetHeight(c->GetHeight() + dy);
+				//else if (c->height.mode == UISize::Mode::RelativeToEntity)
+				//	c->SetHeight(c->height.value + dy / pc->GetHeight());
+				//else if (c->height.mode == UISize::Mode::RelativeToWindow)
+				//	c->SetHeight(c->height.value + dy / Window::getHeight());
+			}
+
+			if (r->dragged.right)
+			{
+				float dx = std::clamp<float>(e.x - (c->GetX() + c->GetWidth()), UI::toAbsoluteWidth(this, c->parent, r->minWidth) - c->GetWidth(), UI::toAbsoluteWidth(this, c->parent, r->maxWidth) - c->GetWidth());
+				std::cout << dx << std::endl;
+				c->SetWidth(c->GetWidth() + dx);
+				//if (c->width.mode == UISize::Mode::Absolute)
+				//	c->SetWidth(c->GetWidth() + dx);
+				//else if (c->width.mode == UISize::Mode::RelativeToEntity)
+				//	c->SetWidth(c->width.value + dx / pc->GetWidth());
+				//else if (c->width.mode == UISize::Mode::RelativeToWindow)
+				//	c->SetWidth(c->width.value + dx / Window::getWidth());
+			}
+			else if (r->dragged.left)
+			{
+				float dx = std::clamp<float>(c->GetX() - e.x, UI::toAbsoluteWidth(this, c->parent, r->minWidth) - c->GetWidth(), UI::toAbsoluteWidth(this, c->parent, r->maxWidth) - c->GetWidth());
+				std::cout << dx << std::endl;
+				c->SetX(c->GetX() + dx);
+				c->SetWidth(c->GetWidth() + dx);
+
+				std::cout << std::endl << c->x.value << std::endl;
+				std::cout << c->width.value << std::endl << std::endl;
+
+				//if (c->x.mode == UISize::Mode::Absolute)
+				//	c->SetX(c->GetX() - dx);
+				//else if (c->x.mode == UISize::Mode::RelativeToEntity)
+				//	c->SetX(c->x.value - dx / pc->GetWidth());
+				//else if (c->x.mode == UISize::Mode::RelativeToWindow)
+				//	c->SetX(c->x.value + dx / Window::getWidth());
+
+				//if (c->width.mode == UISize::Mode::Absolute)
+				//	c->SetWidth(c->GetWidth() + dx);
+				//else if (c->width.mode == UISize::Mode::RelativeToEntity)
+				//	c->SetWidth(c->width.value + dx / pc->GetWidth());
+				//else if (c->width.mode == UISize::Mode::RelativeToWindow)
+				//	c->SetWidth(c->width.value + dx / Window::getWidth());
+			}
 		}
-		else if (r->dragged.top)
-		{
-			float y = c->GetY();
-			float height = c->GetHeight();
-			float dy = std::clamp<float>(e.y - (y + height), UI::toAbsoluteHeight(this, c->parent, r->minHeight) - height, UI::toAbsoluteHeight(this, c->parent, r->maxHeight) - height);
 
-			if (c->height.mode == UISize::Mode::Absolute)
-				c->height.value += dy;
-			else if (c->height.mode == UISize::Mode::RelativeToEntity)
-				c->height.value += dy / height;
-			else if (c->height.mode == UISize::Mode::RelativeToWindow)
-				c->height.value += dy / Window::getHeight();
-		}
-
-		if (r->dragged.right)
-		{
-			float x = c->GetX();
-			float width = c->GetWidth();
-			float dx = std::clamp<float>(e.x - (x + width), UI::toAbsoluteWidth(this, c->parent, r->minWidth) - width, UI::toAbsoluteWidth(this, c->parent, r->maxWidth) - width);
-
-			if (c->width.mode == UISize::Mode::Absolute)
-				c->width.value += dx;
-			else if (c->width.mode == UISize::Mode::RelativeToEntity)
-				c->width.value += dx / width;
-			else if (c->width.mode == UISize::Mode::RelativeToWindow)
-				c->width.value += dx / Window::getWidth();
-		} 
-		else if (r->dragged.left)
-		{
-			float x = c->GetX();
-			float width = c->GetWidth();
-			float dx = std::clamp<float>(x - e.x, UI::toAbsoluteWidth(this, c->parent, r->minWidth) - width, UI::toAbsoluteWidth(this, c->parent, r->maxWidth) - width);
-
-			if (c->x.mode == UISize::Mode::Absolute)
-				c->x.value -= dx;
-			else if (c->x.mode == UISize::Mode::RelativeToEntity)
-				c->x.value -= dx / width;
-			else if (c->x.mode == UISize::Mode::RelativeToWindow)
-				c->x.value -= dx / Window::getWidth();
-
-			if (c->width.mode == UISize::Mode::Absolute)
-				c->width.value += dx;
-			else if (c->width.mode == UISize::Mode::RelativeToEntity)
-				c->width.value += dx / width;
-			else if (c->width.mode == UISize::Mode::RelativeToWindow)
-				c->width.value += dx / Window::getWidth();
-		}
 	}
 	
 	void Scene::OnUIComponentAdded(const ComponentAddedEvent<UIComponent>& e)
 	{
+		UIComponent* c = GetComponent<UIComponent>(e.entity);
+
 		if (HasComponent<UIRendererComponent>(e.entity))
-			GetComponent<UIComponent>(e.entity)->uiRendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
+			c->uiRendererDirty = GetComponent<UIRendererComponent>(e.entity)->dirty;
 		if (HasComponent<TextComponent>(e.entity))
-			GetComponent<UIComponent>(e.entity)->fontRendererDirty = GetComponent<TextComponent>(e.entity)->dirty;
+			c->fontRendererDirty = GetComponent<TextComponent>(e.entity)->dirty;
+
+		if (c->parent != 0)
+			GetComponent<UIComponent>(c->parent)->childs->push_back(e.entity);
 	}
 
 	void Scene::OnUIHoverComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e)
@@ -347,5 +425,15 @@ AddListener(this, &Scene::OnUIRendererComponentAdded);
 	{
 		if (HasComponent<Renderer2DComponent>(e.entity))
 			GetComponent<Transform2DComponent>(e.entity)->rendererDirty = GetComponent<Renderer2DComponent>(e.entity)->dirty;
+	}
+
+	void Scene::OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e)
+	{
+		auto* c = GetComponent<UIComponent>(e.entity);
+		if (c->parent != 0)
+		{
+			auto* parentComponent = GetComponent<UIComponent>(c->parent);
+			parentComponent->childs->erase(std::remove(parentComponent->childs->begin(), parentComponent->childs->end(), e.entity));
+		}
 	}
 }

@@ -1,3 +1,4 @@
+#include <math.h>
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Sonic/Debug/Profiler/Profiler.h"
@@ -9,6 +10,8 @@
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/PairView.h"
 #include "Renderer2D.h"
+
+static const float PI = 3.14159265358979323846f;
 
 struct Vertex
 {
@@ -85,17 +88,17 @@ namespace Sonic {
             delete[] indices;
         }
 
-        void drawRect(int index, const glm::vec3& position, const glm::vec2& size, float rotation, const Sprite& sprite, const Color& color)
+        void drawRect(int index, const glm::vec3& position, const glm::vec2& scale, float rotation, const Sprite& sprite, const Color& color)
         {
             float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(*sprite.texture);
 
-            Vertex* vertex = s_Vertices + 4 * index;
+            Vertex* vertex = s_Vertices + 4 * (size_t)index;
             if (rotation == 0)
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    vertex->x = position.x + (i % 2) * size.x;
-                    vertex->y = position.y + (i / 2) * size.y;
+                    vertex->x = position.x + (i % 2) * scale.x;
+                    vertex->y = position.y + (i / 2) * scale.y;
                     vertex->z = position.z;
                     vertex->r = color.r;
                     vertex->g = color.g;
@@ -110,28 +113,38 @@ namespace Sonic {
             }
             else
             {
-                //for (int i = 0; i < 4; i++)
-                //{
-                //    s_Data.nextVertex->x = position.x + (i % 2) * size.x;
-                //    s_Data.nextVertex->y = position.y + (i / 2) * size.y;
-                //    s_Data.nextVertex->z = position.z;
-                //    s_Data.nextVertex->r = color.r;
-                //    s_Data.nextVertex->g = color.g;
-                //    s_Data.nextVertex->b = color.b;
-                //    s_Data.nextVertex->a = color.a;
-                //    s_Data.nextVertex->textureX = sprite.GetTextureCoords()[2 * i + 0];
-                //    s_Data.nextVertex->textureY = sprite.GetTextureCoords()[2 * i + 1];
-                //    s_Data.nextVertex->textureSlot = textureSlot;
+                glm::vec2 center = { 0.5f * scale.x, 0.5f * scale.y };
+                float hypo = std::sqrt(center.x * center.x + center.y * center.y);
 
-                //    s_Data.nextVertex++;
-                //}
+                float sin = std::sin(rotation * PI / 180) * hypo;
+                float cos = std::cos(rotation * PI / 180) * hypo;
+
+                vertex[0].x = position.x + center.x - sin;
+                vertex[0].y = position.y + center.y - cos;
+
+                vertex[1].x = position.x + center.x + cos;
+                vertex[1].y = position.y + center.y - sin;
+
+                vertex[2].x = position.x + center.x - cos;
+                vertex[2].y = position.y + center.y + sin;
+
+                vertex[3].x = position.x + center.x + sin;
+                vertex[3].y = position.y + center.y + cos;
+
+                for (int i = 0; i < 4; i++)
+                {
+                    vertex->z = position.z;
+                    vertex->r = color.r;
+                    vertex->g = color.g;
+                    vertex->b = color.b;
+                    vertex->a = color.a;
+                    vertex->textureX = i % 2 == 0 ? sprite.x0 : sprite.x1;
+                    vertex->textureY = i / 2 == 0 ? sprite.y0 : sprite.y1;
+                    vertex->textureSlot = textureSlot;
+
+                    vertex++;
+                }
             }
-        }
-
-        void startScene(const Camera2D* camera)
-        {
-            s_RectCount = 0;
-
         }
 
         void drawEntity(Scene* scene, EntityID e, Renderer2DComponent* r, int index)

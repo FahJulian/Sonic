@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <string>
+#include <vector>
 #include "Sonic/Base.h"
 #include "Sonic/Log/Log.h"
 #include "Sonic/UI/Font/Font.h"
@@ -67,6 +68,8 @@ namespace Sonic {
 		Ref<bool> uiRendererDirty = Ref<bool>(nullptr);
 		Ref<bool> fontRendererDirty = Ref<bool>(nullptr);
 
+		Ref<std::vector<EntityID>> childs = std::make_shared<std::vector<EntityID>>();
+
 	public:
 		UIComponent(float x, float y, float width, float height)
 			: parent(0), x({ Mode::Absolute, x }), y({ Mode::Absolute, y }), width({ Mode::Absolute, width }), height({ Mode::Absolute, height }), 
@@ -100,27 +103,14 @@ namespace Sonic {
 		{
 		}
 
-		void Recalculate(Scene* scene)
-		{
-			absoluteX = UI::toAbsoluteX(scene, parent, x);
-			absoluteY = UI::toAbsoluteY(scene, parent, y);
-			absoluteWidth = UI::toAbsoluteWidth(scene, parent, width);
-			absoluteHeight = UI::toAbsoluteHeight(scene, parent, height);
+		void SetX(float newX); 
+		void SetY(float newY); 
+		void SetWidth(float newWidth) { width.value = (newWidth / absoluteWidth) * width.value; dirty = true; }
+		void SetHeight(float newHeight) { height.value = (newHeight / absoluteHeight) * height.value; dirty = true; }
 
-			dirty = false;
-			if (uiRendererDirty)
-				*uiRendererDirty = true;
-			if (fontRendererDirty)
-				*fontRendererDirty = true;
-		}
-
-		void SetX(float newX) { x.value = newX; dirty = true; }
 		void SetX(UISize newX) { x = newX; dirty = true; }
-		void SetY(float newY) { y.value = newY; dirty = true; }
 		void SetY(UISize newY) { y = newY; dirty = true; }
-		void SetWidth(float newWidth) { width.value = newWidth; dirty = true; }
 		void SetWidth(UISize newWidth) { width = newWidth; dirty = true; }
-		void SetHeight(float newHeight) { height.value = newHeight; dirty = true; }
 		void SetHeight(UISize newHeight) { height = newHeight; dirty = true; }
 
 		float GetX() const { return absoluteX; }
@@ -131,6 +121,16 @@ namespace Sonic {
 
 		bool IsDirty() const { return dirty; }
 
+		void SetRendererDirty()
+		{
+			if (uiRendererDirty)
+				*uiRendererDirty = true;
+			if (fontRendererDirty)
+				*fontRendererDirty = true;
+		}
+
+	private:
+
 		friend class Scene;
 
 		friend float UI::toAbsoluteX(Scene* scene, EntityID parent, const UISize& x);
@@ -139,7 +139,7 @@ namespace Sonic {
 		friend float UI::toAbsoluteHeight(Scene* scene, EntityID parent, const UISize& height);
 	};
 
-	struct ResizableComponent
+	struct UIResizableComponent
 	{
 		struct Borders
 		{
@@ -157,15 +157,16 @@ namespace Sonic {
 		float grabSize;
 
 		Borders resizable;
-		Borders dragged;
+		Borders hovered = { false, false, false, false};
+		Borders dragged = { false, false, false, false};
 
-		ResizableComponent(UISize::Mode mode, float minWidth, float minHeight, float maxWidth, float maxHeight, float grabSize, Borders resizable = { true, true, true, true })
-			: minWidth({ mode, minWidth }), minHeight({ mode, minHeight }), maxWidth({ mode, maxWidth }), maxHeight({ mode, maxHeight }), grabSize(grabSize), resizable(resizable), dragged({ false, false, false, false})
+		UIResizableComponent(UISize::Mode mode, float minWidth, float minHeight, float maxWidth, float maxHeight, float grabSize, Borders resizable = { true, true, true, true })
+			: minWidth({ mode, minWidth }), minHeight({ mode, minHeight }), maxWidth({ mode, maxWidth }), maxHeight({ mode, maxHeight }), grabSize(grabSize), resizable(resizable)
 		{
 		}
 
-		ResizableComponent(UISize minWidth, UISize minHeight, UISize maxWidth, UISize maxHeight, float grabSize, Borders resizable = { true, true, true, true })
-			: minWidth(minWidth), minHeight(minHeight), maxWidth(maxWidth), maxHeight(maxHeight), grabSize(grabSize), resizable(resizable), dragged({ false, false, false, false })
+		UIResizableComponent(UISize minWidth, UISize minHeight, UISize maxWidth, UISize maxHeight, float grabSize, Borders resizable = { true, true, true, true })
+			: minWidth(minWidth), minHeight(minHeight), maxWidth(maxWidth), maxHeight(maxHeight), grabSize(grabSize), resizable(resizable)
 		{
 		}
 	};

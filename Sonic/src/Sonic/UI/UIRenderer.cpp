@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include "Sonic/Base.h"
 #include "Sonic/Debug/Profiler/Profiler.h"
 #include "Sonic/Window/Window.h"
@@ -144,9 +145,9 @@ namespace Sonic {
 			{
 				auto* h = scene->GetComponent<UIHoverComponent>(e);
 
-				if (scene->HasComponent<ResizableComponent>(e))
+				if (scene->HasComponent<UIResizableComponent>(e))
 				{
-					auto* r = scene->GetComponent<ResizableComponent>(e);
+					auto* r = scene->GetComponent<UIResizableComponent>(e);
 					if (r->dragged.bottom || r->dragged.top || r->dragged.right || r->dragged.left)
 						h->SetHoverered(true);
 				}
@@ -180,6 +181,8 @@ namespace Sonic {
 
 			auto& entities = scene->View<UIRendererComponent>();
 			s_ElementCount = entities.Size();
+			if (s_ElementCount > MAX_ELEMENTS)
+				s_ElementCount = MAX_ELEMENTS;
 
 			int i = 0;
 			for (auto [e, r] : entities)

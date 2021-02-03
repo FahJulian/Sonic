@@ -3,7 +3,7 @@
 
 const float TIME_STEP = 0.25f;
 
-const int PADDING = 300;
+const int PADDING = 100;
 const int BORDER = 2;
 const int X0 = PADDING + BORDER;
 const int Y0 = PADDING + BORDER;
