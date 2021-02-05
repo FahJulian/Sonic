@@ -1,4 +1,5 @@
 #pragma once
+#include <limits>
 #include <string>
 #include <vector>
 #include "Sonic/Base.h"
@@ -90,8 +91,8 @@ namespace Sonic {
 		{
 		}
 
-		void SetX(float newX) { x.value = x.value + (x.absoluteValue - newX) * (width.value / width.absoluteValue); dirty = true; }
-		void SetY(float newY) { y.value = y.value + (y.absoluteValue - newY) * (height.value / height.absoluteValue); dirty = true; }
+		void SetX(float newX) { x.value = x.value + (newX - x.absoluteValue) * (width.value / width.absoluteValue); dirty = true; }
+		void SetY(float newY) { y.value = y.value + (newY - y.absoluteValue) * (height.value / height.absoluteValue); dirty = true; }
 		void SetWidth(float newWidth) { width.value = width.value * (newWidth / width.absoluteValue); dirty = true; }
 		void SetHeight(float newHeight) { height.value = height.value * (newHeight / height.absoluteValue); dirty = true; }
 
@@ -127,6 +128,20 @@ namespace Sonic {
 			bool top;
 			bool left;
 			bool right;
+
+			operator bool()
+			{
+				return *reinterpret_cast<uint32_t*>(this) != 0;
+			}
+
+			bool operator=(bool b)
+			{
+				bottom = b;
+				top = b;
+				left = b;
+				right = b;
+				return b;
+			}
 		};
 
 	private:
@@ -137,20 +152,19 @@ namespace Sonic {
 
 		float grabSize;
 
-		Borders resizable;
-		Borders hovered = { false, false, false, false};
-		Borders dragged = { false, false, false, false };
+		Borders bordersResizable;
+		Borders bordersHovered = { false, false, false, false};
 
 		bool dirty = true;
 
 	public:
-		UIResizableComponent(UISize::Mode mode, float minWidth, float minHeight, float maxWidth, float maxHeight, float grabSize, Borders resizable = { true, true, true, true })
-			: minWidth({ mode, minWidth }), minHeight({ mode, minHeight }), maxWidth({ mode, maxWidth }), maxHeight({ mode, maxHeight }), grabSize(grabSize), resizable(resizable)
+		UIResizableComponent(UISize::Mode mode, float minWidth, float minHeight, float maxWidth, float maxHeight, float grabSize, Borders bordersResizable = { true, true, true, true })
+			: minWidth({ mode, minWidth }), minHeight({ mode, minHeight }), maxWidth({ mode, maxWidth }), maxHeight({ mode, maxHeight }), grabSize(grabSize), bordersResizable(bordersResizable)
 		{
 		}
 
-		UIResizableComponent(UISize minWidth, UISize minHeight, UISize maxWidth, UISize maxHeight, float grabSize, Borders resizable = { true, true, true, true })
-			: minWidth(minWidth), minHeight(minHeight), maxWidth(maxWidth), maxHeight(maxHeight), grabSize(grabSize), resizable(resizable)
+		UIResizableComponent(UISize minWidth, UISize minHeight, UISize maxWidth, UISize maxHeight, float grabSize, Borders bordersResizable = { true, true, true, true })
+			: minWidth(minWidth), minHeight(minHeight), maxWidth(maxWidth), maxHeight(maxHeight), grabSize(grabSize), bordersResizable(bordersResizable)
 		{
 		}
 
@@ -170,6 +184,17 @@ namespace Sonic {
 		float GetMaxHeight() const { return maxHeight.absoluteValue; }
 
 		bool IsDirty() const { return dirty; }
+
+		friend class SceneUIHandler;
+	};
+
+	struct UIMovableComponent
+	{
+	private:
+		bool dirty = true;
+
+	public:
+		UIMovableComponent() = default;
 
 		friend class SceneUIHandler;
 	};

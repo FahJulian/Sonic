@@ -1,11 +1,11 @@
 #pragma once
+#include "Sonic/Scene/EntityID.h"
 
 namespace Sonic {
 
 	class Scene;
 
 	struct MouseButtonReleasedEvent;
-	struct MouseButtonPressedEvent;
 	struct MouseMovedEvent;
 	struct WindowResizedEvent;
 
@@ -14,6 +14,7 @@ namespace Sonic {
 	struct UITextComponent;
 	struct UIRendererComponent;
 	struct UIResizableComponent;
+	struct UIMovableComponent;
 
 	template<typename Component>
 	struct ComponentAddedEvent;
@@ -31,7 +32,6 @@ namespace Sonic {
 
 		void Update(float deltaSeconds);
 
-		void OnMouseButtonPressed(const MouseButtonPressedEvent& e);
 		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
 		void OnMouseMoved(const MouseMovedEvent& e);
 		void OnWindowResized(const WindowResizedEvent& e);
@@ -46,6 +46,11 @@ namespace Sonic {
 		float CalculateAbsoluteY(const UISize& y, UIComponent* parent);
 		float CalculateAbsoluteWidth(const UISize& width, UIComponent* parent);
 		float CalculateAbsoluteHeight(const UISize& height, UIComponent* parent);
+
+		void UpdateUIResizableComponentMouseButtonDown(EntityID entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e);
+		void UpdateUIResizableComponentMouseButtonUp(EntityID entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e);
+		void UpdateUIMovableComponentMouseButtonDown(UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e);
+		void UpdateUIMovableComponentMouseButtonUp(UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e);
 
 		void ResizeChilds(UIComponent* component);
 

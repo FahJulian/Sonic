@@ -29,11 +29,13 @@ namespace Sonic {
     {
         float x;
         float y;
+        float beforeX;
+        float beforeY;
         float deltaX;
         float deltaY;
 
-        MouseMovedEvent(float x, float y, float deltaX, float deltaY)
-            : x(x), y(y), deltaX(deltaX), deltaY(deltaY)
+        MouseMovedEvent(float x, float y, float beforeX, float beforeY, float deltaX, float deltaY)
+            : x(x), y(y), beforeX(beforeX), beforeY(beforeY), deltaX(deltaX), deltaY(deltaY)
         {
         }
     };
@@ -43,11 +45,13 @@ namespace Sonic {
         MouseButton button;
         float x;
         float y;
+        float beforeX;
+        float beforeY;
         float deltaX;
         float deltaY;
 
-        MouseDraggedEvent(MouseButton button, float x, float y, float deltaX, float deltaY)
-            : button(button), x(x), y(y), deltaX(deltaX), deltaY(deltaY)
+        MouseDraggedEvent(MouseButton button, float x, float y, float beforeX, float beforeY, float deltaX, float deltaY)
+            : button(button), x(x), y(y), beforeX(beforeX), beforeY(beforeY), deltaX(deltaX), deltaY(deltaY)
         {
         }
     };

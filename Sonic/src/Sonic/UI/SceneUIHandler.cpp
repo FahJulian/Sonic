@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "Sonic/Log/Log.h"
+#include "Sonic/Math/Math.h"
 #include "Sonic/Window/Window.h"
 #include "Sonic/Window/Input/Mouse.h"
 #include "Sonic/Event/Events.h"
@@ -11,10 +12,20 @@
 using namespace Sonic;
 
 
+enum class Action : uint8_t
+{
+	Resizing,
+	Moving,
+	None
+};
+
+static Action s_CurrentAction = Action::None;
+static Action s_HoveredAction = Action::None;
+
+
 SceneUIHandler::SceneUIHandler(Scene* scene)
 	: m_Scene(scene)
 {
-	m_Scene->AddListener(this, &SceneUIHandler::OnMouseButtonPressed);
 	m_Scene->AddListener(this, &SceneUIHandler::OnMouseButtonReleased);
 	m_Scene->AddListener(this, &SceneUIHandler::OnMouseMoved);
 	m_Scene->AddListener(this, &SceneUIHandler::OnWindowResized);
@@ -60,39 +71,15 @@ void SceneUIHandler::Update(float deltaTime)
 	}
 }
 
-void SceneUIHandler::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
-{
-	if (e.button == Buttons::Left)
-	{
-		for (auto* r : m_Scene->ViewComponents<UIResizableComponent>())
-		{
-			r->dragged.bottom = r->hovered.bottom;
-			r->dragged.top = r->hovered.top && !r->hovered.bottom;
-			r->dragged.left = r->hovered.left;
-			r->dragged.right = r->hovered.right && !r->hovered.left;
-		}
-	}
-}
-
 void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 {
-	for (auto [entity, clickListener, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
-	{
-		if (m_Scene->HasComponent<UIResizableComponent>(entity))
-		{
-			auto* r = m_Scene->GetComponent<UIResizableComponent>(entity);
-			if (r->dragged.bottom || r->dragged.top || r->dragged.right || r->dragged.left)
-				continue;
-		}
-
-		if (e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >=c ->GetY() && e.y <c ->GetY() + c->GetHeight())
-			clickListener->listener(e);
-	}
-
 	if (e.button == Buttons::Left)
 	{
-		for (auto* r : m_Scene->ViewComponents<UIResizableComponent>())
-			r->dragged = { false, false, false, false };
+		if (s_CurrentAction == Action::None)
+			for (auto [entity, clickListener, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
+				if (e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight())
+					clickListener->listener(e);
+		s_CurrentAction = Action::None;
 	}
 }
 
@@ -100,66 +87,35 @@ void SceneUIHandler::OnMouseMoved(const MouseMovedEvent& e)
 {
 	Window::setCursor(StandardCursors::Arrow);
 
-	for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
-			h->SetHoverered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
-
-	for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
-	{
-		r->hovered = { false, false, false, false };
-
-		if (r->resizable.bottom && e.x >= c->GetX() - r->grabSize && e.x < c->GetX() + c->GetWidth() + r->grabSize && e.y >= c->GetY() - r->grabSize && e.y < c->GetY() + r->grabSize)
-			r->hovered.bottom = true;
-		else if (r->resizable.top && e.x >= c->GetX() - r->grabSize && e.x < c->GetX() + c->GetWidth() + r->grabSize && e.y >= c->GetY() + c->GetHeight() - r->grabSize && e.y < c->GetY() + c->GetHeight() + r->grabSize)
-			r->hovered.top = true;
-
-		if (r->resizable.right && e.x >= c->GetX() + c->GetWidth() - r->grabSize && e.x < c->GetX() + c->GetWidth() + r->grabSize && e.y >= c->GetY() - r->grabSize && e.y < c->GetY() + c->GetHeight() + r->grabSize)
-			r->hovered.right = true;
-		else if (r->resizable.left && e.x >= c->GetX() - r->grabSize && e.x < c->GetX() + r->grabSize && e.y >= c->GetY() - r->grabSize && e.y < c->GetY() + c->GetHeight() + r->grabSize)
-			r->hovered.left = true;
-
-		if (m_Scene->HasComponent<UIHoverComponent>(entity) && (r->dragged.bottom || r->dragged.top || r->dragged.right || r->dragged.left))
-			m_Scene->GetComponent<UIHoverComponent>(entity)->SetHoverered(true);
-
-		if ((r->dragged.bottom && r->dragged.right) || (r->dragged.top && r->dragged.left) || (r->hovered.bottom && r->hovered.right) || (r->hovered.top && r->hovered.left))
-			Window::setCursor(StandardCursors::ResizeDiagonalLeft);
-		else if ((r->dragged.bottom && r->dragged.left) || (r->dragged.top && r->dragged.right) || (r->hovered.bottom && r->hovered.left) || (r->hovered.top && r->hovered.right))
-			Window::setCursor(StandardCursors::ResizeDiagonalRight);
-		else if (r->dragged.bottom || r->dragged.top || r->hovered.bottom || r->hovered.top)
-			Window::setCursor(StandardCursors::ResizeVertical);
-		else if (r->dragged.left || r->dragged.right || r->hovered.left || r->hovered.right)
-			Window::setCursor(StandardCursors::ResizeHorizontal);
-	}
-
 	if (Mouse::isButtonPressed(Buttons::Left))
 	{
-		for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
+		if (s_CurrentAction == Action::None || s_CurrentAction == Action::Resizing)
 		{
-			UIComponent* pc = c->parent != 0 ? pc = m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-
-			if (r->dragged.bottom)
-			{
-				float dy = std::clamp<float>(c->GetY() - e.y, r->minHeight.absoluteValue - c->GetHeight(), r->maxHeight.absoluteValue - c->GetHeight());
-				c->SetY(c->GetY() + dy);
-				c->SetHeight(c->GetHeight() + dy);
-			}
-			else if (r->dragged.top)
-			{
-				float dy = std::clamp<float>(e.y - (c->GetY() + c->GetHeight()), r->minHeight.absoluteValue - c->GetHeight(), r->maxHeight.absoluteValue - c->GetHeight());
-				c->SetHeight(c->GetHeight() + dy);
-			}
-
-			if (r->dragged.right)
-			{
-				float dx = std::clamp<float>(e.x - (c->GetX() + c->GetWidth()), r->minWidth.absoluteValue - c->GetWidth(), r->maxWidth.absoluteValue - c->GetWidth());
-				c->SetWidth(c->GetWidth() + dx);
-			}
-			else if (r->dragged.left)
-			{
-				float dx = std::clamp<float>(c->GetX() - e.x, r->minWidth.absoluteValue - c->GetWidth(), r->maxWidth.absoluteValue - c->GetWidth());
-				c->SetX(c->GetX() + dx);
-				c->SetWidth(c->GetWidth() + dx);
-			}
+			for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
+				UpdateUIResizableComponentMouseButtonDown(entity, r, c, e);
 		}
+
+		if (s_CurrentAction == Action::None || s_CurrentAction == Action::Moving)
+		{
+			for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
+				UpdateUIMovableComponentMouseButtonDown(m, c, e);
+		}
+	}
+	else
+	{
+		s_HoveredAction = Action::None;
+
+		for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
+			UpdateUIResizableComponentMouseButtonUp(entity, r, c, e);
+
+		if (s_HoveredAction != Action::Resizing)
+		{
+			for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
+				UpdateUIMovableComponentMouseButtonUp(m, c, e);
+		}
+
+		for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
+			h->SetHoverered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
 	}
 }
 
@@ -307,5 +263,112 @@ void SceneUIHandler::ResizeChilds(UIComponent* c)
 			if (childComponent->height.mode == UISize::Mode::RelativeToEntity) childComponent->height.absoluteValue = childComponent->height.value * c->height.absoluteValue;
 			childComponent->SetRendererDirty();
 		}
+	}
+}
+
+void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(EntityID entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
+{
+	if ((r->bordersHovered.bottom && r->bordersHovered.right) || (r->bordersHovered.top && r->bordersHovered.left))
+		Window::setCursor(StandardCursors::ResizeDiagonalLeft);
+	else if ((r->bordersHovered.bottom && r->bordersHovered.left) || (r->bordersHovered.top && r->bordersHovered.right))
+		Window::setCursor(StandardCursors::ResizeDiagonalRight);
+	else if (r->bordersHovered.bottom || r->bordersHovered.top)
+		Window::setCursor(StandardCursors::ResizeVertical);
+	else if (r->bordersHovered.left || r->bordersHovered.right)
+		Window::setCursor(StandardCursors::ResizeHorizontal);
+
+	if (r->bordersHovered)
+	{
+		if (m_Scene->HasComponent<UIHoverComponent>(entity))
+			m_Scene->GetComponent<UIHoverComponent>(entity)->SetHoverered(true);
+		s_HoveredAction = Action::Resizing;
+	}
+
+	if (r->bordersHovered.bottom)
+	{
+		float dy = std::clamp<float>(c->GetY() - e.y, r->minHeight.absoluteValue - c->GetHeight(), r->maxHeight.absoluteValue - c->GetHeight());
+		c->SetY(c->GetY() - dy);
+		c->SetHeight(c->GetHeight() + dy);
+		s_CurrentAction = Action::Resizing;
+	}
+	else if (r->bordersHovered.top)
+	{
+		float dy = std::clamp<float>(e.y - (c->GetY() + c->GetHeight()), r->minHeight.absoluteValue - c->GetHeight(), r->maxHeight.absoluteValue - c->GetHeight());
+		c->SetHeight(c->GetHeight() + dy);
+		s_CurrentAction = Action::Resizing;
+	}
+
+	if (r->bordersHovered.left)
+	{
+		float dx = std::clamp<float>(c->GetX() - e.x, r->minWidth.absoluteValue - c->GetWidth(), r->maxWidth.absoluteValue - c->GetWidth());
+		c->SetX(c->GetX() - dx);
+		c->SetWidth(c->GetWidth() + dx);
+		s_CurrentAction = Action::Resizing;
+	}
+	else if (r->bordersHovered.right)
+	{
+		float dx = std::clamp<float>(e.x - (c->GetX() + c->GetWidth()), r->minWidth.absoluteValue - c->GetWidth(), r->maxWidth.absoluteValue - c->GetWidth());
+		c->SetWidth(c->GetWidth() + dx);
+		s_CurrentAction = Action::Resizing;
+	}
+}
+
+void SceneUIHandler::UpdateUIResizableComponentMouseButtonUp(EntityID entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
+{
+	r->bordersHovered = { false, false, false, false };
+
+	if (e.beforeX >= c->GetX() - r->grabSize && e.beforeX < c->GetX() + c->GetWidth() + r->grabSize)
+	{
+		if (r->bordersResizable.bottom && e.beforeY >= c->GetY() - r->grabSize && e.beforeY < c->GetY() + r->grabSize)
+			r->bordersHovered.bottom = true;
+		else if (r->bordersResizable.top && e.beforeY >= c->GetY() + c->GetHeight() - r->grabSize && e.beforeY < c->GetY() + c->GetHeight() + r->grabSize)
+			r->bordersHovered.top = true;
+	}
+
+	if (e.beforeY >= c->GetY() - r->grabSize && e.beforeY < c->GetY() + c->GetHeight() + r->grabSize)
+	{
+		if (r->bordersResizable.left && e.beforeX >= c->GetX() - r->grabSize && e.beforeX < c->GetX() + r->grabSize)
+			r->bordersHovered.left = true;
+		else if (r->bordersResizable.right && e.beforeX >= c->GetX() + c->GetWidth() - r->grabSize && e.beforeX < c->GetX() + c->GetWidth() + r->grabSize)
+			r->bordersHovered.right = true;
+	}
+
+	if ((r->bordersHovered.bottom && r->bordersHovered.right) || (r->bordersHovered.top && r->bordersHovered.left))
+		Window::setCursor(StandardCursors::ResizeDiagonalLeft);
+	else if ((r->bordersHovered.bottom && r->bordersHovered.left) || (r->bordersHovered.top && r->bordersHovered.right))
+		Window::setCursor(StandardCursors::ResizeDiagonalRight);
+	else if (r->bordersHovered.bottom || r->bordersHovered.top)
+		Window::setCursor(StandardCursors::ResizeVertical);
+	else if (r->bordersHovered.left || r->bordersHovered.right)
+		Window::setCursor(StandardCursors::ResizeHorizontal);
+
+	if (r->bordersHovered)
+	{
+		if (m_Scene->HasComponent<UIHoverComponent>(entity))
+			m_Scene->GetComponent<UIHoverComponent>(entity)->SetHoverered(true);
+		s_HoveredAction = Action::Resizing;
+	}
+}
+
+void SceneUIHandler::UpdateUIMovableComponentMouseButtonUp(UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e)
+{
+	if (Sonic::Math::isInRange(e.beforeX, c->GetX(), c->GetX() + c->GetWidth()) &&
+		Sonic::Math::isInRange(e.beforeY, c->GetY(), c->GetY() + c->GetHeight()))
+	{
+		Window::setCursor(StandardCursors::Move);
+		s_HoveredAction = Action::Moving;
+	}
+}
+
+void SceneUIHandler::UpdateUIMovableComponentMouseButtonDown(UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e)
+{
+	if (Sonic::Math::isInRange(e.beforeX, c->GetX(), c->GetX() + c->GetWidth()) &&
+		Sonic::Math::isInRange(e.beforeY, c->GetY(), c->GetY() + c->GetHeight()))
+	{
+		Window::setCursor(StandardCursors::Move);
+		s_CurrentAction = Action::Moving;
+
+		c->SetX(c->GetX() + e.deltaX);
+		c->SetY(c->GetY() + e.deltaY);
 	}
 }

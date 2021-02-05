@@ -38,6 +38,7 @@ namespace Sonic {
 			Arrow,
 			Alternate,
 			IBeam,
+			Move,
 			Crosshair,
 			ResizeHorizontal,
 			ResizeVertical,

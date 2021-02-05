@@ -68,6 +68,7 @@ StandardCursors::StandardCursors(const std::string& folderPath)
 	m_StandardCursors[static_cast<uint8_t>(StandardCursors::Arrow)] = Get("Arrow");
 	m_StandardCursors[static_cast<uint8_t>(StandardCursors::Alternate)] = Get("Alternate");
 	m_StandardCursors[static_cast<uint8_t>(StandardCursors::IBeam)] = Get("IBeam");
+	m_StandardCursors[static_cast<uint8_t>(StandardCursors::Move)] = Get("Move");
 	m_StandardCursors[static_cast<uint8_t>(StandardCursors::Crosshair)] = Get("Crosshair");
 	m_StandardCursors[static_cast<uint8_t>(StandardCursors::ResizeHorizontal)] = Get("ResizeHorizontal");
 	m_StandardCursors[static_cast<uint8_t>(StandardCursors::ResizeVertical)] = Get("ResizeVertical");

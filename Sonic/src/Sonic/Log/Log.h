@@ -22,7 +22,7 @@ namespace Sonic {
         {
             std::cout << "[DEBUG] ";
             std::cout << std::forward<Arg>(arg);
-            ((std::cout << ',' << std::forward<Args>(args)), ...);
+            ((std::cout << std::forward<Args>(args)), ...);
             std::cout << std::endl;
         }
     };
