@@ -58,7 +58,7 @@ namespace Sonic::FontRenderer {
 
 	void init()
 	{
-		s_Shader = Shader(SONIC_RESOURCE_DIR + "shaders\\font.vs", SONIC_RESOURCE_DIR + "shaders\\font.fs");
+		s_Shader = Shader(coreResourceDir() + "shaders\\font.vs", coreResourceDir() + "shaders\\font.fs");
 		s_Shader.Bind();
 		s_Shader.UniformFloat("u_ViewportWidth", Window::getWidth());
 		s_Shader.UniformFloat("u_ViewportHeight", Window::getHeight());

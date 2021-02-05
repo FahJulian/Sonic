@@ -4,13 +4,19 @@ namespace Sonic {
 
 	struct UISize
 	{
-		enum class Mode : unsigned char
+		enum class Mode : uint8_t
 		{
 			Absolute, RelativeToEntity, RelativeToWindow
 		};
 	
 		Mode mode;
-		float value;
+
+		union
+		{
+			float relativeValue;
+			float changedValue;
+		};
+
 		float absoluteValue;
 	};
 

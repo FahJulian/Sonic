@@ -15,10 +15,8 @@ namespace Sonic::UI {
 	{
 		Entity button = scene->AddEntity();
 		button.AddComponent<UIComponent>(UISize::Mode::Absolute, x, y, width, height, zIndex);
-		button.AddComponent<UIRendererComponent>(color);
-		button.AddComponent<UIBorderComponent>(borderWeight, borderColor);
-		button.AddComponent<UIRoundedEdgeComponent>(edgeRadius);
-		button.AddComponent<UIHoverComponent>(hoverColor);
+		button.AddComponent<UIRendererComponent>(UIRendererProperties(color).Border(borderColor, borderWeight).EdgeRadius(edgeRadius));
+		button.AddComponent<UIHoverComponent>(UIRendererProperties(hoverColor).Border(borderColor, borderWeight).EdgeRadius(edgeRadius));
 		button.AddComponent<UIClickListenerComponent>(onClick);
 		return button;
 	}

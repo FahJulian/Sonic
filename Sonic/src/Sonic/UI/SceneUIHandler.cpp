@@ -115,7 +115,7 @@ void SceneUIHandler::OnMouseMoved(const MouseMovedEvent& e)
 		}
 
 		for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
-			h->SetHoverered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
+			h->SetHovered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
 	}
 }
 
@@ -135,7 +135,7 @@ void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIComponent>& e)
 void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e)
 {
 	if (m_Scene->HasComponent<UIRendererComponent>(e.entity))
-		m_Scene->GetComponent<UIHoverComponent>(e.entity)->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
+		m_Scene->GetComponent<UIHoverComponent>(e.entity)->rendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
 }
 
 void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UITextComponent>& e)
@@ -168,25 +168,25 @@ void SceneUIHandler::OnWindowResized(const WindowResizedEvent& e)
 
 		if (c->x.mode == UISize::Mode::RelativeToWindow)
 		{
-			c->x.absoluteValue = c->x.value * e.width;
+			c->x.absoluteValue = c->x.relativeValue * e.width;
 			resized = true;
 		}
 
 		if (c->y.mode == UISize::Mode::RelativeToWindow)
 		{
-			c->y.absoluteValue = c->y.value * e.height;
+			c->y.absoluteValue = c->y.relativeValue * e.height;
 			resized = true;
 		}
 
 		if (c->width.mode == UISize::Mode::RelativeToWindow)
 		{
-			c->width.absoluteValue = c->width.value * e.width;
+			c->width.absoluteValue = c->width.relativeValue * e.width;
 			resized = true;
 		}
 
 		if (c->height.mode == UISize::Mode::RelativeToWindow)
 		{
-			c->height.absoluteValue = c->height.value * e.height;
+			c->height.absoluteValue = c->height.relativeValue * e.height;
 			resized = true;
 		}
 
@@ -202,9 +202,9 @@ float SceneUIHandler::CalculateAbsoluteX(const UISize& x, UIComponent* parent)
 {
 	switch (x.mode)
 	{
-	case UISize::Mode::Absolute: return x.value;
-	case UISize::Mode::RelativeToWindow: return x.value * Window::getWidth();
-	case UISize::Mode::RelativeToEntity: return parent->GetX() + x.value * parent->GetWidth();
+	case UISize::Mode::Absolute: return x.relativeValue;
+	case UISize::Mode::RelativeToWindow: return x.relativeValue * Window::getWidth();
+	case UISize::Mode::RelativeToEntity: return parent->GetX() + x.relativeValue * parent->GetWidth();
 	default:
 		SONIC_LOG_ERROR("Unknown UI Size mode");
 		return -1.0f;
@@ -215,9 +215,9 @@ float SceneUIHandler::CalculateAbsoluteY(const UISize& y, UIComponent* parent)
 {
 	switch (y.mode)
 	{
-	case UISize::Mode::Absolute: return y.value;
-	case UISize::Mode::RelativeToWindow: return y.value * Window::getHeight();
-	case UISize::Mode::RelativeToEntity: return parent->GetY() + y.value * parent->GetHeight();
+	case UISize::Mode::Absolute: return y.relativeValue;
+	case UISize::Mode::RelativeToWindow: return y.relativeValue * Window::getHeight();
+	case UISize::Mode::RelativeToEntity: return parent->GetY() + y.relativeValue * parent->GetHeight();
 	default:
 		SONIC_LOG_ERROR("Unknown UI Size mode");
 		return -1.0f;
@@ -228,9 +228,9 @@ float SceneUIHandler::CalculateAbsoluteWidth(const UISize& width, UIComponent* p
 {
 	switch (width.mode)
 	{
-	case UISize::Mode::Absolute: return width.value;
-	case UISize::Mode::RelativeToWindow: return width.value * Window::getWidth();
-	case UISize::Mode::RelativeToEntity: return width.value * parent->GetWidth();
+	case UISize::Mode::Absolute: return width.relativeValue;
+	case UISize::Mode::RelativeToWindow: return width.relativeValue * Window::getWidth();
+	case UISize::Mode::RelativeToEntity: return width.relativeValue * parent->GetWidth();
 	default:
 		SONIC_LOG_ERROR("Unknown UI Size mode");
 		return -1.0f;
@@ -241,9 +241,9 @@ float SceneUIHandler::CalculateAbsoluteHeight(const UISize& height, UIComponent*
 {
 	switch (height.mode)
 	{
-	case UISize::Mode::Absolute: return height.value;
-	case UISize::Mode::RelativeToWindow: return height.value * Window::getHeight();
-	case UISize::Mode::RelativeToEntity: return height.value * parent->GetHeight();
+	case UISize::Mode::Absolute: return height.relativeValue;
+	case UISize::Mode::RelativeToWindow: return height.relativeValue * Window::getHeight();
+	case UISize::Mode::RelativeToEntity: return height.relativeValue * parent->GetHeight();
 	default:
 		SONIC_LOG_ERROR("Unknown UI Size mode");
 		return -1.0f;
@@ -257,10 +257,10 @@ void SceneUIHandler::ResizeChilds(UIComponent* c)
 		auto* childComponent = m_Scene->GetComponent<UIComponent>(child);
 		if (!childComponent->IsDirty())
 		{
-			if (childComponent->x.mode == UISize::Mode::RelativeToEntity) childComponent->x.absoluteValue = c->x.absoluteValue + childComponent->x.value * c->width.absoluteValue;
-			if (childComponent->y.mode == UISize::Mode::RelativeToEntity) childComponent->y.absoluteValue = c->y.absoluteValue + childComponent->y.value * c->height.absoluteValue;
-			if (childComponent->width.mode == UISize::Mode::RelativeToEntity) childComponent->width.absoluteValue = childComponent->width.value * c->width.absoluteValue;
-			if (childComponent->height.mode == UISize::Mode::RelativeToEntity) childComponent->height.absoluteValue = childComponent->height.value * c->height.absoluteValue;
+			if (childComponent->x.mode == UISize::Mode::RelativeToEntity) childComponent->x.absoluteValue = c->x.absoluteValue + childComponent->x.relativeValue * c->width.absoluteValue;
+			if (childComponent->y.mode == UISize::Mode::RelativeToEntity) childComponent->y.absoluteValue = c->y.absoluteValue + childComponent->y.relativeValue * c->height.absoluteValue;
+			if (childComponent->width.mode == UISize::Mode::RelativeToEntity) childComponent->width.absoluteValue = childComponent->width.relativeValue * c->width.absoluteValue;
+			if (childComponent->height.mode == UISize::Mode::RelativeToEntity) childComponent->height.absoluteValue = childComponent->height.relativeValue * c->height.absoluteValue;
 			childComponent->SetRendererDirty();
 		}
 	}
@@ -280,7 +280,7 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(EntityID entity, 
 	if (r->bordersHovered)
 	{
 		if (m_Scene->HasComponent<UIHoverComponent>(entity))
-			m_Scene->GetComponent<UIHoverComponent>(entity)->SetHoverered(true);
+			m_Scene->GetComponent<UIHoverComponent>(entity)->SetHovered(true);
 		s_HoveredAction = Action::Resizing;
 	}
 
@@ -345,7 +345,7 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonUp(EntityID entity, UI
 	if (r->bordersHovered)
 	{
 		if (m_Scene->HasComponent<UIHoverComponent>(entity))
-			m_Scene->GetComponent<UIHoverComponent>(entity)->SetHoverered(true);
+			m_Scene->GetComponent<UIHoverComponent>(entity)->SetHovered(true);
 		s_HoveredAction = Action::Resizing;
 	}
 }

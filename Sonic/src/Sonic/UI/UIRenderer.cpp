@@ -64,190 +64,178 @@ static float textureSlotOf(const Texture& texture)
 }
 
 
-namespace Sonic::UIRenderer {
+void UIRenderer::init()
+{
+	s_Shader = Shader(coreResourceDir() + "shaders\\ui.vs", coreResourceDir() + "shaders\\ui.fs");
+	s_Shader.Bind();
+	s_Shader.UniformFloat("u_ViewportWidth", Window::getWidth());
+	s_Shader.UniformFloat("u_ViewportHeight", Window::getHeight());
 
-	void init()
+	int textureSlots[MAX_TEXTURES];
+	for (int i = 0; i < MAX_TEXTURES; i++)
+		textureSlots[i] = i;
+
+	s_Shader.UniformIntArray("u_Textures", textureSlots, MAX_TEXTURES);
+	s_Shader.Unbind();
+
+	s_Textures.reserve(MAX_TEXTURES);
+
+	int* indices = new int[6 * MAX_ELEMENTS];
+	for (int i = 0; i < MAX_ELEMENTS; i++)
 	{
-		s_Shader = Shader(SONIC_RESOURCE_DIR + "shaders\\ui.vs", SONIC_RESOURCE_DIR + "shaders\\ui.fs");
-		s_Shader.Bind();
-		s_Shader.UniformFloat("u_ViewportWidth", Window::getWidth());
-		s_Shader.UniformFloat("u_ViewportHeight", Window::getHeight());
+		indices[6 * i + 0] = 4 * i + 0;
+		indices[6 * i + 1] = 4 * i + 1;
+		indices[6 * i + 2] = 4 * i + 2;
 
-		int textureSlots[MAX_TEXTURES];
-		for (int i = 0; i < MAX_TEXTURES; i++)
-			textureSlots[i] = i;
-
-		s_Shader.UniformIntArray("u_Textures", textureSlots, MAX_TEXTURES);
-		s_Shader.Unbind();
-
-		s_Textures.reserve(MAX_TEXTURES);
-
-		int* indices = new int[6 * MAX_ELEMENTS];
-		for (int i = 0; i < MAX_ELEMENTS; i++)
-		{
-			indices[6 * i + 0] = 4 * i + 0;
-			indices[6 * i + 1] = 4 * i + 1;
-			indices[6 * i + 2] = 4 * i + 2;
-
-			indices[6 * i + 3] = 4 * i + 1;
-			indices[6 * i + 4] = 4 * i + 3;
-			indices[6 * i + 5] = 4 * i + 2;
-		}
-
-		s_VBO = Sonic::VertexBuffer(4 * MAX_ELEMENTS * sizeof(Vertex), { 3, 4, 2, 1, 2, 2, 4, 1, 1 });
-		s_VAO = Sonic::VertexArray(indices, MAX_ELEMENTS * 6, { s_VBO });
-
-		delete[] indices;
+		indices[6 * i + 3] = 4 * i + 1;
+		indices[6 * i + 4] = 4 * i + 3;
+		indices[6 * i + 5] = 4 * i + 2;
 	}
 
-	void drawElement(int index, float x, float y, float zIndex, float width, float height, const Sprite& sprite, const Color& color, float borderWeight, const Color& borderColor, float edgeRadius)
+	s_VBO = Sonic::VertexBuffer(4 * MAX_ELEMENTS * sizeof(Vertex), { 3, 4, 2, 1, 2, 2, 4, 1, 1 });
+	s_VAO = Sonic::VertexArray(indices, MAX_ELEMENTS * 6, { s_VBO });
+
+	delete[] indices;
+}
+
+void UIRenderer::drawElement(int index, float x, float y, float zIndex, float width, float height, const UIRendererProperties* properties)
+{
+	float textureSlot = properties->sprite.IsNull() ? -1.0f : textureSlotOf(*properties->sprite.texture);
+
+	Vertex* vertex = s_Vertices + 4 * index;
+	for (int i = 0; i < 4; i++)
 	{
-		float textureSlot = sprite.IsNull() ? -1.0f : textureSlotOf(*sprite.texture);
+		vertex->x = x + (i % 2) * width;
+		vertex->y = y + (i / 2) * height;
+		vertex->zIndex = zIndex;
+		vertex->r = properties->color.r;
+		vertex->g = properties->color.g;
+		vertex->b = properties->color.b;
+		vertex->a = properties->color.a;
+		vertex->textureX = i % 2 == 0 ? properties->sprite.x0 : properties->sprite.x1;
+		vertex->textureY = i / 2 == 0 ? properties->sprite.y0 : properties->sprite.y1;
+		vertex->textureSlot = textureSlot;
 
-		Vertex* vertex = s_Vertices + 4 * index;
-		for (int i = 0; i < 4; i++)
-		{
-			vertex->x = x + (i % 2) * width;
-			vertex->y = y + (i / 2) * height;
-			vertex->zIndex = zIndex;
-			vertex->r = color.r;
-			vertex->g = color.g;
-			vertex->b = color.b;
-			vertex->a = color.a;
-			vertex->textureX = i % 2 == 0 ? sprite.x0 : sprite.x1;
-			vertex->textureY = i / 2 == 0 ? sprite.y0 : sprite.y1;
-			vertex->textureSlot = textureSlot;
+		vertex->rectX = x;
+		vertex->rectY = y;
+		vertex->rectWidth = width;
+		vertex->rectHeight = height;
 
-			vertex->rectX = x;
-			vertex->rectY = y;
-			vertex->rectWidth = width;
-			vertex->rectHeight = height;
+		vertex->borderR = properties->borderColor.r;
+		vertex->borderG = properties->borderColor.g;
+		vertex->borderB = properties->borderColor.b;
+		vertex->borderA = properties->borderColor.a;
+		vertex->borderWeight = properties->borderWeight;
+		vertex->edgeRadius = properties->edgeRadius;
 
-			vertex->borderR = borderColor.r;
-			vertex->borderG = borderColor.g;
-			vertex->borderB = borderColor.b;
-			vertex->borderA = borderColor.a;
-			vertex->borderWeight = borderWeight;
-			vertex->edgeRadius = edgeRadius;
-
-			vertex++;
-		}
+		vertex++;
 	}
+}
 
-	void drawEntity(Scene* scene, EntityID e, UIRendererComponent* r, int index)
+void UIRenderer::rebuffer(Scene* scene)
+{
+	bool rebuffer = false;
+
+	auto& entities = scene->View<UIRendererComponent>();
+	s_ElementCount = entities.Size();
+	if (s_ElementCount > MAX_ELEMENTS)
+		s_ElementCount = MAX_ELEMENTS;
+
+	if (s_CompleteRebuffer)
 	{
-		auto* c = scene->GetComponent<UIComponent>(e);
-
-		const Sprite* sprite = r->GetSprite();
-		const Color* color = r->GetColor();
-		const Color* borderColor = color;
-		float borderWeight = 0;
-		float edgeRadius = 0;
-
-		if (scene->HasComponent<UIHoverComponent>(e))
+		int i = 0;
+		for (auto [e, r] : entities)
 		{
-			auto* h = scene->GetComponent<UIHoverComponent>(e);
+			if (i > MAX_ELEMENTS)
+				break;
 
-			if (h->IsHovered())
+			auto* c = scene->GetComponent<UIComponent>(e);
+			const UIRendererProperties* properties = nullptr;
+
+			if (UIHoverComponent* h = nullptr;
+				scene->HasComponent<UIHoverComponent>(e) && (h = scene->GetComponent<UIHoverComponent>(e))->hovered)
 			{
-				sprite = h->GetSprite();
-				color = h->GetColor();
+				properties = &h->properties;
 			}
-		}
-
-		if (scene->HasComponent<UIBorderComponent>(e))
-		{
-			auto* b = scene->GetComponent<UIBorderComponent>(e);
-			borderColor = &b->GetColor();
-			borderWeight = b->GetWeight();
-		}
-
-		if (scene->HasComponent<UIRoundedEdgeComponent>(e))
-		{
-			auto* r = scene->GetComponent<UIRoundedEdgeComponent>(e);
-			edgeRadius = r->GetEdgeRadius();
-		}
-
-		drawElement(index, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight(), *sprite, *color, borderWeight, *borderColor, edgeRadius);
-	}
-
-	void rebuffer(Scene* scene)
-	{
-		bool rebuffer = false;
-
-		auto& entities = scene->View<UIRendererComponent>();
-		s_ElementCount = entities.Size();
-		if (s_ElementCount > MAX_ELEMENTS)
-			s_ElementCount = MAX_ELEMENTS;
-
-		if (s_CompleteRebuffer)
-		{
-			int i = 0;
-			for (auto [e, r] : entities)
+			else
 			{
-				if (i > MAX_ELEMENTS)
-					break;
-
-				drawEntity(scene, e, r, i);
-				*r->dirty = false;
-
-				i++;
+				properties = &r->properties;
 			}
-		}
-		else
-		{
-			int i = 0;
-			for (auto [e, r] : entities)
-			{
-				if (i > MAX_ELEMENTS)
-					break;
 
-				if (*r->dirty)
+			drawElement(i, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight(), properties);
+
+			*r->dirty = false;
+			rebuffer = true;
+
+			i++;
+		}
+	}
+	else
+	{
+		int i = 0;
+		for (auto [e, r] : entities)
+		{
+			if (i > MAX_ELEMENTS)
+				break;
+
+			if (*r->dirty)
+			{
+				auto* c = scene->GetComponent<UIComponent>(e);
+				const UIRendererProperties* properties = nullptr;
+
+				if (UIHoverComponent* h = nullptr;
+					scene->HasComponent<UIHoverComponent>(e) && (h = scene->GetComponent<UIHoverComponent>(e))->hovered)
 				{
-					drawEntity(scene, e, r, i);
-					*r->dirty = false;
-					rebuffer = true;
+					properties = &h->properties;
+				}
+				else
+				{
+					properties = &r->properties;
 				}
 
-				i++;
+				drawElement(i, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight(), properties);
+
+				*r->dirty = false;
+				rebuffer = true;
 			}
-		}
 
-		if (rebuffer || s_CompleteRebuffer)
-		{
-			s_VBO.Bind();
-			s_VBO.SetData(s_Vertices, 4 * s_ElementCount * sizeof(Vertex));
-			s_VBO.Unbind();
-
-			s_CompleteRebuffer = false;
+			i++;
 		}
 	}
 
-	void render()
+	if (rebuffer)
 	{
-		s_Shader.Bind();
-		s_VAO.Bind();
+		s_VBO.Bind();
+		s_VBO.SetData(s_Vertices, 4 * s_ElementCount * sizeof(Vertex));
+		s_VBO.Unbind();
 
-		for (int i = 0; i < s_Textures.size(); i++)
-			s_Textures.at(i).Bind(i);
-
-		glDrawElements(GL_TRIANGLES, s_ElementCount * 6, GL_UNSIGNED_INT, nullptr);
-
-		for (int i = 0; i < s_Textures.size(); i++)
-			s_Textures.at(i).Unbind();
-
-		s_VAO.Unbind();
-		s_Shader.Unbind();
+		s_CompleteRebuffer = false;
 	}
+}
 
-	void setViewportSize(float width, float height)
-	{
-		s_Shader.Bind();
-		s_Shader.UniformFloat("u_ViewportWidth", width);
-		s_Shader.UniformFloat("u_ViewportHeight", height);
-		s_Shader.Unbind();
+void UIRenderer::render()
+{
+	s_Shader.Bind();
+	s_VAO.Bind();
 
-		s_CompleteRebuffer = true;
-	}
+	for (int i = 0; i < s_Textures.size(); i++)
+		s_Textures.at(i).Bind(i);
 
+	glDrawElements(GL_TRIANGLES, s_ElementCount * 6, GL_UNSIGNED_INT, nullptr);
+
+	for (int i = 0; i < s_Textures.size(); i++)
+		s_Textures.at(i).Unbind();
+
+	s_VAO.Unbind();
+	s_Shader.Unbind();
+}
+
+void UIRenderer::setViewportSize(float width, float height)
+{
+	s_Shader.Bind();
+	s_Shader.UniformFloat("u_ViewportWidth", width);
+	s_Shader.UniformFloat("u_ViewportHeight", height);
+	s_Shader.Unbind();
+
+	s_CompleteRebuffer = true;
 }

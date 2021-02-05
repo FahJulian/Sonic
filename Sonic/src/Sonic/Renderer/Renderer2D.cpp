@@ -60,7 +60,7 @@ namespace Sonic::Renderer2D {
 
     void init()
     {
-        s_Shader = Shader(SONIC_RESOURCE_DIR + "shaders\\rectangle.vs", SONIC_RESOURCE_DIR + "shaders\\rectangle.fs");
+        s_Shader = Shader(coreResourceDir() + "shaders\\rectangle.vs", coreResourceDir() + "shaders\\rectangle.fs");
         s_Shader.Bind();
 
         int textureSlots[MAX_TEXTURES];

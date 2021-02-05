@@ -82,10 +82,10 @@ StandardCursors::StandardCursors(const std::string& folderPath)
 
 void StandardCursors::init()
 {
-	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::Black)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_black");
-	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::BlackShadow)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_black_shadow");
-	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::White)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_white");
-	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::WhiteShadow)] = StandardCursors(SONIC_RESOURCE_DIR + "cursors/default_white_shadow");
+	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::Black)] = StandardCursors(coreResourceDir() + "cursors/default_black");
+	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::BlackShadow)] = StandardCursors(coreResourceDir() + "cursors/default_black_shadow");
+	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::White)] = StandardCursors(coreResourceDir() + "cursors/default_white");
+	s_StandardCursorSets[static_cast<uint8_t>(StandardCursors::Sets::WhiteShadow)] = StandardCursors(coreResourceDir() + "cursors/default_white_shadow");
 }
 
 Cursor StandardCursors::getCurrent(StandardCursor cursor)

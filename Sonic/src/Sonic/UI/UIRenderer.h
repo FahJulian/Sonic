@@ -5,17 +5,18 @@
 namespace Sonic {
 
 	class Scene;
+	struct UIRendererProperties;
 
-	namespace UIRenderer {
+	class UIRenderer
+	{
+	public:
+		static void init();
+		static void rebuffer(Scene* scene);
+		static void render();
+		static void setViewportSize(float width, float height);
 
-		void init();
-
-		void rebuffer(Scene* scene);
-
-		void render();
-
-		void setViewportSize(float width, float height);
-
-	}
+	private:
+		static void drawElement(int index, float x, float y, float zIndex, float width, float height, const UIRendererProperties* properties);
+	};
 
 }
