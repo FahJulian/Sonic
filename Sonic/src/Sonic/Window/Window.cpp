@@ -121,6 +121,21 @@ float Window::getHeight()
     return s_Data.height;
 }
 
+void Window::setWidth(float width)
+{
+    glfwSetWindowSize(s_Data.glfwID, static_cast<int>(width), static_cast<int>(getHeight()));
+}
+
+void Window::setHeight(float height)
+{
+    glfwSetWindowSize(s_Data.glfwID, static_cast<int>(getWidth()), static_cast<int>(height));
+}
+
+void Window::setSize(float width, float height)
+{
+    glfwSetWindowSize(s_Data.glfwID, static_cast<int>(width), static_cast<int>(height));
+}
+
 const std::string& Window::getTitle()
 {
     return s_Data.title;

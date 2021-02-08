@@ -59,6 +59,12 @@ namespace Sonic {
 
         static float getWidth();
 
+        static void setSize(float width, float height);
+
+        static void setWidth(float width);
+
+        static void setHeight(float height);
+
         static const std::string& getTitle();
 
         static void setTitle(const std::string& title);

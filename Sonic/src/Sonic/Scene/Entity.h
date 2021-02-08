@@ -10,7 +10,7 @@ namespace Sonic {
 		Entity(Scene* scene, EntityID id);
 
 	public:
-		operator EntityID() { return m_ID; }
+		operator EntityID() const { return m_ID; }
 
 		bool operator==(const Entity& other) const { return m_ID == other.m_ID && m_Scene == other.m_Scene; }
 		bool operator!=(const Entity& other) const { return m_ID != other.m_ID || m_Scene != other.m_Scene; }

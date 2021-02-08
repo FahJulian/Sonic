@@ -67,6 +67,8 @@ namespace Sonic {
 		virtual void PollCollisionEvents() {}
 
 	public:
+		SceneUIHandler& GetUIHandler() { return m_UIHandler; }
+
 		Entity AddEntity();
 		void RemoveEntity(EntityID entity);
 		Entity ToEntity(EntityID entity);

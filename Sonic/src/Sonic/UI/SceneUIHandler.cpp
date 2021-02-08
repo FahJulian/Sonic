@@ -189,6 +189,8 @@ void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIRendererCompon
 {
 	if (m_Scene->HasComponent<UIComponent>(e.entity))
 		m_Scene->GetComponent<UIComponent>(e.entity)->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
+	if (m_Scene->HasComponent<UIHoverComponent>(e.entity))
+		m_Scene->GetComponent<UIHoverComponent>(e.entity)->rendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
 }
 
 void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIPositionConstraintsComponent>& e)
@@ -360,16 +362,14 @@ void SceneUIHandler::UpdateUIMovableComponentMouseButtonUp(UIMovableComponent* m
 
 void SceneUIHandler::UpdateUIMovableComponentMouseButtonDown(EntityID entity, UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e)
 {
-	if (m->hovered &&
-		Sonic::Math::isInRange(e.beforeX, c->GetX(), c->GetX() + c->GetWidth()) &&
-		Sonic::Math::isInRange(e.beforeY, c->GetY(), c->GetY() + c->GetHeight()))
+	if (m->hovered)
 	{
 		Window::setCursor(m->cursor);
 		s_CurrentAction = Action::Moving;
 
 		UIComponent* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-		SetX(entity, c, c->GetX() + e.deltaX, parent);
-		SetY(entity, c, c->GetY() + e.deltaY, parent);
+		SetX(entity, c, e.x - c->GetWidth() / 2, parent);
+		SetY(entity, c, e.y - c->GetHeight() / 2, parent);
 
 		if (m->onMoved)
 			m->onMoved(UIEntityMovedEvent{ e.deltaX, e.deltaY });

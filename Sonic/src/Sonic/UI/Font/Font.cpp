@@ -56,7 +56,7 @@ Font::Font(const std::string& filePath, int size)
 	for (int i : widths)
 		totalWidth += i;
 
-	unsigned char* giantBitmap = new unsigned char[maxHeight * totalWidth]{ 0 };
+	unsigned char* giantBitmap = new unsigned char[static_cast<size_t>(maxHeight) * static_cast<size_t>(totalWidth)]{ 0 };
 
 	unsigned int currentX = 0;
 	for (unsigned char c = 0; c < 0xff; c++)
@@ -84,7 +84,7 @@ Font::Font(const std::string& filePath, int size)
 		m_Characters->emplace(c, Character{ width, height, 
 			bearingX, bearingY, advanceX, x0, x1, y0, y1 });
 
-		currentX += glyph->bitmap.width;
+		currentX += glyph->bitmap.width + 1;
 	}
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -93,8 +93,8 @@ Font::Font(const std::string& filePath, int size)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, totalWidth, maxHeight, 0, GL_RED, GL_UNSIGNED_BYTE, giantBitmap);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 Font::~Font()

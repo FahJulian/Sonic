@@ -14,4 +14,9 @@ namespace Sonic {
 		float deltaY;
 	};
 
+	struct UISliderEvent
+	{
+		float percentage;
+	};
+
 }

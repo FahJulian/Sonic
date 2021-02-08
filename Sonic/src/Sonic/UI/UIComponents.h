@@ -10,59 +10,13 @@
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Scene/EntityID.h"
+#include "UIRenderer.h"
 #include "UIEvents.h"
 #include "UISize.h"
 
 namespace Sonic {
 
 	class Scene;
-
-	struct UIRendererProperties
-	{
-	private:
-		Sprite sprite;
-		Color color;
-
-		Color borderColor = Colors::Black;
-		float borderWeight = 0.0f;
-
-		float edgeRadius = 0.0f;
-
-	public:
-		UIRendererProperties() = delete;
-
-		UIRendererProperties(const Sprite& sprite)
-			: sprite(sprite), color(Colors::White)
-		{
-		}
-
-		UIRendererProperties(const Color& color)
-			: sprite(Sprite()), color(color)
-		{
-		}
-
-		UIRendererProperties(const Sprite& sprite, const Color& color)
-			: sprite(sprite), color(color)
-		{
-		}
-
-		UIRendererProperties& Border(Color color, float weight)
-		{
-			borderColor = color;
-			borderWeight = weight;
-			return *this;
-		}
-
-		UIRendererProperties& EdgeRadius(float radius)
-		{
-			edgeRadius = radius;
-			return *this;
-		}
-
-		friend struct UIRendererComponent;
-		friend struct UIHoverComponent;	
-		friend class UIRenderer;
-	};
 
 	struct UIRendererComponent
 	{

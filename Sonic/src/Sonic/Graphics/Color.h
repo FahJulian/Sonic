@@ -32,6 +32,7 @@ namespace Sonic {
 
         enum : ColorCode
         {
+            Transparent = 0x00000000,
             White = 0xffffffff,
             Black = 0x000000ff,
             DarkGray = 0x555555ff,

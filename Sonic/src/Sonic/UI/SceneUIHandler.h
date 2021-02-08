@@ -12,6 +12,13 @@ namespace Sonic {
 
 	class SceneUIHandler
 	{
+	public:
+		void SetX(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr, bool resizeChilds = true);
+		void SetY(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr, bool resizeChilds = true);
+		void SetWidth(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr);
+		void SetHeight(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr);
+	
+	private:
 		SceneUIHandler() = delete;
 		SceneUIHandler(const SceneUIHandler& other) = delete;
 		SceneUIHandler(Scene* scene);
@@ -35,11 +42,6 @@ namespace Sonic {
 		void UpdateUIResizableComponentMouseButtonUp(EntityID entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e);
 		void UpdateUIMovableComponentMouseButtonDown(EntityID entity, UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e);
 		void UpdateUIMovableComponentMouseButtonUp(UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e);
-
-		void SetX(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr, bool resizeChilds = true);
-		void SetY(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr, bool resizeChilds = true);
-		void SetWidth(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr);
-		void SetHeight(EntityID entity, UIComponent* component, float value, UIComponent* parent = nullptr);
 
 		void ResizeChildsX(EntityID parent, UIComponent* c);
 		void ResizeChildsY(EntityID parent, UIComponent* c);
