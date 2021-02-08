@@ -6,9 +6,11 @@
 #include "Sonic/UI/Font/Font.h"
 #include "Sonic/Graphics/Graphics2D/Sprite.h"
 #include "Sonic/Graphics/Color.h"
+#include "Sonic/Window/Cursor/Cursors.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Scene/EntityID.h"
+#include "UIEvents.h"
 #include "UISize.h"
 
 namespace Sonic {
@@ -151,46 +153,23 @@ namespace Sonic {
 			}
 		};
 
-	private:
-		UISize minWidth;
-		UISize minHeight;
-		UISize maxWidth;
-		UISize maxHeight;
-
 		float grabSize;
 
 		Borders bordersResizable;
 		Borders bordersHovered = { false, false, false, false};
 
-		bool dirty = true;
+		EventListener<UIEntityResizedEvent> onResized;
 
 	public:
-		UIResizableComponent(UISize::Mode mode, float minWidth, float minHeight, float maxWidth, float maxHeight, float grabSize, Borders bordersResizable = { true, true, true, true })
-			: minWidth({ mode, minWidth }), minHeight({ mode, minHeight }), maxWidth({ mode, maxWidth }), maxHeight({ mode, maxHeight }), grabSize(grabSize), bordersResizable(bordersResizable)
+		UIResizableComponent(float grabSize = 3.0f, Borders bordersResizable = { true, true, true, true })
+			: grabSize(grabSize), bordersResizable(bordersResizable), onResized(nullptr)
 		{
 		}
 
-		UIResizableComponent(UISize minWidth, UISize minHeight, UISize maxWidth, UISize maxHeight, float grabSize, Borders bordersResizable = { true, true, true, true })
-			: minWidth(minWidth), minHeight(minHeight), maxWidth(maxWidth), maxHeight(maxHeight), grabSize(grabSize), bordersResizable(bordersResizable)
+		UIResizableComponent(EventListener<UIEntityResizedEvent> onResized, float grabSize = 3.0f, Borders bordersResizable = { true, true, true, true })
+			: grabSize(grabSize), bordersResizable(bordersResizable), onResized(onResized)
 		{
 		}
-
-		void SetMinWidth(float newMinWidth) { minWidth.relativeValue = minWidth.relativeValue * (newMinWidth / minWidth.absoluteValue); dirty = true; }
-		void SetMinHeight(float newMinHeight) { minHeight.relativeValue = minHeight.relativeValue * (newMinHeight / minHeight.absoluteValue); dirty = true; }
-		void SetMaxWidth(float newMaxWidth) { maxWidth.relativeValue = maxWidth.relativeValue * (newMaxWidth / maxWidth.absoluteValue); dirty = true; }
-		void SetMaxHeight(float newMaxHeight) { maxHeight.relativeValue = maxHeight.relativeValue * (newMaxHeight / maxHeight.absoluteValue); dirty = true; }
-
-		void SetMinWidth(UISize newMinWidth) { minWidth = newMinWidth; dirty = true; }
-		void SetMinHeight(UISize newMinHeight) { minHeight= newMinHeight; dirty = true; }
-		void SetMaxWidth(UISize newMaxWidth) { maxWidth = newMaxWidth; dirty = true; }
-		void SetMaxHeight(UISize newMaxHeight) { maxHeight = newMaxHeight; dirty = true; }
-
-		float GetMinWidth() const { return minWidth.absoluteValue; }
-		float GetMaxWidth() const { return maxWidth.absoluteValue; }
-		float GetMinHeight() const { return minHeight.absoluteValue; }
-		float GetMaxHeight() const { return maxHeight.absoluteValue; }
-
-		bool IsDirty() const { return dirty; }
 
 		friend class SceneUIHandler;
 	};
@@ -198,10 +177,20 @@ namespace Sonic {
 	struct UIMovableComponent
 	{
 	private:
-		bool dirty = true;
+		StandardCursor cursor;
+		EventListener<UIEntityMovedEvent> onMoved;
+		bool hovered = false;
 
 	public:
-		UIMovableComponent() = default;
+		UIMovableComponent(StandardCursor cursor = StandardCursors::Move)
+			: cursor(cursor), onMoved(nullptr)
+		{
+		}
+
+		UIMovableComponent(EventListener<UIEntityMovedEvent> onMoved, StandardCursor cursor = StandardCursors::Move)
+			: cursor(cursor), onMoved(onMoved)
+		{
+		}
 
 		friend class SceneUIHandler;
 	};
@@ -232,6 +221,7 @@ namespace Sonic {
 
 	struct UIClickListenerComponent
 	{
+		bool clicked = false;
 		EventListener<MouseButtonReleasedEvent> listener;
 
 		UIClickListenerComponent(EventListener<MouseButtonReleasedEvent> listener)
@@ -246,6 +236,7 @@ namespace Sonic {
 		using Mode = UISize::Mode;
 
 		EntityID parent;
+
 		UISize x;
 		UISize y;
 		UISize width;
@@ -253,27 +244,23 @@ namespace Sonic {
 
 		float zIndex;
 
-		bool dirty = true;
-
 		Ref<bool> uiRendererDirty = Ref<bool>(nullptr);
 		Ref<bool> fontRendererDirty = Ref<bool>(nullptr);
 
-		Ref<std::vector<EntityID>> childs = std::make_shared<std::vector<EntityID>>();
-
 	public:
 		UIComponent(float x, float y, float width, float height, float zIndex = 0.0f)
-			: parent(0), x({ Mode::Absolute, x, x }), y({ Mode::Absolute, y, y }), width({ Mode::Absolute, width, width }), height({ Mode::Absolute, height, height }),
-			zIndex(zIndex), dirty(false)
+			: parent(0), x({ Mode::Absolute, x }), y({ Mode::Absolute, y }), width({ Mode::Absolute, width }), 
+			height({ Mode::Absolute, height }), zIndex(zIndex)
 		{
 		}
 
 		UIComponent(Mode mode, float x, float y, float width, float height, EntityID parent = 0)
-			: parent(parent), x({ mode, x, 0.0f }), y({ mode, y, 0.0f }), width({ mode, width, 0.0f }), height({ mode, height, 0.0f }), zIndex(0.0f)
+			: parent(parent), x({ mode, x }), y({ mode, y }), width({ mode, width }), height({ mode, height }), zIndex(0.0f)
 		{
 		}
 
 		UIComponent(Mode mode, float x, float y, float width, float height, float zIndex, EntityID parent = 0)
-			: parent(parent), x({ mode, x, 0.0f }), y({ mode, y, 0.0f }), width({ mode, width, 0.0f }), height({ mode, height, 0.0f }), zIndex(zIndex)
+			: parent(parent), x({ mode, x }), y({ mode, y }), width({ mode, width }), height({ mode, height }), zIndex(zIndex)
 		{
 		}
 
@@ -287,33 +274,39 @@ namespace Sonic {
 		{
 		}
 
-		void SetX(float newX) { x.relativeValue = x.relativeValue + (newX - x.absoluteValue) * (width.relativeValue / width.absoluteValue); dirty = true; }
-		void SetY(float newY) { y.relativeValue = y.relativeValue + (newY - y.absoluteValue) * (height.relativeValue / height.absoluteValue); dirty = true; }
-		void SetWidth(float newWidth) { width.relativeValue = width.relativeValue * (newWidth / width.absoluteValue); dirty = true; }
-		void SetHeight(float newHeight) { height.relativeValue = height.relativeValue * (newHeight / height.absoluteValue); dirty = true; }
-
-		void SetX(UISize newX) { x = newX; dirty = true; }
-		void SetY(UISize newY) { y = newY; dirty = true; }
-		void SetWidth(UISize newWidth) { width = newWidth; dirty = true; }
-		void SetHeight(UISize newHeight) { height = newHeight; dirty = true; }
-
 		float GetX() const { return x.absoluteValue; }
 		float GetY() const { return y.absoluteValue; }
 		float GetWidth() const { return width.absoluteValue; }
 		float GetHeight() const { return height.absoluteValue; }
 		float GetZIndex() const { return zIndex; }
 
-		bool IsDirty() const { return dirty; }
-
-		void SetRendererDirty()
-		{
-			if (uiRendererDirty)
-				*uiRendererDirty = true;
-			if (fontRendererDirty)
-				*fontRendererDirty = true;
-		}
-
 		friend class SceneUIHandler;
+	};
+
+	struct UIPositionConstraintsComponent
+	{
+		float minX;
+		float minY;
+		float maxX;
+		float maxY;
+
+		UIPositionConstraintsComponent(float minX, float minY, float maxX, float maxY)
+			: minX(minX), minY(minY), maxX(maxX), maxY(maxY)
+		{
+		}
+	};
+
+	struct UISizeConstraintsComponent
+	{
+		float minWidth;
+		float minHeight;
+		float maxWidth;
+		float maxHeight;
+
+		UISizeConstraintsComponent(float minWidth, float minHeight, float maxWidth, float maxHeight)
+			: minWidth(minWidth), minHeight(minHeight), maxWidth(maxWidth), maxHeight(maxHeight)
+		{
+		}
 	};
 
 }

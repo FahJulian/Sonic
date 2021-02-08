@@ -10,13 +10,7 @@ namespace Sonic {
 		};
 	
 		Mode mode;
-
-		union
-		{
-			float relativeValue;
-			float changedValue;
-		};
-
+		float relativeValue;
 		float absoluteValue;
 	};
 

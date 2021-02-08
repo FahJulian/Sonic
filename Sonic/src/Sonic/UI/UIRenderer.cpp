@@ -1,16 +1,12 @@
-#include <vector>
-#include <algorithm>
-#include "Sonic/Base.h"
-#include "Sonic/Debug/Profiler/Profiler.h"
-#include "Sonic/Window/Window.h"
 #include "Sonic/Graphics/Buffer/VertexArray.h"
 #include "Sonic/Graphics/Buffer/VertexBuffer.h"
 #include "Sonic/Graphics/Graphics2D/Texture.h"
+#include "Sonic/Graphics/Graphics2D/Sprite.h"
 #include "Sonic/Graphics/Shader.h"
-#include "Sonic/Renderer/Renderer2D.h"
-#include "Sonic/Scene/PairView.h"
-#include "Sonic/UI/Font/FontRenderer.h"
+#include "Sonic/Graphics/Color.h"
+#include "Sonic/Window/Window.h"
 #include "Sonic/Scene/Scene.h"
+#include "Sonic/Scene/Views.h"
 #include "UIComponents.h"
 #include "UIRenderer.h"
 
@@ -98,11 +94,11 @@ void UIRenderer::init()
 	delete[] indices;
 }
 
-void UIRenderer::drawElement(int index, float x, float y, float zIndex, float width, float height, const UIRendererProperties* properties)
+void UIRenderer::drawElement(int index, float x, float y, float width, float height, float zIndex, const UIRendererProperties* properties)
 {
 	float textureSlot = properties->sprite.IsNull() ? -1.0f : textureSlotOf(*properties->sprite.texture);
 
-	Vertex* vertex = s_Vertices + 4 * index;
+	Vertex* vertex = s_Vertices + 4 * static_cast<size_t>(index);
 	for (int i = 0; i < 4; i++)
 	{
 		vertex->x = x + (i % 2) * width;
@@ -118,6 +114,7 @@ void UIRenderer::drawElement(int index, float x, float y, float zIndex, float wi
 
 		vertex->rectX = x;
 		vertex->rectY = y;
+
 		vertex->rectWidth = width;
 		vertex->rectHeight = height;
 
@@ -162,7 +159,7 @@ void UIRenderer::rebuffer(Scene* scene)
 				properties = &r->properties;
 			}
 
-			drawElement(i, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight(), properties);
+			drawElement(i, c->GetX(), c->GetY(), c->GetWidth(), c->GetHeight(), c->GetZIndex(), properties);
 
 			*r->dirty = false;
 			rebuffer = true;
@@ -193,7 +190,7 @@ void UIRenderer::rebuffer(Scene* scene)
 					properties = &r->properties;
 				}
 
-				drawElement(i, c->GetX(), c->GetY(), c->GetZIndex(), c->GetWidth(), c->GetHeight(), properties);
+				drawElement(i, c->GetX(), c->GetY(), c->GetWidth(), c->GetHeight(), c->GetZIndex(), properties);
 
 				*r->dirty = false;
 				rebuffer = true;
