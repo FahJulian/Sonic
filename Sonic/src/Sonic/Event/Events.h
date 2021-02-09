@@ -1,5 +1,5 @@
 #pragma once
-#include "Sonic/Scene/EntityID.h"
+#include "Sonic/Scene/Entity.h"
 #include "Sonic/Window/Input/MouseButtons.h"
 #include "Sonic/Window/Input/Keys.h"
 
@@ -111,9 +111,9 @@ namespace Sonic {
     template<typename Component>
     struct ComponentAddedEvent
     {
-        EntityID entity;
+        Entity entity;
 
-        ComponentAddedEvent(EntityID entity)
+        ComponentAddedEvent(Entity entity)
             : entity(entity)
         {
         }
@@ -122,9 +122,9 @@ namespace Sonic {
     template<typename Component>
     struct ComponentRemovedEvent
     {
-        EntityID entity;
+        Entity entity;
 
-        ComponentRemovedEvent(EntityID entity)
+        ComponentRemovedEvent(Entity entity)
             : entity(entity)
         {
         }

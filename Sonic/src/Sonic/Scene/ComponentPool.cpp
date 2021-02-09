@@ -1,35 +1,98 @@
 #pragma once
+#include "Sonic/Log/Log.h"
 #include "ComponentPool.h"
 
 using namespace Sonic;
 
 
-bool BaseComponentPool::HasEntity(EntityID entity)
+uint8_t* ComponentPool::GetComponent(Entity entity, size_t componentSize)
 {
-	return IndexOf(entity) != -1;
+	size_t index = IndexOf(entity);
+
+	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant remove Entity from ComponentPool: Pool does not contain Entity");
+
+	return m_Data + index * componentSize;
 }
 
-void BaseComponentPool::RemoveEntity(EntityID entity)
+void ComponentPool::AddComponent(Entity entity, uint8_t* data, size_t componentSize)
 {
-	m_ToRemove.insert(IndexOf(entity));
+	if (m_Size == m_Capacity)
+		IncreaseSize(componentSize);
+
+	for (size_t i = 0; i < componentSize; i++)
+		m_Data[m_Size * componentSize + i] = data[i];
+
+	m_Entities[m_Size] = entity;
+
+	m_Size++;
 }
 
-int BaseComponentPool::IndexOf(EntityID entity)
+void ComponentPool::TransferEntity(Entity entity, ComponentPool* other, size_t componentSize)
 {
-	static unsigned int index = 0;
+	uint8_t* data = GetComponent(entity, componentSize);
+	other->AddComponent(entity, data, componentSize);
+	RemoveEntity(entity, componentSize);
+}
 
-	unsigned int iteration = 0;
-	while (iteration < m_Entities.size())
+bool ComponentPool::HasEntity(Entity entity)
+{
+	return IndexOf(entity) != NOT_FOUND;
+}
+
+void ComponentPool::RemoveEntity(Entity entity, size_t componentSize)
+{
+	size_t index = IndexOf(entity);
+
+	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant remove Entity from ComponentPool: Pool does not contain Entity");
+
+	memcpy(m_Data + index * componentSize, m_Data + (index + 1) * componentSize, (m_Size - index - 1) * componentSize);
+	memcpy(m_Entities + index, m_Entities + index + 1, (m_Size - index - 1) * sizeof(Entity));
+
+	m_Size--;
+
+	for (size_t* iteratorIndex : m_ActiveIteratorIndices)
 	{
-		if (index >= m_Entities.size())
-			index = 0;
+		if (*iteratorIndex >= index)
+			(*iteratorIndex)--;
+	}
+}
 
-		if (m_Entities.at(index) == entity)
-			return index;
+size_t ComponentPool::IndexOf(Entity entity)
+{
+	size_t iteration = 0;
+	while (iteration++ < m_Size)
+	{
+		if (m_Cursor >= m_Size)
+			m_Cursor = 0;
 
-		index++;
-		iteration++;
+		if (m_Entities[m_Cursor] == entity)
+			return m_Cursor;
+
+		m_Cursor++;
 	}
 
-	return -1;
+	return NOT_FOUND;
+}
+
+void ComponentPool::IncreaseSize(size_t componentSize)
+{
+	SONIC_LOG_DEBUG("Increasing component pool size");
+	m_Capacity = (size_t)((double)(m_Capacity + 1) * 1.2);
+
+	uint8_t* newData = new uint8_t[m_Capacity * componentSize];
+	std::copy(m_Data, m_Data + m_Size * componentSize, newData);
+	delete[] m_Data;
+	m_Data = newData;
+
+	Entity* newEntities = new Entity[m_Capacity];
+	std::copy(m_Entities, m_Entities + m_Size, newEntities);
+	delete[] m_Entities;
+	m_Entities = newEntities;
+}
+
+void ComponentPool::Destroy()
+{
+	SONIC_LOG_DEBUG("Destroying component pool");
+	delete[] m_Data;
+	delete[] m_Entities;
 }

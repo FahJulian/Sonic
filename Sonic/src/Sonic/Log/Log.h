@@ -36,7 +36,7 @@ namespace Sonic {
     #define SONIC_LOG_WARN(...) SONIC_LOG_DEBUG(__VA_ARGS__)    
 #else
     #define SONIC_LOG_DEBUG(...) 
-    #define SONIC_LOG_DEBUG_ASSERT(b, ...) 
+    #define SONIC_LOG_DEBUG_ASSERT(b, ...)
     #define SONIC_LOG_ERROR(...)
     #define SONIC_LOG_WARN(...)   
 #endif

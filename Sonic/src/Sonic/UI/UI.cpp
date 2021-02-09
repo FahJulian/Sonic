@@ -14,9 +14,9 @@ namespace Sonic::UI {
 		EventListener<MouseButtonReleasedEvent> onClick)
 	{
 		Entity button = scene->AddEntity();
-		button.AddComponent<UIComponent>(mode, x, y, width, height);
-		button.AddComponent<UIRendererComponent>(properties);
-		button.AddComponent<UIClickListenerComponent>(onClick);
+		scene->AddComponent<UIComponent>(button, mode, x, y, width, height);
+		scene->AddComponent<UIRendererComponent>(button, properties);
+		scene->AddComponent<UIClickListenerComponent>(button, onClick);
 		return button;
 	}
 
@@ -24,7 +24,7 @@ namespace Sonic::UI {
 		const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick)
 	{
 		Entity button = createButton(scene, mode, x, y, width, height, properties, onClick);
-		button.AddComponent<UIHoverComponent>(hoveredProperties);
+		scene->AddComponent<UIHoverComponent>(button, hoveredProperties);
 		return button;
 	}
 
@@ -32,7 +32,7 @@ namespace Sonic::UI {
 		EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const std::string& text)
 	{
 		Entity button = createButton(scene, mode, x, y, width, height, properties, onClick);
-		button.AddComponent<UITextComponent>(font, textColor, text);
+		scene->AddComponent<UITextComponent>(button, font, textColor, text);
 		return button;
 	}
 
@@ -40,32 +40,32 @@ namespace Sonic::UI {
 		const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const std::string& text)
 	{
 		Entity button = createButton(scene, mode, x, y, width, height, properties, hoveredProperties, onClick);
-		button.AddComponent<UITextComponent>(font, textColor, text);
+		scene->AddComponent<UITextComponent>(button, font, textColor, text);
 		return button;
 	}
 
 	Entity createSlider(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const SliderProperties& properties, const EventListener<UISliderEvent>& onSlide)
 	{
 		Entity background = scene->AddEntity();
-		background.AddComponent<UIComponent>(mode, x, y, width, height);
+		scene->AddComponent<UIComponent>(background, mode, x, y, width, height);
 
 		if (properties.hasBackground)
-			background.AddComponent<UIRendererComponent>(properties.background);
+			scene->AddComponent<UIRendererComponent>(background, properties.background);
 
 		if (properties.hasCrossBar)
 		{
 			Entity crossbar = scene->AddEntity();
-			crossbar.AddComponent<UIComponent>(UISize::Mode::RelativeToEntity, 0.0f, (1.0f - properties.crossbarHeight) / 2.0f, 1.0f, properties.crossbarHeight, background);
-			crossbar.AddComponent<UIRendererComponent>(properties.crossbar);
+			scene->AddComponent<UIComponent>(crossbar, UISize::Mode::RelativeToEntity, 0.0f, (1.0f - properties.crossbarHeight) / 2.0f, 1.0f, properties.crossbarHeight, background);
+			scene->AddComponent<UIRendererComponent>(crossbar, properties.crossbar);
 		}
 
 		Entity slider = scene->AddEntity();
-		slider.AddComponent<UIComponent>(UISize::Mode::RelativeToEntity, (1.0f - properties.sliderWidth) / 2.0f, 0.0f, properties.sliderWidth, 1.0f, background);
-		slider.AddComponent<UIRendererComponent>(properties.slider);
-		slider.AddComponent<UIPositionConstraintsComponent>(0.0f, 0.0f, 1.0f - properties.sliderWidth, 0.0f);
+		scene->AddComponent<UIComponent>(slider, UISize::Mode::RelativeToEntity, (1.0f - properties.sliderWidth) / 2.0f, 0.0f, properties.sliderWidth, 1.0f, background);
+		scene->AddComponent<UIRendererComponent>(slider, properties.slider);
+		scene->AddComponent<UIPositionConstraintsComponent>(slider, 0.0f, 0.0f, 1.0f - properties.sliderWidth, 0.0f);
 
 		float sliderWidth = properties.sliderWidth;
-		slider.AddComponent<UIMovableComponent>([scene, slider, background, onSlide, sliderWidth](const UIEntityMovedEvent& e) {
+		scene->AddComponent<UIMovableComponent>(slider, [scene, slider, background, onSlide, sliderWidth](const UIEntityMovedEvent& e) {
 			auto* sliderComponent = scene->GetComponent<UIComponent>(slider);
 			auto* backgroundComponent = scene->GetComponent<UIComponent>(background);
 
@@ -73,7 +73,7 @@ namespace Sonic::UI {
 			onSlide(UISliderEvent{ percentage });
 		}, StandardCursors::Link);
 
-		background.AddComponent<UIClickListenerComponent>([scene, slider, background, onSlide, sliderWidth](const MouseButtonReleasedEvent& e) {
+		scene->AddComponent<UIClickListenerComponent>(background, [scene, slider, background, onSlide, sliderWidth](const MouseButtonReleasedEvent& e) {
 			auto* sliderComponent = scene->GetComponent<UIComponent>(slider);
 			auto* backgroundComponent = scene->GetComponent<UIComponent>(background);
 

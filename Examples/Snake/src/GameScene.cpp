@@ -19,39 +19,38 @@ void GameScene::Load()
 	for (Entity e : borderEntities)
 		AddComponent<Renderer2DComponent>(e, BORDER_COLOR);
 
-	borderEntities[0].AddComponent<Transform2DComponent>(X0 - BORDER, Y0, WIDTH + 2 * BORDER, -BORDER);
-	borderEntities[1].AddComponent<Transform2DComponent>(X0 + WIDTH, Y0 - BORDER, BORDER, HEIGHT + 2 * BORDER);
-	borderEntities[2].AddComponent<Transform2DComponent>(X0 + WIDTH + BORDER, Y0 + HEIGHT, -WIDTH - 2 * BORDER, BORDER);
-	borderEntities[3].AddComponent<Transform2DComponent>(X0, Y0 + HEIGHT + BORDER, -BORDER, -HEIGHT - 2 * BORDER);
+	AddComponent<Transform2DComponent>(borderEntities[0], X0 - BORDER, Y0, WIDTH + 2 * BORDER, -BORDER);
+	AddComponent<Transform2DComponent>(borderEntities[1], X0 + WIDTH, Y0 - BORDER, BORDER, HEIGHT + 2 * BORDER);
+	AddComponent<Transform2DComponent>(borderEntities[2], X0 + WIDTH + BORDER, Y0 + HEIGHT, -WIDTH - 2 * BORDER, BORDER);
+	AddComponent<Transform2DComponent>(borderEntities[3], X0, Y0 + HEIGHT + BORDER, -BORDER, -HEIGHT - 2 * BORDER);
 
 	Entity snakeHead = AddEntity();
-	snakeHead.AddComponent<Transform2DComponent>(0, 0, CELL_SIZE, CELL_SIZE);
-	snakeHead.AddComponent<SnakeHeadComponent>(SNAKE_START_LENGTH);
-	snakeHead.AddComponent<Renderer2DComponent>(HEAD_COLOR);
-	snakeHead.AddComponent<Direction2DComponent>(Direction2DComponent::Direction::Up);
-	snakeHead.AddBehaviour<DirectionController>();
-	snakeHead.AddBehaviour<SnakeHeadBehaviour>();
+	AddComponent<Transform2DComponent>(snakeHead, 0, 0, CELL_SIZE, CELL_SIZE);
+	AddComponent<SnakeHeadComponent>(snakeHead, SNAKE_START_LENGTH);
+	AddComponent<Renderer2DComponent>(snakeHead, HEAD_COLOR);
+	AddComponent<Direction2DComponent>(snakeHead, Direction2DComponent::Direction::Up);
+	//AddBehaviour<DirectionController>(snakeHead);
+	//AddBehaviour<SnakeHeadBehaviour>(snakeHead);
 
 	Entity food = AddEntity();
-	food.AddComponent<Transform2DComponent>(0, 0, CELL_SIZE, CELL_SIZE);
-	food.AddComponent<FoodComponent>(snakeHead);
-	food.AddComponent<Renderer2DComponent>(FOOD_COLOR);
-	food.AddBehaviour<FoodBehaviour>();
+	AddComponent<Transform2DComponent>(food, 0, 0, CELL_SIZE, CELL_SIZE);
+	AddComponent<FoodComponent>(food, snakeHead);
+	AddComponent<Renderer2DComponent>(food, FOOD_COLOR);
 
 	for (int i = 0; i < SNAKE_START_LENGTH; i++)
 	{
 		Entity tailElement = AddEntity();		
-		tailElement.AddComponent<Transform2DComponent>(0, 0, CELL_SIZE, CELL_SIZE);
-		tailElement.AddComponent<SnakeTailComponent>(snakeHead, i + 1);
-		tailElement.AddComponent<Renderer2DComponent>(TAIL_COLOR);
-		tailElement.AddBehaviour<SnakeTailBehaviour>();
+		AddComponent<Transform2DComponent>(tailElement, 0, 0, CELL_SIZE, CELL_SIZE);
+		AddComponent<SnakeTailComponent>(tailElement, snakeHead, i + 1);
+		AddComponent<Renderer2DComponent>(tailElement, TAIL_COLOR);
+		//AddBehaviour<SnakeTailBehaviour>(tailElement);
 	}
 }
 
 void GameScene::OnInit()
 {
 	for (auto entity : ViewEntities<SnakeHeadComponent>())
-		DispatchEvent(SnakeResetEvent{ ToEntity(entity) });
+		DispatchEvent(SnakeResetEvent{ entity });
 }
 
 void GameScene::OnUpdate(float deltaTime)
@@ -73,17 +72,17 @@ void GameScene::OnUpdate(float deltaTime)
 
 void GameScene::PollCollisionEvents()
 {
-	for (auto [entity, component, transform] : Group<SnakeHeadComponent, Transform2DComponent>())
-	{
-		for (auto [foodEntity, f, t] : Group<FoodComponent, Transform2DComponent>())
-			if (t->GetPosition() == transform->GetPosition())
-				DispatchEvent(SnakeEatEvent{ entity, foodEntity });
+	//for (auto [entity, component, transform] : Group<SnakeHeadComponent, Transform2DComponent>())
+	//{
+	//	for (auto [foodEntity, f, t] : Group<FoodComponent, Transform2DComponent>())
+	//		if (t->GetPosition() == transform->GetPosition())
+	//			DispatchEvent(SnakeEatEvent{ entity, foodEntity });
 
-		for (auto [tailEntity, st, t] : Group<SnakeTailComponent, Transform2DComponent>())
-			if (t->GetPosition() == transform->GetPosition())
-				DispatchEvent(SnakeResetEvent{ entity });
+	//	for (auto [tailEntity, st, t] : Group<SnakeTailComponent, Transform2DComponent>())
+	//		if (t->GetPosition() == transform->GetPosition())
+	//			DispatchEvent(SnakeResetEvent{ entity });
 
-		if (isOutsideBorders(transform->GetPosition()))
-			DispatchEvent(SnakeResetEvent{ entity });
-	}
+	//	if (isOutsideBorders(transform->GetPosition()))
+	//		DispatchEvent(SnakeResetEvent{ entity });
+	//}
 }

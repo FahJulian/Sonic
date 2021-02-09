@@ -44,17 +44,17 @@ void SceneUIHandler::Update(float deltaTime)
 
 void SceneUIHandler::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
 {
-	if (e.button == Buttons::Left)
-	{
-		for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
-		{
-			if (Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
-				Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
-			{
-				cl->clicked = true;
-			}
-		}
-	}
+	//if (e.button == Buttons::Left)
+	//{
+	//	for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
+	//	{
+	//		if (Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
+	//			Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
+	//		{
+	//			cl->clicked = true;
+	//		}
+	//	}
+	//}
 }
 
 void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
@@ -63,16 +63,16 @@ void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 	{
 		if (s_CurrentAction == Action::None)
 		{
-			for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
-			{
-				if (cl->clicked &&
-					Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
-					Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
-				{
-					cl->listener(e);
-					cl->clicked = false;
-				}
-			}
+			//for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
+			//{
+			//	if (cl->clicked &&
+			//		Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
+			//		Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
+			//	{
+			//		cl->listener(e);
+			//		cl->clicked = false;
+			//	}
+			//}
 		}
 
 		s_CurrentAction = Action::None;
@@ -85,33 +85,33 @@ void SceneUIHandler::OnMouseMoved(const MouseMovedEvent& e)
 
 	if (Mouse::isButtonPressed(Buttons::Left))
 	{
-		if (s_CurrentAction == Action::None || s_CurrentAction == Action::Resizing)
-		{
-			for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
-				UpdateUIResizableComponentMouseButtonDown(entity, r, c, e);
-		}
+		//if (s_CurrentAction == Action::None || s_CurrentAction == Action::Resizing)
+		//{
+		//	for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
+		//		UpdateUIResizableComponentMouseButtonDown(entity, r, c, e);
+		//}
 
-		if (s_CurrentAction == Action::None || s_CurrentAction == Action::Moving)
-		{
-			for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
-				UpdateUIMovableComponentMouseButtonDown(entity, m, c, e);
-		}
+		//if (s_CurrentAction == Action::None || s_CurrentAction == Action::Moving)
+		//{
+		//	for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
+		//		UpdateUIMovableComponentMouseButtonDown(entity, m, c, e);
+		//}
 	}
 	else
 	{
 		s_HoveredAction = Action::None;
 
-		for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
-			UpdateUIResizableComponentMouseButtonUp(entity, r, c, e);
+		//for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
+		//	UpdateUIResizableComponentMouseButtonUp(entity, r, c, e);
 
-		if (s_HoveredAction != Action::Resizing)
-		{
-			for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
-				UpdateUIMovableComponentMouseButtonUp(m, c, e);
-		}
+		//if (s_HoveredAction != Action::Resizing)
+		//{
+		//	for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
+		//		UpdateUIMovableComponentMouseButtonUp(m, c, e);
+		//}
 
-		for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
-			h->SetHovered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
+		//for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
+		//h->SetHovered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
 	}
 }
 
@@ -220,7 +220,7 @@ void SceneUIHandler::OnComponentRemoved(const ComponentRemovedEvent<UIComponent>
 	auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
 	if (c->parent != 0)
 	{
-		std::vector<EntityID>& childs = m_ChildRegistry[c->parent];
+		std::vector<Entity>& childs = m_ChildRegistry[c->parent];
 		childs.erase(std::remove(childs.begin(), childs.end(), e.entity));
 	}
 }
@@ -243,7 +243,7 @@ void SceneUIHandler::OnWindowResized(const WindowResizedEvent& e)
 	}
 }
 
-void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(EntityID entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
+void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
 {
 	if ((r->bordersHovered.bottom && r->bordersHovered.right) || (r->bordersHovered.top && r->bordersHovered.left))
 		Window::setCursor(StandardCursors::ResizeDiagonalLeft);
@@ -308,7 +308,7 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(EntityID entity, 
 	}
 }
 
-void SceneUIHandler::UpdateUIResizableComponentMouseButtonUp(EntityID entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
+void SceneUIHandler::UpdateUIResizableComponentMouseButtonUp(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
 {
 	r->bordersHovered = { false, false, false, false };
 
@@ -360,7 +360,7 @@ void SceneUIHandler::UpdateUIMovableComponentMouseButtonUp(UIMovableComponent* m
 	}
 }
 
-void SceneUIHandler::UpdateUIMovableComponentMouseButtonDown(EntityID entity, UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e)
+void SceneUIHandler::UpdateUIMovableComponentMouseButtonDown(Entity entity, UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e)
 {
 	if (m->hovered)
 	{
@@ -376,7 +376,7 @@ void SceneUIHandler::UpdateUIMovableComponentMouseButtonDown(EntityID entity, UI
 	}
 }
 
-void SceneUIHandler::SetX(EntityID entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds)
+void SceneUIHandler::SetX(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds)
 {
 	float relativeValue = 0.0f;
 	switch (component->x.mode)
@@ -416,7 +416,7 @@ void SceneUIHandler::SetX(EntityID entity, UIComponent* component, float value, 
 		ResizeChildsX(entity, component);
 }
 
-void SceneUIHandler::SetY(EntityID entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds)
+void SceneUIHandler::SetY(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds)
 {
 	float relativeValue = 0.0f;
 	switch (component->y.mode)
@@ -456,7 +456,7 @@ void SceneUIHandler::SetY(EntityID entity, UIComponent* component, float value, 
 		ResizeChildsY(entity, component);
 }
 
-void SceneUIHandler::SetWidth(EntityID entity, UIComponent* component, float value, UIComponent* parent)
+void SceneUIHandler::SetWidth(Entity entity, UIComponent* component, float value, UIComponent* parent)
 {
 	if (value < 0.0f)
 		value = 0.0f;
@@ -497,7 +497,7 @@ void SceneUIHandler::SetWidth(EntityID entity, UIComponent* component, float val
 	ResizeChildsWidth(entity, component);
 }
 
-void SceneUIHandler::SetHeight(EntityID entity, UIComponent* component, float value, UIComponent* parent)
+void SceneUIHandler::SetHeight(Entity entity, UIComponent* component, float value, UIComponent* parent)
 {
 	if (value < 0.0f)
 		value = 0.0f;
@@ -546,9 +546,9 @@ void SceneUIHandler::MarkDirty(UIComponent* component)
 		*component->fontRendererDirty = true;
 }
 
-void SceneUIHandler::ResizeChildsX(EntityID parent, UIComponent* c)
+void SceneUIHandler::ResizeChildsX(Entity parent, UIComponent* c)
 {
-	for (EntityID child : m_ChildRegistry[parent])
+	for (Entity child : m_ChildRegistry[parent])
 	{
 		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
 		if (childComponent->x.mode == UISize::Mode::RelativeToEntity)
@@ -560,9 +560,9 @@ void SceneUIHandler::ResizeChildsX(EntityID parent, UIComponent* c)
 	}
 }
 
-void SceneUIHandler::ResizeChildsY(EntityID parent, UIComponent* c)
+void SceneUIHandler::ResizeChildsY(Entity parent, UIComponent* c)
 {
-	for (EntityID child : m_ChildRegistry[parent])
+	for (Entity child : m_ChildRegistry[parent])
 	{
 		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
 		childComponent->y.absoluteValue = c->y.absoluteValue + childComponent->y.relativeValue * c->height.absoluteValue;
@@ -571,9 +571,9 @@ void SceneUIHandler::ResizeChildsY(EntityID parent, UIComponent* c)
 	}
 }
 
-void SceneUIHandler::ResizeChildsWidth(EntityID parent, UIComponent* c)
+void SceneUIHandler::ResizeChildsWidth(Entity parent, UIComponent* c)
 {
-	for (EntityID child : m_ChildRegistry[parent])
+	for (Entity child : m_ChildRegistry[parent])
 	{
 		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
 
@@ -596,9 +596,9 @@ void SceneUIHandler::ResizeChildsWidth(EntityID parent, UIComponent* c)
 	}
 }
 
-void SceneUIHandler::ResizeChildsHeight(EntityID parent, UIComponent* c)
+void SceneUIHandler::ResizeChildsHeight(Entity parent, UIComponent* c)
 {
-	for (EntityID child : m_ChildRegistry[parent])
+	for (Entity child : m_ChildRegistry[parent])
 	{
 		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
 
@@ -621,7 +621,7 @@ void SceneUIHandler::ResizeChildsHeight(EntityID parent, UIComponent* c)
 	}
 }
 
-void SceneUIHandler::FitPosition(EntityID entity, UIComponent* c, UIPositionConstraintsComponent* constraints)
+void SceneUIHandler::FitPosition(Entity entity, UIComponent* c, UIPositionConstraintsComponent* constraints)
 {
 	auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
 
@@ -680,7 +680,7 @@ void SceneUIHandler::FitPosition(EntityID entity, UIComponent* c, UIPositionCons
 	}
 }
 
-void SceneUIHandler::FitSize(EntityID entity, UIComponent* c, UISizeConstraintsComponent* constraints)
+void SceneUIHandler::FitSize(Entity entity, UIComponent* c, UISizeConstraintsComponent* constraints)
 {
 	auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
 

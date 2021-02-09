@@ -1,91 +1,71 @@
 #pragma once
-#include <set>
 #include <vector>
-#include <unordered_map>
-#include "Sonic/Event/Events.h"
-#include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Log/Log.h"
-#include "EntityID.h"
+#include "Entity.h"
 
 namespace Sonic {
 
-	class BaseComponentPool
+	class ComponentPool
 	{
-	protected:
-		virtual void OnUpdate() = 0;
-
-		bool HasEntity(EntityID entity);
-		void RemoveEntity(EntityID entity);
-		int IndexOf(EntityID entity);
-
-		std::vector<EntityID> m_Entities;
-		std::set<int, std::greater<int>> m_ToRemove;
-
-		friend class Scene;
-	};
-
-
-	template<typename Component>
-	class ComponentPool : public BaseComponentPool
-	{
-	public:
-		ComponentPool(EventDispatcher* eventDispatcher)
-			: m_EventDispatcher(eventDispatcher) 
+		ComponentPool()
+			: m_Size(0), m_Capacity(0), m_Cursor(0), m_Data(nullptr), m_Entities(nullptr)
 		{
 		}
 
-	private:
-		template<typename... Args>
-		void AddComponent(EntityID entity, Args&&... args)
+		template<typename Component>
+		Component* GetComponent(Entity e)
 		{
+			size_t index = IndexOf(e);
+
+			SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant get Component from ComponentPool: Pool does not contain Entity");
+
+			return reinterpret_cast<Component*>(m_Data) + index;
+		}
+
+		template<typename Component, typename... Args>
+		void AddComponent(Entity entity, Args&&... args)
+		{
+			if (m_Size == m_Capacity)
+				IncreaseSize(sizeof(Component));
+
 #pragma warning(disable:4244)
-			m_ToAdd.emplace(entity, Component(std::forward<Args>(args)...));
+			new(reinterpret_cast<Component*>(m_Data + m_Size * sizeof(Component))) Component(std::forward<Args>(args)...);
 #pragma warning(default:4244)
+
+			m_Entities[m_Size] = entity;
+
+			m_Size++;
 		}
 
-		Component* GetComponent(EntityID entity)
-		{
-#ifdef SONIC_DEBUG
-			if (IndexOf(entity) == -1)
-			{
-				SONIC_LOG_DEBUG("Critical: ComponentPool::GetComponent: No component exists for this entity");
-				return nullptr;
-			}
-#endif
-			return &m_Components.at(IndexOf(entity));
-		}
+		uint8_t* GetComponent(Entity entity, size_t componentSize);
 
-		void OnUpdate() override
-		{
-			for (int index : m_ToRemove)
-			{
-				EntityID entity = *(m_Entities.begin() + index);
-				m_Entities.erase(m_Entities.begin() + index);
-				m_Components.erase(m_Components.begin() + index);
-				m_EventDispatcher->DispatchEvent(ComponentRemovedEvent<Component>(entity));
-			}
+		void AddComponent(Entity entity, uint8_t* data, size_t componentSize);
 
-			for (auto& [entity, component] : m_ToAdd)
-			{
-				m_Entities.push_back(entity);
-				m_Components.push_back(component);
-				m_EventDispatcher->DispatchEvent(ComponentAddedEvent<Component>(entity));
-			}
+		void TransferEntity(Entity entity, ComponentPool* other, size_t componentSize);
 
-			m_ToRemove.clear();
-			m_ToAdd.clear();
-		}
+		bool HasEntity(Entity entity);
 
-		std::vector<Component> m_Components;
-		std::unordered_map<EntityID, Component> m_ToAdd;
-		EventDispatcher* m_EventDispatcher;
+		void RemoveEntity(Entity entity, size_t componentSize);
 
-		friend class Scene;
-		template<typename> friend class EntityView;
+		size_t IndexOf(Entity entity);
+
+		void IncreaseSize(size_t componentSize);
+
+		void Destroy();
+
+		size_t m_Size;
+		size_t m_Capacity;
+		size_t m_Cursor;
+		uint8_t* m_Data;
+		Entity* m_Entities;
+		std::vector<size_t*> m_ActiveIteratorIndices;
+
+		static const size_t NOT_FOUND = std::numeric_limits<size_t>::max();
+
+		friend class EntityView;
 		template<typename> friend class ComponentView;
 		template<typename> friend class PairView;
-		template<typename, typename> friend class GroupView;
+		friend class ComponentRegistry;
 	};
 
 }
-

@@ -133,7 +133,7 @@ void UIRenderer::rebuffer(Scene* scene)
 {
 	bool rebuffer = false;
 
-	auto& entities = scene->View<UIRendererComponent>();
+	auto entities = scene->View<UIRendererComponent>();
 	s_ElementCount = entities.Size();
 	if (s_ElementCount > MAX_ELEMENTS)
 		s_ElementCount = MAX_ELEMENTS;

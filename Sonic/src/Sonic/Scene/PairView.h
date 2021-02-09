@@ -1,81 +1,75 @@
 #pragma once
-#include <vector>
-#include <iterator>
-#include <functional>
-#include "Sonic/Util/GenericContainer.h"
+#include "ComponentType.h"
 #include "ComponentPool.h"
-#include "EntityID.h"
+#include "ComponentRegistry.h"
 
 namespace Sonic {
-
-	class Scene;
 
 	template<typename Component>
 	class PairView
 	{
-	public:
 		struct Pair
 		{
-			EntityID entity;
+			Entity entity;
 			Component* component;
 		};
 
 		struct Iterator
 		{
-			using EntityIterator = std::vector<EntityID>::const_iterator;
-			using ComponentIterator = typename std::vector<Component>::iterator;
-
 			using iterator_category = std::forward_iterator_tag;
-			using difference_type = std::ptrdiff_t;
 			using value_type = Pair;
+			using reference = Pair&;
 			using pointer = Pair*;
-			using Reference = Pair&;
 
-			Iterator(const EntityIterator& entityIterator, const ComponentIterator& componentIterator)
-				: m_EntityIterator(entityIterator), m_ComponentIterator(componentIterator) 
+			size_t index;
+			ComponentPool* pool;
+
+			Iterator(ComponentPool* pool, size_t index)
+				: pool(pool), index(index)
 			{
+				pool->m_ActiveIteratorIndices.push_back(&this->index);
 			}
 
-			value_type operator*() { return { *m_EntityIterator, &(*m_ComponentIterator) }; }
+			Iterator(const Iterator& other) = delete;
+			void operator=(const Iterator& other) = delete;
 
-			Iterator& operator++() { m_EntityIterator++; m_ComponentIterator++; return *this; }
+			value_type operator*() { return { pool->m_Entities[index], reinterpret_cast<Component*>(pool->m_Data) + index }; }
+
+			Iterator& operator++() { index++; return *this; }
 			Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
-			
-			friend bool operator==(const Iterator& a, const Iterator& b) { return a.m_EntityIterator == b.m_EntityIterator && a.m_ComponentIterator == b.m_ComponentIterator; }
-			friend bool operator!=(const Iterator& a, const Iterator& b) { return !(a == b); }
 
-			EntityIterator m_EntityIterator;
-			ComponentIterator m_ComponentIterator;
-		};	
+			friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; }
+			friend bool operator!=(const Iterator& a, const Iterator& b) { 
+				return a.index != b.index; 
+			}
+
+			~Iterator()
+			{
+				pool->m_ActiveIteratorIndices.erase(std::remove(pool->m_ActiveIteratorIndices.begin(), pool->m_ActiveIteratorIndices.end(), &index));
+			}
+		};
 
 	public:
-		PairView(Scene* scene)
-			: m_Pool(GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(scene, (EventDispatcher*)scene))
+		PairView(ComponentRegistry* registry)
+			: m_Pool(registry->GetComponentPool(getComponentType<Component>()))
 		{
 		}
 
-		Iterator begin() { return Iterator(m_Pool->m_Entities.cbegin(), m_Pool->m_Components.begin()); }
-		Iterator end() { return Iterator(m_Pool->m_Entities.cend(), m_Pool->m_Components.end()); }
+		Iterator begin() { return Iterator(m_Pool, 0); }
+		Iterator end() { return Iterator(m_Pool, m_Pool->m_Size); }
 
-		void ForEach(std::function<void(EntityID entity, Component* component)> function)
+		void ForEach(std::function<void(Entity entity, Component* component)> function)
 		{
-			Iterator end = end();
-			for (Iterator iter = begin(); iter != end; iter++)
-			{
-				Pair pair = *iter;
-				function(pair->entity, pair->component);
-			}
+			for (auto [entity, component] : *this)
+				function(entity, component);
 		}
 
-		int Size()
+		size_t Size()
 		{
-			return static_cast<int>(m_Pool->m_Entities.size());
+			return m_Pool->m_Size;
 		}
 
-	private:
-		ComponentPool<Component>* m_Pool;
-
-		friend class Scene;
+		ComponentPool* m_Pool;
 	};
 
 }

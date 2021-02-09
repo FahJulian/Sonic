@@ -149,7 +149,7 @@ namespace Sonic::Renderer2D {
         }
     }
 
-    void drawEntity(Scene* scene, EntityID e, Renderer2DComponent* r, int index)
+    void drawEntity(Scene* scene, Entity e, Renderer2DComponent* r, int index)
     {
         auto* t = scene->GetComponent<Transform2DComponent>(e);
         drawRect(index, t->GetPosition(), t->GetScale(), t->GetRotation(), r->GetSprite(), r->GetColor());
@@ -164,7 +164,7 @@ namespace Sonic::Renderer2D {
 
         bool rebuffer = false;
 
-        auto& entities = scene->View<Renderer2DComponent>();
+        auto entities = scene->View<Renderer2DComponent>();
         s_RectCount = entities.Size();
 
         int i = 0;

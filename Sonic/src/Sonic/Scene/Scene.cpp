@@ -14,8 +14,7 @@ using namespace Sonic;
 
 
 Scene::Scene()
-	: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())),
-	m_UIHandler(this)
+	: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())), m_UIHandler(this)
 {
 	AddListener(this, &Scene::OnRenderer2DComponentAdded);
 	AddListener(this, &Scene::OnTransform2DComponentAdded);
@@ -25,31 +24,32 @@ Scene::Scene()
 
 Entity Scene::AddEntity()
 {
-	return Entity(this);
+	static Entity nextEntity = 1;
+	return nextEntity++;
 }
 
-void Scene::RemoveEntity(EntityID entity)
+void Scene::DeactivateEntity(Entity entity)
 {
-	for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(this))
-		if (pool->HasEntity(entity))
-			pool->RemoveEntity(entity);
-
-	for (BaseComponentPool* pool : GenericContainer::GetAll<BaseComponentPool>(this))
-		if (pool->HasEntity(entity))
-			pool->RemoveEntity(entity);
+	m_MainRegistry.TransferEntity(entity, &m_DisabledRegistry);
+	// Dispatch Event
 }
 
-Entity Scene::ToEntity(EntityID entity)
+void Scene::ReactivateEntity(Entity entity)
 {
-	return { this, entity };
+	m_DisabledRegistry.TransferEntity(entity, &m_MainRegistry);
+	// Dispatch Event
+}
+
+void Scene::RemoveEntity(Entity entity)
+{
+	m_MainRegistry.RemoveEntity(entity);
+	m_DisabledRegistry.RemoveEntity(entity);
+	// Dispatch Event
 }
 
 void Scene::Init()
 {
 	Load();
-
-	UpdatePools();
-
 	OnInit();
 }
 
@@ -65,42 +65,29 @@ void Scene::Update(float deltaTime)
 
 	m_UIHandler.Update(deltaTime);
 
-	UpdatePools();
-
 	PollCollisionEvents();
-}
-
-void Scene::UpdatePools()
-{
-	SONIC_PROFILE_FUNCTION("Scene::UpdatePools");
-
-	for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(this))
-		pool->UpdatePool();
-
-	for (BaseComponentPool* pool : GenericContainer::GetAll<BaseComponentPool>(this))
-		pool->OnUpdate();
 }
 
 void Scene::UpdateBehaviours(float deltaTime)
 {
 	SONIC_PROFILE_FUNCTION("Scene::UpdateBehaviours");
 
-	for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(this))
-		pool->UpdateBehaviours(deltaTime);
+	//for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(m_GenericsKey))
+	//	pool->UpdateBehaviours(deltaTime);
 }
 
 void Scene::UpdateComponents(float deltaTime)
 {
 	SONIC_PROFILE_FUNCTION("Scene::UpdateComponents");
 
-	for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
-	{
-		cameraComponent->camera.SetPosition(t->GetPosition());
-		cameraComponent->camera.SetRotation(t->GetRotation());
+	//for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
+	//{
+	//	cameraComponent->camera.SetPosition(t->GetPosition());
+	//	cameraComponent->camera.SetRotation(t->GetRotation());
 
-		if (cameraComponent->isSceneCamera)
-			m_Camera = cameraComponent->camera;
-	}
+	//	if (cameraComponent->isSceneCamera)
+	//		m_Camera = cameraComponent->camera;
+	//}
 }
 
 void Scene::Rebuffer()

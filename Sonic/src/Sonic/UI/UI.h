@@ -1,5 +1,5 @@
 #pragma once
-#include "Sonic/Scene/EntityID.h"
+#include "Sonic/Scene/Entity.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Scene/Components.h"
 #include "UIRenderer.h"
@@ -9,7 +9,6 @@
 namespace Sonic {
 
 	class Scene;
-	class Entity;
 
 	namespace UI {
 

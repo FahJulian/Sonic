@@ -1,41 +1,22 @@
 #pragma once
 #include "Sonic/Util/GenericContainer.h"
+#include "Sonic/Event/Events.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Renderer/Camera2D.h"
 #include "Sonic/UI/SceneUIHandler.h"
-#include "EntityID.h"
+#include "Entity.h"
+#include "Components.h"
+#include "PairView.h"
+#include "EntityView.h"
+#include "ComponentView.h"
 #include "ComponentPool.h"
-#include "Behaviour.h"
-#include "BehaviourPool.h"
+#include "ComponentType.h"
+#include "ComponentRegistry.h"
 
 namespace Sonic {
 
-	class Camera2D;
-
-	template<typename Component>
-	class PairView;
-
-	template<typename Component>
-	class EntityView;
-
-	template<typename Component>
-	class ComponentView;
-
 	template<typename Component1, typename Component2>
 	class GroupView;
-
-	struct Renderer2DComponent;
-	struct Transform2DComponent;
-
-	template <typename Component>
-	struct ComponentAddedEvent;
-
-	template <typename Component>
-	struct ComponentRemovedEvent;
-
-	struct WindowResizedEvent;
-
-	class Entity;
 
 	class Scene : public EventDispatcher
 	{
@@ -48,14 +29,11 @@ namespace Sonic {
 		void Rebuffer();
 		void Render();
 
-		void UpdatePools();
 		void UpdateComponents(float deltaTime);
 		void UpdateBehaviours(float deltaTime);
 
 		void OnRenderer2DComponentAdded(const ComponentAddedEvent<Renderer2DComponent>& e);
 		void OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DComponent>& e);
-
-		void OnUIComponentRemoved(const ComponentRemovedEvent<UIComponent>& e);
 
 		void OnWindowResized(const WindowResizedEvent& e);
 
@@ -70,76 +48,68 @@ namespace Sonic {
 		SceneUIHandler& GetUIHandler() { return m_UIHandler; }
 
 		Entity AddEntity();
-		void RemoveEntity(EntityID entity);
-		Entity ToEntity(EntityID entity);
+		void DeactivateEntity(Entity entity);
+		void ReactivateEntity(Entity entity);
+		void RemoveEntity(Entity entity);
 
 		template<typename Component, typename... Args>
-		void AddComponent(EntityID entity, Args&&... args)
+		void AddComponent(Entity entity, Args&&... args)
 		{
-			ComponentPool<Component>* pool = GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this);
-			pool->AddComponent(entity, std::forward<Args>(args)...);
-		}
-
-		template<typename DerivedBehaviour, typename... Args>
-		void AddBehaviour(EntityID entity, Args&&... args)
-		{
-			GenericContainer::GetOrAddWithBase<BehaviourPool<DerivedBehaviour>, BaseBehaviourPool>(this, this)->AddBehaviour(entity, std::forward<Args>(args)...);
+			m_MainRegistry.AddComponent<Component>(entity, std::forward<Args>(args)...);
+			// Dispatch Event
 		}
 
 		template<typename Component>
-		bool HasComponent(EntityID entity)
+		bool HasComponent(Entity entity)
 		{
-			return GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->HasEntity(entity);
+			return m_MainRegistry.HasComponent<Component>(entity);
 		}
 
 		template<typename Component>
-		Component* GetComponent(EntityID entity)
+		Component* GetComponent(Entity entity)
 		{
-			return GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->GetComponent(entity);
+			return m_MainRegistry.GetComponent<Component>(entity);
 		}
 
 		template<typename Component>
-		void RemoveComponent(EntityID entity)
+		void RemoveComponent(Entity entity)
 		{
-			GenericContainer::GetOrAddWithBase<ComponentPool<Component>, BaseComponentPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->RemoveEntity(entity);
-		}
-
-		template<typename DerivedBehaviour>
-		void RemoveBehaviour(EntityID entity)
-		{
-			GenericContainer::GetOrAddWithBase<BehaviourPool<DerivedBehaviour>, BaseBehaviourPool, Scene, EventDispatcher*>(this, (EventDispatcher*)this)->RemoveEntity(entity);
+			m_MainRegistry.RemoveComponent<Component>(entity);
+			// Dispatch Event
 		}
 
 		template<typename Component>
-		EntityView<Component>& ViewEntities()
+		EntityView ViewEntities()
 		{
-			return *GenericContainer::GetOrAdd<EntityView<Component>>(this, this);
+			return EntityView(&m_MainRegistry, getComponentType<Component>());
 		}
 
 		template<typename Component>
-		ComponentView<Component>& ViewComponents()
+		ComponentView<Component> ViewComponents()
 		{
-			return *GenericContainer::GetOrAdd<ComponentView<Component>>(this, this);
+			return ComponentView<Component>(&m_MainRegistry);
 		}
 
 		template<typename Component>
-		PairView<Component>& View()
+		PairView<Component> View()
 		{
-			return *GenericContainer::GetOrAdd<PairView<Component>>(this, this);
+			return PairView<Component>(&m_MainRegistry);
 		}
 
-		template<typename Component1, typename Component2>
-		GroupView<Component1, Component2>& Group()
-		{
-			return *GenericContainer::GetOrAdd<GroupView<Component1, Component2>>(this, this);
-		}
+		//template<typename Component1, typename Component2>
+		//GroupView<Component1, Component2>& Group()
+		//{
+		//	return *GenericContainer::GetOrAdd<GroupView<Component1, Component2>, GenericContainer::Key, EventDispatcher*>(m_GenericsKey, m_GenericsKey, (EventDispatcher*)this);
+		//}
 
 	private:
 		Camera2D m_Camera;
 		SceneUIHandler m_UIHandler;
 
+		ComponentRegistry m_MainRegistry;
+		ComponentRegistry m_DisabledRegistry;
+
 		friend class App;
-		friend class Entity;
 		template<typename, typename> friend class GroupView;
 	};
 

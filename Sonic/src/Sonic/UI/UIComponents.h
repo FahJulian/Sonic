@@ -9,7 +9,7 @@
 #include "Sonic/Window/Cursor/Cursors.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Event/Events.h"
-#include "Sonic/Scene/EntityID.h"
+#include "Sonic/Scene/Entity.h"
 #include "UIRenderer.h"
 #include "UIEvents.h"
 #include "UISize.h"
@@ -189,7 +189,7 @@ namespace Sonic {
 	private:
 		using Mode = UISize::Mode;
 
-		EntityID parent;
+		Entity parent;
 
 		UISize x;
 		UISize y;
@@ -208,22 +208,22 @@ namespace Sonic {
 		{
 		}
 
-		UIComponent(Mode mode, float x, float y, float width, float height, EntityID parent = 0)
+		UIComponent(Mode mode, float x, float y, float width, float height, Entity parent = 0)
 			: parent(parent), x({ mode, x }), y({ mode, y }), width({ mode, width }), height({ mode, height }), zIndex(0.0f)
 		{
 		}
 
-		UIComponent(Mode mode, float x, float y, float width, float height, float zIndex, EntityID parent = 0)
+		UIComponent(Mode mode, float x, float y, float width, float height, float zIndex, Entity parent = 0)
 			: parent(parent), x({ mode, x }), y({ mode, y }), width({ mode, width }), height({ mode, height }), zIndex(zIndex)
 		{
 		}
 
-		UIComponent(UISize x, UISize y, UISize width, UISize height, EntityID parent = 0)
+		UIComponent(UISize x, UISize y, UISize width, UISize height, Entity parent = 0)
 			: parent(parent), x(x), y(y), width(width), height(height), zIndex(0.0f)
 		{
 		}
 
-		UIComponent(UISize x, UISize y, UISize width, UISize height, float zIndex, EntityID parent = 0)
+		UIComponent(UISize x, UISize y, UISize width, UISize height, float zIndex, Entity parent = 0)
 			: parent(parent), x(x), y(y), width(width), height(height), zIndex(zIndex)
 		{
 		}

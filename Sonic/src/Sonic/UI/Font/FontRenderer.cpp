@@ -133,7 +133,7 @@ namespace Sonic::FontRenderer {
 		}
 	}
 
-	void drawEntity(Scene* scene, EntityID e, UITextComponent* t, int index)
+	void drawEntity(Scene* scene, Entity e, UITextComponent* t, int index)
 	{
 		auto* c = scene->GetComponent<UIComponent>(e);
 

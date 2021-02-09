@@ -11,7 +11,7 @@ struct SnakeHeadComponent
 
 struct SnakeTailComponent
 {
-	EntityID snake;
+	Entity snake;
 	int tailIndex;
 
 	SnakeTailComponent(Entity snake, int tailIndex = 1)
@@ -20,7 +20,7 @@ struct SnakeTailComponent
 
 struct FoodComponent
 {
-	EntityID snake;
+	Entity snake;
 
 	FoodComponent(Entity snake)
 		: snake(snake) {}
