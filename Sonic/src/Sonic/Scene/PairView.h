@@ -73,9 +73,9 @@ namespace Sonic {
 			}
 		}
 
-		size_t Size()
+		int Size()
 		{
-			return m_Pool->m_Size;
+			return static_cast<int>(m_Pool->m_Size);
 		}
 
 		ComponentPool* m_Pool;

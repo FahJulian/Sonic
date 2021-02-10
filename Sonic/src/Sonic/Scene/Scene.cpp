@@ -5,6 +5,7 @@
 #include "Sonic/Renderer/Renderer2D.h"
 #include "Sonic/UI/Font/FontRenderer.h"
 #include "Sonic/UI/UIRenderer.h"
+#include "Script.h"
 #include "Scene.h"
 
 using namespace Sonic;
@@ -110,6 +111,11 @@ void Scene::Init()
 {
 	Load();
 	OnInit();
+
+	View<ScriptComponent>().ForEach([=](auto entity, auto* scriptComponent) 
+	{
+		scriptComponent->script->Init(this, entity);
+	});
 }
 
 void Scene::Update(float deltaTime)
@@ -120,19 +126,9 @@ void Scene::Update(float deltaTime)
 
 	UpdateComponents(deltaTime);
 
-	UpdateBehaviours(deltaTime);
-
 	m_UIHandler.Update(deltaTime);
 
 	PollCollisionEvents();
-}
-
-void Scene::UpdateBehaviours(float deltaTime)
-{
-	SONIC_PROFILE_FUNCTION("Scene::UpdateBehaviours");
-
-	//for (BaseBehaviourPool* pool : GenericContainer::GetAll<BaseBehaviourPool>(m_GenericsKey))
-	//	pool->UpdateBehaviours(deltaTime);
 }
 
 void Scene::UpdateComponents(float deltaTime)
@@ -147,6 +143,11 @@ void Scene::UpdateComponents(float deltaTime)
 		if (cameraComponent->isSceneCamera)
 			m_Camera = cameraComponent->camera;
 	}
+
+	ViewComponents<ScriptComponent>().ForEach([=](auto* scriptComponent) 
+	{
+		scriptComponent->script->OnUpdate(deltaTime);
+	});
 }
 
 void Scene::Rebuffer()

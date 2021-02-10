@@ -1,12 +1,13 @@
 #include "StartScene.h"
 #include "Settings.h"
 
+
 void StartScene::Load()
 {
 	Window::setClearColor(Colors::DarkGray);
 	Window::setSize(840, 480);
 
-	Font font(coreResourceDir() + "fonts/calibri.ttf", 0.055f * Window::getHeight());
+	Font font(coreResourceDir() + "fonts/calibri.ttf", static_cast<int>(0.055f * Window::getHeight()));
 
 	EntityGroup startMenu = AddEntityGroup();
 	Entity button;

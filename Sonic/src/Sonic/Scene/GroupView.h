@@ -109,9 +109,9 @@ namespace Sonic {
 			}
 		}
 
-		size_t Size()
+		int Size()
 		{
-			return m_Entities.size();
+			return static_cast<int>(m_Entities.size());
 		}
 
 		ComponentPool* m_Pool1;

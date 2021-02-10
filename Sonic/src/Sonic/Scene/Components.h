@@ -6,6 +6,18 @@
 
 namespace Sonic {
 
+    class Script;
+
+    struct ScriptComponent
+    {
+        Script* script;
+
+        ScriptComponent(Script* script)
+            : script(script)
+        {
+        }
+    };
+
     struct Direction2DComponent
     {
         enum class Direction : char

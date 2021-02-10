@@ -29,7 +29,6 @@ namespace Sonic {
 		void Render();
 
 		void UpdateComponents(float deltaTime);
-		void UpdateBehaviours(float deltaTime);
 
 		void OnRenderer2DComponentAdded(const ComponentAddedEvent<Renderer2DComponent>& e);
 		void OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DComponent>& e);

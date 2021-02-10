@@ -35,6 +35,8 @@
 #include "Sonic/Scene/Entity.h"
 #include "Sonic/Scene/Components.h"
 #include "Sonic/Scene/Views.h"
+#include "Sonic/Scene/Script.h"
+#include "Sonic/Scene/Scripts.h"
 
 #include "Sonic/Debug/Profiler/Profiler.h"
 
