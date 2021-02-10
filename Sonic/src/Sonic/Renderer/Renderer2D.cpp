@@ -193,6 +193,9 @@ namespace Sonic::Renderer2D {
 
     void render()
     {
+        if (s_RectCount == 0)
+            return;
+
         s_Shader.Bind();
         s_VAO.Bind();
 

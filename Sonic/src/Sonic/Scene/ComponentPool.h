@@ -7,10 +7,25 @@ namespace Sonic {
 
 	class ComponentPool
 	{
+		struct GroupViewInfo
+		{
+			ComponentPool* otherPool;
+			std::vector<Entity>* entities;
+			std::vector<size_t*>* activeIteratorIndices;
+
+			GroupViewInfo(ComponentPool* otherPool, std::vector<Entity>* entities, std::vector<size_t*>* activeIteratorIndices)
+				: otherPool(otherPool), entities(entities), activeIteratorIndices(activeIteratorIndices)
+			{
+			}
+		};
+
 		ComponentPool()
 			: m_Size(0), m_Capacity(0), m_Cursor(0), m_Data(nullptr), m_Entities(nullptr)
 		{
 		}
+
+		ComponentPool(const ComponentPool& other) = delete;
+		ComponentPool& operator=(const ComponentPool& other) = delete;
 
 		template<typename Component>
 		Component* GetComponent(Entity e)
@@ -33,6 +48,10 @@ namespace Sonic {
 #pragma warning(default:4244)
 
 			m_Entities[m_Size] = entity;
+
+			for (GroupViewInfo groupView : m_GroupViews)
+				if (groupView.otherPool->HasEntity(entity))
+					groupView.entities->push_back(entity);
 
 			m_Size++;
 		}
@@ -59,12 +78,14 @@ namespace Sonic {
 		uint8_t* m_Data;
 		Entity* m_Entities;
 		std::vector<size_t*> m_ActiveIteratorIndices;
+		std::vector<GroupViewInfo> m_GroupViews;
 
 		static const size_t NOT_FOUND = std::numeric_limits<size_t>::max();
 
 		friend class EntityView;
 		template<typename> friend class ComponentView;
 		template<typename> friend class PairView;
+		template<typename, typename> friend class GroupView;
 		friend class ComponentRegistry;
 	};
 

@@ -129,4 +129,34 @@ namespace Sonic {
         {
         }
     };
+
+    struct EntityDeactivatedEvent
+    {
+        Entity entity;
+
+        EntityDeactivatedEvent(Entity entity)
+            : entity(entity)
+        {
+        }
+    };
+
+    struct EntityReactivatedEvent
+    {
+        Entity entity;
+
+        EntityReactivatedEvent(Entity entity)
+            : entity(entity)
+        {
+        }
+    };
+
+    struct EntityRemovedEvent
+    {
+        Entity entity;
+
+        EntityRemovedEvent(Entity entity)
+            : entity(entity)
+        {
+        }
+    };
 }

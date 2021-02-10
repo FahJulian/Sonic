@@ -5,24 +5,25 @@ using namespace Sonic;
 
 ComponentPool* ComponentRegistry::GetComponentPool(ComponentType type)
 {
-	if (type >= m_ComponentPoolsSize)
-	{
-		ComponentPool* newComponentPools = new ComponentPool[(size_t)type + 1];
-		std::copy(m_ComponentPools, m_ComponentPools + m_ComponentPoolsSize, newComponentPools);
-		delete[] m_ComponentPools;
-		m_ComponentPools = newComponentPools;
-		m_ComponentPoolsSize = (size_t)type + 1;
-	}
+	while (type >= m_ComponentPools.size())
+		m_ComponentPools.push_back(new ComponentPool());
 
-	return m_ComponentPools + type;
+	return m_ComponentPools.at(type);
+}
+
+bool ComponentRegistry::HasEntity(Entity entity)
+{
+	return m_ComponentMap.find(entity) != m_ComponentMap.end();
 }
 
 void ComponentRegistry::TransferEntity(Entity entity, ComponentRegistry* other)
 {
 	auto it = m_ComponentMap.find(entity);
 
+#ifdef SONIC_DEBUG
 	if (it == m_ComponentMap.end())
 		return;
+#endif
 
 	for (ComponentType type : it->second)
 	{
@@ -52,6 +53,6 @@ void ComponentRegistry::RemoveEntity(Entity entity)
 
 ComponentRegistry::~ComponentRegistry()
 {
-	for (int i = 0; i < m_ComponentPoolsSize; i++)
-		m_ComponentPools[i].Destroy();
+	for (ComponentPool* pool : m_ComponentPools)
+		pool->Destroy();
 }

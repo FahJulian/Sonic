@@ -27,7 +27,7 @@ struct Vertex
 	float edgeRadius;
 };
 
-static const int MAX_ELEMENTS = 5000;
+static const int MAX_ELEMENTS = 20000;
 static const int MAX_TEXTURES = 16;
 
 static int s_ElementCount = 0;
@@ -212,6 +212,9 @@ void UIRenderer::rebuffer(Scene* scene)
 
 void UIRenderer::render()
 {
+	if (s_ElementCount == 0)
+		return;
+
 	s_Shader.Bind();
 	s_VAO.Bind();
 
@@ -234,5 +237,10 @@ void UIRenderer::setViewportSize(float width, float height)
 	s_Shader.UniformFloat("u_ViewportHeight", height);
 	s_Shader.Unbind();
 
+	s_CompleteRebuffer = true;
+}
+
+void UIRenderer::markDirty()
+{
 	s_CompleteRebuffer = true;
 }

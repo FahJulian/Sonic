@@ -25,4 +25,12 @@ void StartScene::Load()
 
 	UI::createButton(this, UISize::Mode::Absolute, 430, 70, 200, 40, UIRendererProperties(Colors::LightGray).Border(Colors::Black, 2),
 		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [](const auto& e) { App::stop(); }, font, 0xddddddff, "Quit Game");
+
+	DeactivateEntity(100);
+	DeactivateEntity(3);
+	DeactivateEntity(2);
+
+	ReactivateEntity(5);
+	ReactivateEntity(3);
+	ReactivateEntity(2);
 }

@@ -194,6 +194,9 @@ namespace Sonic::FontRenderer {
 
 	void render()
 	{
+		if (s_CharacterCount == 0)
+			return;
+
 		s_Shader.Bind();
 		s_VAO.Bind();
 

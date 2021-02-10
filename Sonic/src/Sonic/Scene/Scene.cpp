@@ -6,9 +6,6 @@
 #include "Sonic/UI/Font/FontRenderer.h"
 #include "Sonic/UI/UIRenderer.h"
 #include "Scene.h"
-#include "Entity.h"
-#include "Components.h"
-#include "Views.h"
 
 using namespace Sonic;
 
@@ -30,21 +27,46 @@ Entity Scene::AddEntity()
 
 void Scene::DeactivateEntity(Entity entity)
 {
-	m_MainRegistry.TransferEntity(entity, &m_DisabledRegistry);
-	// Dispatch Event
+#ifdef SONIC_DEBUG
+	if (!m_MainRegistry.HasEntity(entity))
+	{
+		SONIC_LOG_WARN("Cannot deactivate entity. Active registry does not contain the given entity.");
+		return;
+	}
+#endif
+
+	DispatchEvent(EntityDeactivatedEvent(entity));
+	m_MainRegistry.TransferEntity(entity, &m_InactiveRegistry);
+
+	if (HasComponent<UIRendererComponent>(entity))
+		UIRenderer::markDirty();
 }
 
 void Scene::ReactivateEntity(Entity entity)
 {
-	m_DisabledRegistry.TransferEntity(entity, &m_MainRegistry);
-	// Dispatch Event
+#ifdef SONIC_DEBUG
+	if (!m_InactiveRegistry.HasEntity(entity))
+	{
+		SONIC_LOG_WARN("Cannot reactivate entity. Inactive registry does not contain the given entity.");
+		return;
+	}
+#endif
+
+	m_InactiveRegistry.TransferEntity(entity, &m_MainRegistry);
+	DispatchEvent(EntityReactivatedEvent(entity));
+
+	if (HasComponent<UIRendererComponent>(entity))
+		UIRenderer::markDirty();
 }
 
 void Scene::RemoveEntity(Entity entity)
 {
+	DispatchEvent(EntityRemovedEvent(entity));
 	m_MainRegistry.RemoveEntity(entity);
-	m_DisabledRegistry.RemoveEntity(entity);
-	// Dispatch Event
+	m_InactiveRegistry.RemoveEntity(entity);
+
+	if (HasComponent<UIRendererComponent>(entity))
+		UIRenderer::markDirty();
 }
 
 void Scene::Init()
@@ -80,14 +102,14 @@ void Scene::UpdateComponents(float deltaTime)
 {
 	SONIC_PROFILE_FUNCTION("Scene::UpdateComponents");
 
-	//for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
-	//{
-	//	cameraComponent->camera.SetPosition(t->GetPosition());
-	//	cameraComponent->camera.SetRotation(t->GetRotation());
+	for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
+	{
+		cameraComponent->camera.SetPosition(t->GetPosition());
+		cameraComponent->camera.SetRotation(t->GetRotation());
 
-	//	if (cameraComponent->isSceneCamera)
-	//		m_Camera = cameraComponent->camera;
-	//}
+		if (cameraComponent->isSceneCamera)
+			m_Camera = cameraComponent->camera;
+	}
 }
 
 void Scene::Rebuffer()

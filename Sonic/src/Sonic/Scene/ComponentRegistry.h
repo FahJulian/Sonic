@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include <vector>
 #include "Entity.h"
 #include "ComponentType.h"
 #include "ComponentPool.h"
@@ -9,10 +10,17 @@ namespace Sonic {
 	class ComponentRegistry
 	{
 	public:
-		ComponentRegistry()
-			: m_ComponentPoolsSize(0), m_ComponentPools(nullptr)
-		{
-		}
+		ComponentRegistry() = default;
+
+		ComponentPool* GetComponentPool(ComponentType type);
+
+		bool HasEntity(Entity entity);
+
+		void TransferEntity(Entity entity, ComponentRegistry * other);
+
+		void RemoveEntity(Entity entity);
+
+		~ComponentRegistry();
 
 		template<typename Component, typename... Args>
 		void AddComponent(Entity entity, Args&&... args)
@@ -46,16 +54,7 @@ namespace Sonic {
 			m_ComponentMap[entity].erase(std::remove(m_ComponentMap[entity].begin(), m_ComponentMap[entity].end(), type));
 		}
 
-		ComponentPool* GetComponentPool(ComponentType type);
-
-		void TransferEntity(Entity entity, ComponentRegistry* other);
-
-		void RemoveEntity(Entity entity);
-
-		~ComponentRegistry();
-
-		size_t m_ComponentPoolsSize;
-		ComponentPool* m_ComponentPools;
+		std::vector<ComponentPool*> m_ComponentPools;
 		std::unordered_map<Entity, std::vector<ComponentType>> m_ComponentMap;
 	};
 

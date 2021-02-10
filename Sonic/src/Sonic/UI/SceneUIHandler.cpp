@@ -44,17 +44,17 @@ void SceneUIHandler::Update(float deltaTime)
 
 void SceneUIHandler::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
 {
-	//if (e.button == Buttons::Left)
-	//{
-	//	for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
-	//	{
-	//		if (Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
-	//			Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
-	//		{
-	//			cl->clicked = true;
-	//		}
-	//	}
-	//}
+	if (e.button == Buttons::Left)
+	{
+		for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
+		{
+			if (Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
+				Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
+			{
+				cl->clicked = true;
+			}
+		}
+	}
 }
 
 void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
@@ -63,16 +63,16 @@ void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 	{
 		if (s_CurrentAction == Action::None)
 		{
-			//for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
-			//{
-			//	if (cl->clicked &&
-			//		Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
-			//		Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
-			//	{
-			//		cl->listener(e);
-			//		cl->clicked = false;
-			//	}
-			//}
+			for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
+			{
+				if (cl->clicked &&
+					Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
+					Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
+				{
+					cl->listener(e);
+					cl->clicked = false;
+				}
+			}
 		}
 
 		s_CurrentAction = Action::None;
@@ -85,33 +85,33 @@ void SceneUIHandler::OnMouseMoved(const MouseMovedEvent& e)
 
 	if (Mouse::isButtonPressed(Buttons::Left))
 	{
-		//if (s_CurrentAction == Action::None || s_CurrentAction == Action::Resizing)
-		//{
-		//	for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
-		//		UpdateUIResizableComponentMouseButtonDown(entity, r, c, e);
-		//}
+		if (s_CurrentAction == Action::None || s_CurrentAction == Action::Resizing)
+		{
+			for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
+				UpdateUIResizableComponentMouseButtonDown(entity, r, c, e);
+		}
 
-		//if (s_CurrentAction == Action::None || s_CurrentAction == Action::Moving)
-		//{
-		//	for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
-		//		UpdateUIMovableComponentMouseButtonDown(entity, m, c, e);
-		//}
+		if (s_CurrentAction == Action::None || s_CurrentAction == Action::Moving)
+		{
+			for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
+				UpdateUIMovableComponentMouseButtonDown(entity, m, c, e);
+		}
 	}
 	else
 	{
 		s_HoveredAction = Action::None;
 
-		//for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
-		//	UpdateUIResizableComponentMouseButtonUp(entity, r, c, e);
+		for (auto [entity, r, c] : m_Scene->Group<UIResizableComponent, UIComponent>())
+			UpdateUIResizableComponentMouseButtonUp(entity, r, c, e);
 
-		//if (s_HoveredAction != Action::Resizing)
-		//{
-		//	for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
-		//		UpdateUIMovableComponentMouseButtonUp(m, c, e);
-		//}
+		if (s_HoveredAction != Action::Resizing)
+		{
+			for (auto [entity, m, c] : m_Scene->Group<UIMovableComponent, UIComponent>())
+				UpdateUIMovableComponentMouseButtonUp(m, c, e);
+		}
 
-		//for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
-		//h->SetHovered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
+		for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
+		h->SetHovered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
 	}
 }
 

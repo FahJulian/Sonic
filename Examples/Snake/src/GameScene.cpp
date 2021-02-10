@@ -72,17 +72,17 @@ void GameScene::OnUpdate(float deltaTime)
 
 void GameScene::PollCollisionEvents()
 {
-	//for (auto [entity, component, transform] : Group<SnakeHeadComponent, Transform2DComponent>())
-	//{
-	//	for (auto [foodEntity, f, t] : Group<FoodComponent, Transform2DComponent>())
-	//		if (t->GetPosition() == transform->GetPosition())
-	//			DispatchEvent(SnakeEatEvent{ entity, foodEntity });
+	for (auto [entity, component, transform] : Group<SnakeHeadComponent, Transform2DComponent>())
+	{
+		for (auto [foodEntity, f, t] : Group<FoodComponent, Transform2DComponent>())
+			if (t->GetPosition() == transform->GetPosition())
+				DispatchEvent(SnakeEatEvent{ entity, foodEntity });
 
-	//	for (auto [tailEntity, st, t] : Group<SnakeTailComponent, Transform2DComponent>())
-	//		if (t->GetPosition() == transform->GetPosition())
-	//			DispatchEvent(SnakeResetEvent{ entity });
+		for (auto [tailEntity, st, t] : Group<SnakeTailComponent, Transform2DComponent>())
+			if (t->GetPosition() == transform->GetPosition())
+				DispatchEvent(SnakeResetEvent{ entity });
 
-	//	if (isOutsideBorders(transform->GetPosition()))
-	//		DispatchEvent(SnakeResetEvent{ entity });
-	//}
+		if (isOutsideBorders(transform->GetPosition()))
+			DispatchEvent(SnakeResetEvent{ entity });
+	}
 }

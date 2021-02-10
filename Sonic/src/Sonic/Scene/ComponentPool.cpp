@@ -55,6 +55,21 @@ void ComponentPool::RemoveEntity(Entity entity, size_t componentSize)
 		if (*iteratorIndex >= index)
 			(*iteratorIndex)--;
 	}
+
+	for (GroupViewInfo groupView : m_GroupViews)
+	{
+		for (size_t i = 0, size = groupView.entities->size(); i < size; i++)
+		{
+			if (groupView.entities->at(i) == entity)
+			{
+				groupView.entities->erase(groupView.entities->begin() + i);
+				for (size_t* iteratorIndex : *groupView.activeIteratorIndices)
+					if (*iteratorIndex >= i)
+						--(*iteratorIndex);
+				return;
+			}
+		}
+	}
 }
 
 size_t ComponentPool::IndexOf(Entity entity)
@@ -76,7 +91,6 @@ size_t ComponentPool::IndexOf(Entity entity)
 
 void ComponentPool::IncreaseSize(size_t componentSize)
 {
-	SONIC_LOG_DEBUG("Increasing component pool size");
 	m_Capacity = (size_t)((double)(m_Capacity + 1) * 1.2);
 
 	uint8_t* newData = new uint8_t[m_Capacity * componentSize];
@@ -92,7 +106,6 @@ void ComponentPool::IncreaseSize(size_t componentSize)
 
 void ComponentPool::Destroy()
 {
-	SONIC_LOG_DEBUG("Destroying component pool");
 	delete[] m_Data;
 	delete[] m_Entities;
 }

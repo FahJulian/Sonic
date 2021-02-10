@@ -1,15 +1,13 @@
 #pragma once
+#include <algorithm>
 #include "Sonic/Util/GenericContainer.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Renderer/Camera2D.h"
 #include "Sonic/UI/SceneUIHandler.h"
+#include "Views.h"
 #include "Entity.h"
 #include "Components.h"
-#include "PairView.h"
-#include "EntityView.h"
-#include "ComponentView.h"
-#include "ComponentPool.h"
 #include "ComponentType.h"
 #include "ComponentRegistry.h"
 
@@ -56,7 +54,7 @@ namespace Sonic {
 		void AddComponent(Entity entity, Args&&... args)
 		{
 			m_MainRegistry.AddComponent<Component>(entity, std::forward<Args>(args)...);
-			// Dispatch Event
+			DispatchEvent(ComponentAddedEvent<Component>(entity));
 		}
 
 		template<typename Component>
@@ -75,7 +73,7 @@ namespace Sonic {
 		void RemoveComponent(Entity entity)
 		{
 			m_MainRegistry.RemoveComponent<Component>(entity);
-			// Dispatch Event
+			DispatchEvent(ComponentRemovedEvent<Component>(entity));
 		}
 
 		template<typename Component>
@@ -96,18 +94,27 @@ namespace Sonic {
 			return PairView<Component>(&m_MainRegistry);
 		}
 
-		//template<typename Component1, typename Component2>
-		//GroupView<Component1, Component2>& Group()
-		//{
-		//	return *GenericContainer::GetOrAdd<GroupView<Component1, Component2>, GenericContainer::Key, EventDispatcher*>(m_GenericsKey, m_GenericsKey, (EventDispatcher*)this);
-		//}
+		template<typename Component1, typename Component2>
+		GroupView<Component1, Component2>& Group()
+		{
+			static std::unordered_map<Scene*, GroupView<Component1, Component2>*> groups;
+
+			auto it = groups.find(this);
+			if (it == groups.end())
+			{
+				groups.emplace(this, new GroupView<Component1, Component2>(&m_MainRegistry));
+				it = --(groups.end());
+			}
+
+			return *it->second;
+		}
 
 	private:
 		Camera2D m_Camera;
 		SceneUIHandler m_UIHandler;
 
 		ComponentRegistry m_MainRegistry;
-		ComponentRegistry m_DisabledRegistry;
+		ComponentRegistry m_InactiveRegistry;
 
 		friend class App;
 		template<typename, typename> friend class GroupView;

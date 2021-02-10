@@ -1,124 +1,116 @@
-//#pragma once
-//#include <iterator>
-//#include <unordered_map>
-//#include <functional>
-//#include "Sonic/Util/GenericContainer.h"
-//#include "Sonic/Event/EventDispatcher.h"
-//#include "Sonic/Event/Events.h"
-//#include "ComponentPool.h"
-//#include "Entity.h"
-//
-//namespace Sonic {
-//
-//	template<typename Component1, typename Component2>
-//	class GroupView
-//	{
-//	public: 
-//		struct Group
-//		{
-//			Entity entity;
-//			Component1* component1;
-//			Component2* component2;
-//		};
-//
-//		struct IndexPair
-//		{
-//			int index1;
-//			int index2;
-//		};
-//
-//		struct Iterator
-//		{
-//			using MapIterator = typename std::unordered_map<Entity, IndexPair>::const_iterator;
-//
-//			using iterator_category = std::forward_iterator_tag;
-//			using difference_type = std::ptrdiff_t;
-//			using value_type = Group;
-//			using pointer = Group*;
-//			using Reference = Group&;
-//
-//			Iterator(const MapIterator& mapIterator, ComponentPool<Component1>* pool1, ComponentPool<Component2>* pool2)
-//				: mapIterator(mapIterator), pool1(pool1), pool2(pool2) 
-//			{
-//			}
-//
-//			value_type operator*() { return { mapIterator->first, &pool1->m_Components.at(mapIterator->second.index1), &pool2->m_Components.at(mapIterator->second.index2) }; }
-//
-//			Iterator& operator++() { mapIterator++; return *this; }
-//			Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
-//
-//			friend bool operator==(const Iterator& a, const Iterator& b) { return a.mapIterator == b.mapIterator; }
-//			friend bool operator!=(const Iterator& a, const Iterator& b) 
-//			{ 
-//				return a.mapIterator != b.mapIterator; 
-//			}
-//
-//			MapIterator mapIterator;
-//			ComponentPool<Component1>* pool1;
-//			ComponentPool<Component2>* pool2;
-//		};
-//
-//	public:
-//		GroupView(GenericContainer::Key genericsKey, EventDispatcher* eventDispatcher)
-//			: m_Pool1(GenericContainer::GetOrAddWithBase<ComponentPool<Component1>, BaseComponentPool, EventDispatcher*>(genericsKey, eventDispatcher)),
-//			m_Pool2(GenericContainer::GetOrAddWithBase<ComponentPool<Component2>, BaseComponentPool, EventDispatcher*>(genericsKey, eventDispatcher))
-//		{
-//			for (int idx1 = 0; idx1 < m_Pool1->m_Entities.size(); idx1++)
-//			{
-//				Entity e1 = m_Pool1->m_Entities.at(idx1);
-//
-//				int idx2 = m_Pool2->IndexOf(e1); 
-//				if (idx2 != -1)
-//					m_Elements.emplace(e1, IndexPair{ idx1, idx2 });
-//			}
-//
-//			eventDispatcher->AddListener<ComponentAddedEvent<Component1>>([this](const ComponentAddedEvent<Component1>& e) {
-//				if (m_Pool2->HasEntity(e.entity))
-//					m_Elements.emplace(e.entity, IndexPair{ m_Pool1->IndexOf(e.entity), m_Pool2->IndexOf(e.entity) });
-//			});
-//
-//			eventDispatcher->AddListener<ComponentAddedEvent<Component2>>([this](const ComponentAddedEvent<Component2>& e) {
-//				if (m_Pool1->HasEntity(e.entity))
-//					m_Elements.emplace(e.entity, IndexPair{ m_Pool1->IndexOf(e.entity), m_Pool2->IndexOf(e.entity) });
-//			});
-//
-//			eventDispatcher->AddListener<ComponentRemovedEvent<Component1>>([this](const ComponentRemovedEvent<Component1>& e) {
-//				typename std::unordered_map<Entity, IndexPair>::iterator it = m_Elements.find(e.entity);
-//				if (it != m_Elements.end())
-//					m_Elements.erase(it);
-//			});
-//
-//			eventDispatcher->AddListener<ComponentRemovedEvent<Component2>>([this](const ComponentRemovedEvent<Component2>& e) {
-//				typename std::unordered_map<Entity, IndexPair>::iterator it = m_Elements.find(e.entity);
-//				if (it != m_Elements.end())
-//					m_Elements.erase(it);
-//			});
-//		}
-//
-//		Iterator begin() { return Iterator(m_Elements.cbegin(), m_Pool1, m_Pool2); }
-//		Iterator end() { return Iterator(m_Elements.cend(), m_Pool1, m_Pool2); }
-//
-//		void ForEach(std::function<void(Entity e, Component1* c1, Component2* c2)> function)
-//		{
-//			Iterator end = end();
-//			for (Iterator iter = begin(); iter != end; iter++)
-//			{
-//				Group group = *iter;
-//				function(group->entity, group->component1, group->component2);
-//			}
-//		}
-//
-//		int Size()
-//		{
-//			return static_cast<int>(m_Elements.size());
-//		}
-//
-//	private:
-//		std::unordered_map<Entity, IndexPair> m_Elements;
-//		ComponentPool<Component1>* m_Pool1;
-//		ComponentPool<Component2>* m_Pool2;
-//
-//		friend class Scene;
-//	};
-//
-//}
+#pragma once
+#include <vector>
+#include <iterator>
+#include <functional>
+#include "Sonic/Event/Events.h"
+#include "Sonic/Event/EventDispatcher.h"
+#include "Entity.h"
+#include "ComponentType.h"
+#include "ComponentPool.h"
+#include "ComponentRegistry.h"
+
+namespace Sonic {
+
+	template<typename Component1, typename Component2>
+	class GroupView
+	{
+		struct Group
+		{
+			Entity entity;
+			Component1* component1;
+			Component2* component2;
+		};
+
+		struct Iterator
+		{
+			using iterator_category = std::forward_iterator_tag;
+			using value_type = Group;
+			using reference = Group&;
+			using pointer = Group*;
+
+			ComponentPool* pool1;
+			ComponentPool* pool2;
+			GroupView* groupView;
+			size_t index;
+
+			Iterator(ComponentPool* pool1, ComponentPool* pool2, GroupView<Component1, Component2>* groupView, size_t index)
+				: pool1(pool1), pool2(pool2), groupView(groupView), index(index)
+			{
+				groupView->m_ActiveIteratorIndices.push_back(&this->index);
+			}
+
+			Iterator(const Iterator& other)
+				: pool1(other.pool1), pool2(other.pool2), groupView(other.groupView), index(other.index)
+			{
+				groupView->m_ActiveIteratorIndices.push_back(&this->index);
+			}
+
+			value_type operator*() 
+			{
+				Entity entity = groupView->m_Entities[index]; 
+				return {
+					entity,
+					pool1->GetComponent<Component1>(entity),
+					pool2->GetComponent<Component2>(entity)
+				};
+			}
+
+			Iterator operator++() { index++; return *this; }
+			Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+
+			friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; }
+			friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; }
+
+			~Iterator()
+			{
+				groupView->m_ActiveIteratorIndices.erase(std::remove(groupView->m_ActiveIteratorIndices.begin(),
+					groupView->m_ActiveIteratorIndices.end(), &index));
+			}
+		};
+
+	public:
+		GroupView(ComponentRegistry* registry)
+			: m_Pool1(registry->GetComponentPool(getComponentType<Component1>())), m_Pool2(registry->GetComponentPool(getComponentType<Component2>()))
+		{
+			for (size_t i = 0; i < m_Pool1->m_Size; i++)
+			{
+				Entity entity = m_Pool1->m_Entities[i];
+
+				for (size_t j = 0; j < m_Pool2->m_Size; j++)
+				{
+					if (m_Pool2->m_Entities[j] == entity)
+					{
+						m_Entities.emplace_back(entity);
+						break;
+					}
+				}
+			}
+
+			m_Pool1->m_GroupViews.emplace_back(m_Pool2, &m_Entities, &m_ActiveIteratorIndices);
+			m_Pool2->m_GroupViews.emplace_back(m_Pool1, &m_Entities, &m_ActiveIteratorIndices);
+		}
+
+		GroupView(const GroupView& other) = delete;
+		GroupView& operator=(const GroupView& other) = delete;
+
+		Iterator begin() { return Iterator(m_Pool1, m_Pool2, this, 0); }
+		Iterator end() { return Iterator(m_Pool1, m_Pool2, this, m_Entities.size()); }
+
+		void ForEach(std::function<void(Entity, Component1*, Component2*)> function)
+		{
+			for (auto [entity, component1, component2] : *this)
+				function(entity, component1, component2);
+		}
+
+		size_t Size()
+		{
+			return m_Entities.size();
+		}
+
+		ComponentPool* m_Pool1;
+		ComponentPool* m_Pool2;
+		std::vector<Entity> m_Entities;
+		std::vector<size_t*> m_ActiveIteratorIndices;
+	};
+
+}

@@ -30,8 +30,11 @@ namespace Sonic {
 				pool->m_ActiveIteratorIndices.push_back(&this->index);
 			}
 
-			Iterator(const Iterator& other) = delete;
-			void operator=(const Iterator& other) = delete;
+			Iterator(const Iterator& other)
+				: pool(other.pool), index(other.index)
+			{
+				pool->m_ActiveIteratorIndices.push_back(&this->index);
+			}
 
 			value_type operator*() { return { pool->m_Entities[index], reinterpret_cast<Component*>(pool->m_Data) + index }; }
 
@@ -39,13 +42,12 @@ namespace Sonic {
 			Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
 
 			friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; }
-			friend bool operator!=(const Iterator& a, const Iterator& b) { 
-				return a.index != b.index; 
-			}
+			friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; }
 
 			~Iterator()
 			{
-				pool->m_ActiveIteratorIndices.erase(std::remove(pool->m_ActiveIteratorIndices.begin(), pool->m_ActiveIteratorIndices.end(), &index));
+				pool->m_ActiveIteratorIndices.erase(std::remove(pool->m_ActiveIteratorIndices.begin(), 
+					pool->m_ActiveIteratorIndices.end(), &index));
 			}
 		};
 
@@ -58,7 +60,7 @@ namespace Sonic {
 		Iterator begin() { return Iterator(m_Pool, 0); }
 		Iterator end() { return Iterator(m_Pool, m_Pool->m_Size); }
 
-		void ForEach(std::function<void(Entity entity, Component* component)> function)
+		void ForEach(std::function<void(Entity, Component*)> function)
 		{
 			for (auto [entity, component] : *this)
 				function(entity, component);
