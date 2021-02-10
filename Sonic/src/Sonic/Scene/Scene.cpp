@@ -21,8 +21,24 @@ Scene::Scene()
 
 Entity Scene::AddEntity()
 {
-	static Entity nextEntity = 1;
-	return nextEntity++;
+	return m_NextEntity++;
+}
+
+Entity Scene::AddEntity(EntityGroup group)
+{
+	Entity entity = m_NextEntity++;
+	m_EntityGroups[group].push_back(entity);
+	return entity;
+}
+
+EntityGroup Scene::AddEntityGroup()
+{
+	return m_NextEntityGroup++;
+}
+
+void Scene::AddToGroup(EntityGroup group, Entity entity)
+{
+	m_EntityGroups[group].push_back(entity);
 }
 
 void Scene::DeactivateEntity(Entity entity)
@@ -36,10 +52,19 @@ void Scene::DeactivateEntity(Entity entity)
 #endif
 
 	DispatchEvent(EntityDeactivatedEvent(entity));
-	m_MainRegistry.TransferEntity(entity, &m_InactiveRegistry);
-
 	if (HasComponent<UIRendererComponent>(entity))
+	{
 		UIRenderer::markDirty();
+		FontRenderer::markDirty();
+	}
+
+	m_MainRegistry.TransferEntity(entity, &m_InactiveRegistry);
+}
+
+void Scene::DeactivateEntities(EntityGroup group)
+{
+	for (Entity entity : m_EntityGroups[group])
+		DeactivateEntity(entity);
 }
 
 void Scene::ReactivateEntity(Entity entity)
@@ -56,7 +81,16 @@ void Scene::ReactivateEntity(Entity entity)
 	DispatchEvent(EntityReactivatedEvent(entity));
 
 	if (HasComponent<UIRendererComponent>(entity))
+	{
 		UIRenderer::markDirty();
+		FontRenderer::markDirty();
+	}
+}
+
+void Scene::ReactivateEntities(EntityGroup group)
+{
+	for (Entity entity : m_EntityGroups[group])
+		ReactivateEntity(entity);
 }
 
 void Scene::RemoveEntity(Entity entity)
@@ -66,7 +100,10 @@ void Scene::RemoveEntity(Entity entity)
 	m_InactiveRegistry.RemoveEntity(entity);
 
 	if (HasComponent<UIRendererComponent>(entity))
+	{
 		UIRenderer::markDirty();
+		FontRenderer::markDirty();
+	}
 }
 
 void Scene::Init()

@@ -1,4 +1,5 @@
 #pragma once
+#include "Entity.h"
 #include "ComponentType.h"
 #include "ComponentPool.h"
 #include "ComponentRegistry.h"
@@ -36,6 +37,10 @@ namespace Sonic {
 
 			friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; }
 			friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; }
+			friend bool operator <(const Iterator& a, const Iterator& b) { return a.index < b.index; }
+			friend bool operator >(const Iterator& a, const Iterator& b) { return a.index > b.index; }
+			friend bool operator <=(const Iterator& a, const Iterator& b) { return a.index <= b.index; }
+			friend bool operator >=(const Iterator& a, const Iterator& b) { return a.index >= b.index; }
 
 			~Iterator()
 			{
@@ -55,8 +60,8 @@ namespace Sonic {
 
 		void ForEach(std::function<void(Entity)> function)
 		{
-			for (auto entity : *this)
-				function(entity);
+			for (auto it = begin(), endIt = end(); it < endIt; ++it)
+				function(*it);
 		}
 
 		size_t Size()

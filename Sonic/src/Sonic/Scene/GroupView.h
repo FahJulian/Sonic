@@ -60,6 +60,10 @@ namespace Sonic {
 
 			friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; }
 			friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; }
+			friend bool operator <(const Iterator& a, const Iterator& b) { return a.index < b.index; }
+			friend bool operator >(const Iterator& a, const Iterator& b) { return a.index > b.index; }
+			friend bool operator <=(const Iterator& a, const Iterator& b) { return a.index <= b.index; }
+			friend bool operator >=(const Iterator& a, const Iterator& b) { return a.index >= b.index; }
 
 			~Iterator()
 			{
@@ -98,8 +102,11 @@ namespace Sonic {
 
 		void ForEach(std::function<void(Entity, Component1*, Component2*)> function)
 		{
-			for (auto [entity, component1, component2] : *this)
-				function(entity, component1, component2);
+			for (auto it = begin(), endIt = end(); it < endIt; ++it)
+			{
+				Group group = *it;
+				function(group.entity, group.component1, group.component2);
+			}
 		}
 
 		size_t Size()

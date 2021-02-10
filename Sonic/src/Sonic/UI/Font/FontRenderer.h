@@ -10,15 +10,13 @@ namespace Sonic {
 	{
 		void init();
 
-		void drawCharacter(float x, float y, float z, unsigned char c, const Font& font, const Color& color);
-
-		void drawString(float x, float y, float z, const std::string& string, const Font& font, const Color& color);
-
 		void rebuffer(Scene* scene);
 
 		void render();
 
 		void setViewportSize(float width, float height);
+
+		void markDirty();
 	}
 
 }

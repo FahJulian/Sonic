@@ -8,6 +8,7 @@
 #include "Views.h"
 #include "Entity.h"
 #include "Components.h"
+#include "EntityGroup.h"
 #include "ComponentType.h"
 #include "ComponentRegistry.h"
 
@@ -46,8 +47,13 @@ namespace Sonic {
 		SceneUIHandler& GetUIHandler() { return m_UIHandler; }
 
 		Entity AddEntity();
+		Entity AddEntity(EntityGroup group);
+		EntityGroup AddEntityGroup();
+		void AddToGroup(EntityGroup group, Entity entity);
 		void DeactivateEntity(Entity entity);
+		void DeactivateEntities(EntityGroup group);
 		void ReactivateEntity(Entity entity);
+		void ReactivateEntities(EntityGroup group);
 		void RemoveEntity(Entity entity);
 
 		template<typename Component, typename... Args>
@@ -115,6 +121,10 @@ namespace Sonic {
 
 		ComponentRegistry m_MainRegistry;
 		ComponentRegistry m_InactiveRegistry;
+
+		Entity m_NextEntity = 1;
+		EntityGroup m_NextEntityGroup = 1;
+		std::unordered_map<EntityGroup, std::vector<Entity>> m_EntityGroups;
 
 		friend class App;
 		template<typename, typename> friend class GroupView;

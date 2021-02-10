@@ -7,10 +7,10 @@
 #include "Sonic/Window/Window.h"
 #include "Sonic/Log/Log.h"
 #include "Font.h"
-#include "FontRenderer.h"
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/PairView.h"
 #include "Sonic/UI/UIComponents.h"
+#include "FontRenderer.h"
 
 using namespace Sonic;
 
@@ -219,6 +219,11 @@ namespace Sonic::FontRenderer {
 		s_Shader.UniformFloat("u_ViewportHeight", height);
 		s_Shader.Unbind();
 
+		s_CompleteRebuffer = true;
+	}
+
+	void markDirty()
+	{
 		s_CompleteRebuffer = true;
 	}
 

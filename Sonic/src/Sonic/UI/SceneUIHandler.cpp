@@ -63,16 +63,25 @@ void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 	{
 		if (s_CurrentAction == Action::None)
 		{
-			for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
-			{
+			m_Scene->Group<UIClickListenerComponent, UIComponent>().ForEach([=](auto entity, auto cl, auto c) {
 				if (cl->clicked &&
 					Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
 					Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
 				{
-					cl->listener(e);
+					(*cl->listener)(e);
 					cl->clicked = false;
 				}
-			}
+			});
+			//for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
+			//{
+			//	if (cl->clicked &&
+			//		Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
+			//		Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
+			//	{
+			//		(*cl->listener)(e);
+			//		cl->clicked = false;
+			//	}
+			//}
 		}
 
 		s_CurrentAction = Action::None;

@@ -19,8 +19,7 @@ void ComponentPool::AddComponent(Entity entity, uint8_t* data, size_t componentS
 	if (m_Size == m_Capacity)
 		IncreaseSize(componentSize);
 
-	for (size_t i = 0; i < componentSize; i++)
-		m_Data[m_Size * componentSize + i] = data[i];
+	std::copy(data, data + componentSize, m_Data + m_Size * componentSize);
 
 	m_Entities[m_Size] = entity;
 
@@ -45,8 +44,8 @@ void ComponentPool::RemoveEntity(Entity entity, size_t componentSize)
 
 	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant remove Entity from ComponentPool: Pool does not contain Entity");
 
-	memcpy(m_Data + index * componentSize, m_Data + (index + 1) * componentSize, (m_Size - index - 1) * componentSize);
-	memcpy(m_Entities + index, m_Entities + index + 1, (m_Size - index - 1) * sizeof(Entity));
+	std::copy(m_Data + (index + 1) * componentSize, m_Data + m_Size * componentSize, m_Data + index * componentSize);
+	std::copy(m_Entities + index + 1, m_Entities + m_Size, m_Entities + index);
 
 	m_Size--;
 

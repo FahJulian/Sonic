@@ -176,10 +176,10 @@ namespace Sonic {
 	struct UIClickListenerComponent
 	{
 		bool clicked = false;
-		EventListener<MouseButtonReleasedEvent> listener;
+		Ref<EventListener<MouseButtonReleasedEvent>> listener;
 
 		UIClickListenerComponent(EventListener<MouseButtonReleasedEvent> listener)
-			: listener(listener) 
+			: listener(createRef<EventListener<MouseButtonReleasedEvent>>(listener)) 
 		{
 		}
 	};
