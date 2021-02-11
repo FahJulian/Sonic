@@ -51,7 +51,7 @@ void AnonymousComponentPool::ReactivateEntity(Entity entity, size_t componentSiz
 		IncreaseSize(componentSize);
 
 	std::copy(m_InactiveData + index * componentSize, m_InactiveData + (index + 1) * componentSize, m_Data + m_Size * componentSize);
-	std::copy(m_InactiveEntities + index, m_InactiveEntities + index + 1, m_Entities + m_InactiveSize);
+	std::copy(m_InactiveEntities + index, m_InactiveEntities + index + 1, m_Entities + m_Size);
 
 	std::copy(m_InactiveData + (index + 1) * componentSize, m_InactiveData + m_InactiveSize * componentSize, m_InactiveData + index * componentSize);
 	std::copy(m_InactiveEntities + index + 1, m_InactiveEntities + m_InactiveSize, m_InactiveEntities + index);

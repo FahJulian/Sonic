@@ -136,4 +136,17 @@ void StartScene::Load()
 	});
 
 	DeactivateEntities(optionsMenu);
+
+	//Entity e = AddEntity();
+	//AddComponent<UIComponent>(e, UISize::Mode::Absolute, 0, 0, 100, 100);
+	//AddComponent<UIRendererComponent>(e, UIRendererProperties(Colors::Orange));
+
+	//Entity e2 = AddEntity();
+	//AddComponent<UIComponent>(e2, UISize::Mode::Absolute, 0, 100, 100, 100);
+	//AddComponent<UIRendererComponent>(e2, UIRendererProperties(Colors::Cyan));
+
+	//DeactivateEntity(e);
+	//DeactivateEntity(e2);
+	//ReactivateEntity(e);
+	//ReactivateEntity(e2);
 }
