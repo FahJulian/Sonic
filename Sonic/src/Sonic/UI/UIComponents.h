@@ -14,6 +14,8 @@
 #include "UIEvents.h"
 #include "UISize.h"
 
+#include "Sonic/Log/Log.h"
+
 namespace Sonic {
 
 	class Scene;
@@ -132,17 +134,17 @@ namespace Sonic {
 	{
 	private:
 		StandardCursor cursor;
-		EventListener<UIEntityMovedEvent> onMoved;
+		Ref<EventListener<UIEntityMovedEvent>> onMoved;
 		bool hovered = false;
 
 	public:
 		UIMovableComponent(StandardCursor cursor = StandardCursors::Move)
-			: cursor(cursor), onMoved(nullptr)
+			: cursor(cursor), onMoved(createRef<EventListener<UIEntityMovedEvent>>(nullptr))
 		{
 		}
 
 		UIMovableComponent(EventListener<UIEntityMovedEvent> onMoved, StandardCursor cursor = StandardCursors::Move)
-			: cursor(cursor), onMoved(onMoved)
+			: cursor(cursor), onMoved(createRef<EventListener<UIEntityMovedEvent>>(onMoved))
 		{
 		}
 
@@ -233,6 +235,11 @@ namespace Sonic {
 		float GetWidth() const { return width.absoluteValue; }
 		float GetHeight() const { return height.absoluteValue; }
 		float GetZIndex() const { return zIndex; }
+
+		~UIComponent()
+		{
+			SONIC_LOG_DEBUG("Destroying UI Component");
+		}
 
 		friend class SceneUIHandler;
 	};

@@ -72,16 +72,6 @@ void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 					cl->clicked = false;
 				}
 			});
-			//for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
-			//{
-			//	if (cl->clicked &&
-			//		Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
-			//		Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
-			//	{
-			//		(*cl->listener)(e);
-			//		cl->clicked = false;
-			//	}
-			//}
 		}
 
 		s_CurrentAction = Action::None;
@@ -381,7 +371,7 @@ void SceneUIHandler::UpdateUIMovableComponentMouseButtonDown(Entity entity, UIMo
 		SetY(entity, c, e.y - c->GetHeight() / 2, parent);
 
 		if (m->onMoved)
-			m->onMoved(UIEntityMovedEvent{ e.deltaX, e.deltaY });
+			(*m->onMoved)(UIEntityMovedEvent{ e.deltaX, e.deltaY });
 	}
 }
 
@@ -747,3 +737,24 @@ void SceneUIHandler::FitSize(Entity entity, UIComponent* c, UISizeConstraintsCom
 		MarkDirty(c);
 	}
 }
+
+void SceneUIHandler::SetX(Entity entity, UIComponent* component, float value, bool resizeChilds)
+{
+	SetX(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr, resizeChilds);
+}
+
+void SceneUIHandler::SetY(Entity entity, UIComponent* component, float value, bool resizeChilds)
+{
+	SetY(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr, resizeChilds);
+}
+
+void SceneUIHandler::SetWidth(Entity entity, UIComponent* component, float value)
+{
+	SetWidth(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr);
+}
+
+void SceneUIHandler::SetHeight(Entity entity, UIComponent* component, float value)
+{
+	SetHeight(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr);
+}
+

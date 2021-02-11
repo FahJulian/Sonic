@@ -132,6 +132,8 @@ void App::setScene(Scene* scene)
 
 void App::destroy()
 { 
+    delete s_Scene;
+
     Font::destroy();
     Window::destroy();
 }

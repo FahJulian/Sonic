@@ -16,9 +16,9 @@ namespace Sonic {
 			using pointer = Component*;
 
 			size_t index;
-			ComponentPool* pool;
+			AnonymousComponentPool* pool;
 
-			Iterator(ComponentPool* pool, size_t index)
+			Iterator(AnonymousComponentPool* pool, size_t index)
 				: pool(pool), index(index)
 			{
 				pool->m_ActiveIteratorIndices.push_back(&this->index);
@@ -51,7 +51,7 @@ namespace Sonic {
 
 	public:
 		ComponentView(ComponentRegistry* registry)
-			: m_Pool(registry->GetComponentPool(getComponentType<Component>()))
+			: m_Pool(registry->GetComponentPool<Component>())
 		{
 		}
 
@@ -69,7 +69,7 @@ namespace Sonic {
 			return static_cast<int>(m_Pool->m_Size);
 		}
 
-		ComponentPool* m_Pool;
+		AnonymousComponentPool* m_Pool;
 	};
 
 }

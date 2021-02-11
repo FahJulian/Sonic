@@ -6,6 +6,7 @@
 
 namespace Sonic {
 
+	template<typename Component>
 	class EntityView
 	{
 		struct Iterator
@@ -15,10 +16,10 @@ namespace Sonic {
 			using reference = Entity&;
 			using pointer = Entity*;
 
-			ComponentPool* pool;
+			AnonymousComponentPool* pool;
 			size_t index;
 
-			Iterator(ComponentPool* pool, size_t index)
+			Iterator(AnonymousComponentPool* pool, size_t index)
 				: pool(pool), index(index)
 			{
 				pool->m_ActiveIteratorIndices.push_back(&this->index);
@@ -50,8 +51,8 @@ namespace Sonic {
 		};
 
 	public:
-		EntityView(ComponentRegistry* registry, ComponentType type)
-			: m_Pool(registry->GetComponentPool(type))
+		EntityView(ComponentRegistry* registry)
+			: m_Pool(registry->GetComponentPool<Component>())
 		{
 		}
 
@@ -69,7 +70,7 @@ namespace Sonic {
 			return static_cast<int>(m_Pool->m_Size);
 		}
 
-		ComponentPool* m_Pool;
+		AnonymousComponentPool* m_Pool;
 	};
 
 }

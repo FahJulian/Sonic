@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
+#include "Sonic/Log/Log.h"
 #include "Entity.h"
 #include "ComponentType.h"
 #include "ComponentPool.h"
@@ -12,49 +13,62 @@ namespace Sonic {
 	public:
 		ComponentRegistry() = default;
 
-		ComponentPool* GetComponentPool(ComponentType type);
+		template<typename Component>
+		AnonymousComponentPool* GetComponentPool()
+		{
+			ComponentType type = getComponentType<Component>();
 
-		bool HasEntity(Entity entity);
+			SONIC_LOG_DEBUG_ASSERT(type <= m_ComponentPools.size(), "Error: Cant add Component Pool because on in between is missing.");
 
-		void TransferEntity(Entity entity, ComponentRegistry * other);
+			if (type == m_ComponentPools.size())
+				m_ComponentPools.push_back(new ComponentPool<Component>());
+			
+			return m_ComponentPools.at(type);
+		}
+
+		void DeactivateEntity(Entity entity);
+
+		void ReactivateEntity(Entity entity);
 
 		void RemoveEntity(Entity entity);
-
-		~ComponentRegistry();
 
 		template<typename Component, typename... Args>
 		void AddComponent(Entity entity, Args&&... args)
 		{
-			ComponentType type = getComponentType<Component>();
-			ComponentPool* pool = GetComponentPool(type);
+			AnonymousComponentPool* pool = GetComponentPool<Component>();
 			pool->AddComponent<Component>(entity, std::forward<Args>(args)...);
-			m_ComponentMap[entity].push_back(type);
+			m_ComponentMap[entity].push_back(getComponentType<Component>());
 		}
 
 		template<typename Component>
 		bool HasComponent(Entity entity)
 		{
-			ComponentPool* pool = GetComponentPool(getComponentType<Component>());
+			AnonymousComponentPool* pool = GetComponentPool<Component>();
 			return pool->HasEntity(entity);
 		}
 
 		template<typename Component>
 		Component* GetComponent(Entity e)
 		{
-			ComponentPool* pool = GetComponentPool(getComponentType<Component>());
+			AnonymousComponentPool* pool = GetComponentPool<Component>();
 			return pool->GetComponent<Component>(e);
 		}
 
 		template<typename Component>
 		void RemoveComponent(Entity entity)
 		{
-			ComponentType type = getComponentType<Component>();
-			ComponentPool* pool = GetComponentPool(type);
-			pool->RemoveEntity(entity, sizeof(Component));
-			m_ComponentMap[entity].erase(std::remove(m_ComponentMap[entity].begin(), m_ComponentMap[entity].end(), type));
+			AnonymousComponentPool* pool = GetComponentPool<Component>();
+			pool->RemoveEntity(entity);
+			m_ComponentMap[entity].erase(std::remove(m_ComponentMap[entity].begin(), m_ComponentMap[entity].end(), getComponentType<Component>()));
 		}
 
-		std::vector<ComponentPool*> m_ComponentPools;
+		~ComponentRegistry()
+		{
+			for (AnonymousComponentPool* pool : m_ComponentPools)
+				delete pool;
+		}
+
+		std::vector<AnonymousComponentPool*> m_ComponentPools;
 		std::unordered_map<Entity, std::vector<ComponentType>> m_ComponentMap;
 	};
 

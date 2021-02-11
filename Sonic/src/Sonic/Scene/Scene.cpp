@@ -42,16 +42,13 @@ void Scene::AddToGroup(EntityGroup group, Entity entity)
 	m_EntityGroups[group].push_back(entity);
 }
 
+std::vector<Entity>* Scene::GetGroup(EntityGroup group)
+{
+	return &m_EntityGroups[group];
+}
+
 void Scene::DeactivateEntity(Entity entity)
 {
-#ifdef SONIC_DEBUG
-	if (!m_MainRegistry.HasEntity(entity))
-	{
-		SONIC_LOG_WARN("Cannot deactivate entity. Active registry does not contain the given entity.");
-		return;
-	}
-#endif
-
 	DispatchEvent(EntityDeactivatedEvent(entity));
 	if (HasComponent<UIRendererComponent>(entity))
 	{
@@ -59,7 +56,7 @@ void Scene::DeactivateEntity(Entity entity)
 		FontRenderer::markDirty();
 	}
 
-	m_MainRegistry.TransferEntity(entity, &m_InactiveRegistry);
+	m_Registry.DeactivateEntity(entity);
 }
 
 void Scene::DeactivateEntities(EntityGroup group)
@@ -70,15 +67,7 @@ void Scene::DeactivateEntities(EntityGroup group)
 
 void Scene::ReactivateEntity(Entity entity)
 {
-#ifdef SONIC_DEBUG
-	if (!m_InactiveRegistry.HasEntity(entity))
-	{
-		SONIC_LOG_WARN("Cannot reactivate entity. Inactive registry does not contain the given entity.");
-		return;
-	}
-#endif
-
-	m_InactiveRegistry.TransferEntity(entity, &m_MainRegistry);
+	m_Registry.ReactivateEntity(entity);
 	DispatchEvent(EntityReactivatedEvent(entity));
 
 	if (HasComponent<UIRendererComponent>(entity))
@@ -97,8 +86,7 @@ void Scene::ReactivateEntities(EntityGroup group)
 void Scene::RemoveEntity(Entity entity)
 {
 	DispatchEvent(EntityRemovedEvent(entity));
-	m_MainRegistry.RemoveEntity(entity);
-	m_InactiveRegistry.RemoveEntity(entity);
+	m_Registry.RemoveEntity(entity);
 
 	if (HasComponent<UIRendererComponent>(entity))
 	{

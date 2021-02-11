@@ -13,10 +13,15 @@ namespace Sonic {
 	class SceneUIHandler
 	{
 	public:
-		void SetX(Entity entity, UIComponent* component, float value, UIComponent* parent = nullptr, bool resizeChilds = true);
-		void SetY(Entity entity, UIComponent* component, float value, UIComponent* parent = nullptr, bool resizeChilds = true);
-		void SetWidth(Entity entity, UIComponent* component, float value, UIComponent* parent = nullptr);
-		void SetHeight(Entity entity, UIComponent* component, float value, UIComponent* parent = nullptr);
+		void SetX(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds = true);
+		void SetY(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds = true);
+		void SetWidth(Entity entity, UIComponent* component, float value, UIComponent* parent);
+		void SetHeight(Entity entity, UIComponent* component, float value, UIComponent* paren);
+
+		void SetX(Entity entity, UIComponent* component, float value, bool resizeChilds = true);
+		void SetY(Entity entity, UIComponent* component, float value, bool resizeChilds = true);
+		void SetWidth(Entity entity, UIComponent* component, float value);
+		void SetHeight(Entity entity, UIComponent* component, float value);
 	
 	private:
 		SceneUIHandler() = delete;

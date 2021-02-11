@@ -48,6 +48,7 @@ namespace Sonic {
 		Entity AddEntity();
 		Entity AddEntity(EntityGroup group);
 		EntityGroup AddEntityGroup();
+		std::vector<Entity>* GetGroup(EntityGroup group);
 		void AddToGroup(EntityGroup group, Entity entity);
 		void DeactivateEntity(Entity entity);
 		void DeactivateEntities(EntityGroup group);
@@ -58,45 +59,45 @@ namespace Sonic {
 		template<typename Component, typename... Args>
 		void AddComponent(Entity entity, Args&&... args)
 		{
-			m_MainRegistry.AddComponent<Component>(entity, std::forward<Args>(args)...);
+			m_Registry.AddComponent<Component>(entity, std::forward<Args>(args)...);
 			DispatchEvent(ComponentAddedEvent<Component>(entity));
 		}
 
 		template<typename Component>
 		bool HasComponent(Entity entity)
 		{
-			return m_MainRegistry.HasComponent<Component>(entity);
+			return m_Registry.HasComponent<Component>(entity);
 		}
 
 		template<typename Component>
 		Component* GetComponent(Entity entity)
 		{
-			return m_MainRegistry.GetComponent<Component>(entity);
+			return m_Registry.GetComponent<Component>(entity);
 		}
 
 		template<typename Component>
 		void RemoveComponent(Entity entity)
 		{
-			m_MainRegistry.RemoveComponent<Component>(entity);
+			m_Registry.RemoveComponent<Component>(entity);
 			DispatchEvent(ComponentRemovedEvent<Component>(entity));
 		}
 
 		template<typename Component>
-		EntityView ViewEntities()
+		EntityView<Component> ViewEntities()
 		{
-			return EntityView(&m_MainRegistry, getComponentType<Component>());
+			return EntityView<Component>(&m_Registry);
 		}
 
 		template<typename Component>
 		ComponentView<Component> ViewComponents()
 		{
-			return ComponentView<Component>(&m_MainRegistry);
+			return ComponentView<Component>(&m_Registry);
 		}
 
 		template<typename Component>
 		PairView<Component> View()
 		{
-			return PairView<Component>(&m_MainRegistry);
+			return PairView<Component>(&m_Registry);
 		}
 
 		template<typename Component1, typename Component2>
@@ -107,7 +108,7 @@ namespace Sonic {
 			auto it = groups.find(this);
 			if (it == groups.end())
 			{
-				groups.emplace(this, new GroupView<Component1, Component2>(&m_MainRegistry));
+				groups.emplace(this, new GroupView<Component1, Component2>(&m_Registry));
 				it = --(groups.end());
 			}
 
@@ -118,8 +119,7 @@ namespace Sonic {
 		Camera2D m_Camera;
 		SceneUIHandler m_UIHandler;
 
-		ComponentRegistry m_MainRegistry;
-		ComponentRegistry m_InactiveRegistry;
+		ComponentRegistry m_Registry;
 
 		Entity m_NextEntity = 1;
 		EntityGroup m_NextEntityGroup = 1;
