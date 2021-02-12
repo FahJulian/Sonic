@@ -1,4 +1,4 @@
-#include "Sonic/App.h"
+#include "Sonic/Scene/SceneManager.h"
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Event/Events.h"
 #include "Keyboard.h"
@@ -19,12 +19,12 @@ void Keyboard::keyCallback(GLFWwindow* window, int key, int scancode, int action
     if (action == GLFW_PRESS)
     {
         s_Data.pressedKeys[key] = true;
-        App::getActiveScene()->DispatchEvent(KeyPressedEvent(key));
+        SceneManager::getCurrentScene()->DispatchEvent(KeyPressedEvent(key));
     } 
     else if (action == GLFW_RELEASE)
     {
         s_Data.pressedKeys[key] = false;
-        App::getActiveScene()->DispatchEvent(KeyReleasedEvent(key));
+        SceneManager::getCurrentScene()->DispatchEvent(KeyReleasedEvent(key));
     }
 }
 

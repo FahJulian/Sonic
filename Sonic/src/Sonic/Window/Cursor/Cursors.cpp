@@ -1,19 +1,19 @@
 #include <algorithm>
 #include <fstream>
 #include <json/json.hpp>
-#include "Sonic/Util/CursorLoader.h"
-#include "Sonic/Log/Log.h"
+#include "Sonic/Util/IO/CursorLoader.h"
+#include "Sonic/Debug/Log/Log.h"
 #include "Cursors.h"
 
 using namespace Sonic;
 
 
-CursorSet::CursorSet(std::string folderPath)
-	: m_Cursors(std::make_shared<std::unordered_map<std::string, Cursor>>())
+CursorSet::CursorSet(String folderPath)
+	: m_Cursors(std::make_shared<std::unordered_map<String, Cursor>>())
 {
 	std::replace(folderPath.begin(), folderPath.end(), '/', '\\');
-	std::string name = folderPath.substr(folderPath.find_last_of("\\") + 1);
-	std::string jsonFile = folderPath + "\\" + name + ".json";
+	String name = folderPath.substr(folderPath.find_last_of("\\") + 1);
+	String jsonFile = folderPath + "\\" + name + ".json";
 	std::ifstream file(jsonFile);
 
 	JSON json;
@@ -21,9 +21,9 @@ CursorSet::CursorSet(std::string folderPath)
 
 	for (auto& [name, value] : json["textures"].items())
 	{
-		std::string relativeTexturePath = value.get<std::string>();
+		String relativeTexturePath = value.get<String>();
 		std::replace(relativeTexturePath.begin(), relativeTexturePath.end(), '/', '\\');
-		std::string texturePath = folderPath + "\\" + relativeTexturePath;
+		String texturePath = folderPath + "\\" + relativeTexturePath;
 
 		GLFWimage image;
 		int offsetX, offsetY;
@@ -31,7 +31,7 @@ CursorSet::CursorSet(std::string folderPath)
 
 		Cursor cursor = glfwCreateCursor(&image, offsetX, offsetY);
 		if (cursor == NULL)
-			SONIC_LOG_ERROR(std::string(std::string("Could not load cursor ") + texturePath).c_str());
+			SONIC_LOG_ERROR(String(String("Could not load cursor ") + texturePath).c_str());
 
 		m_Cursors->insert({ name, cursor });
 
@@ -46,7 +46,7 @@ CursorSet::~CursorSet()
 			glfwDestroyCursor(cursor);
 }
 
-Cursor CursorSet::Get(const std::string& name) const
+Cursor CursorSet::Get(const String& name) const
 {
 #ifdef SONIC_DEBUG
 	if (m_Cursors->find(name) == m_Cursors->end())
@@ -62,7 +62,7 @@ Cursor CursorSet::Get(const std::string& name) const
 StandardCursors StandardCursors::s_StandardCursorSets[STANDARD_CURSOR_SETS_AMOUNT];
 StandardCursors* StandardCursors::s_CurrentStandardCursorSet = &s_StandardCursorSets[static_cast<uint8_t>(Sonic::StandardCursors::Sets::Black)];
 
-StandardCursors::StandardCursors(const std::string& folderPath)
+StandardCursors::StandardCursors(const String& folderPath)
 	: CursorSet(folderPath)
 {
 	m_StandardCursors[static_cast<uint8_t>(StandardCursors::Arrow)] = Get("Arrow");

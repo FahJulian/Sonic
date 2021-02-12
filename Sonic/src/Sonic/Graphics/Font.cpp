@@ -13,7 +13,7 @@ static FT_Library ft;
 void Font::init()
 {
 	if (FT_Init_FreeType(&ft) != FT_Err_Ok)
-		SONIC_LOG_DEBUG("Error initializing FreeType");
+		SONIC_LOG_ERROR("Error initializing FreeType");
 }
 
 void Font::destroy()
@@ -21,7 +21,7 @@ void Font::destroy()
 	FT_Done_FreeType(ft);
 }
 
-Font::Font(const std::string& filePath, int size)
+Font::Font(const String& filePath, int size)
 	: m_TextureID(std::make_shared<unsigned int>()),
 	m_Characters(std::make_shared<std::unordered_map<unsigned char, Character>>()),
 	m_KnownKerning(std::make_shared<std::unordered_map<unsigned short, int>>())
@@ -141,7 +141,7 @@ int Font::GetKerning(unsigned char c1, unsigned char c2) const
 	return k;
 }
 
-int Font::StringWidth(const std::string& string) const
+int Font::StringWidth(const String& string) const
 {
 	int width = 0;
 
@@ -158,7 +158,7 @@ int Font::StringWidth(const std::string& string) const
 	return width;
 }
 
-int Font::StringHeight(const std::string& string) const
+int Font::StringHeight(const String& string) const
 {
 	int maxHeight = 0;
 

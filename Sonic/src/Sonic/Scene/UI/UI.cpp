@@ -29,7 +29,7 @@ namespace Sonic::UI {
 	}
 
 	Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-		EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const std::string& text)
+		EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const String& text)
 	{
 		Entity button = createButton(scene, mode, x, y, width, height, properties, onClick);
 		scene->AddComponent<UITextComponent>(button, font, textColor, text);
@@ -37,7 +37,7 @@ namespace Sonic::UI {
 	}
 
 	Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-		const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const std::string& text)
+		const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const String& text)
 	{
 		Entity button = createButton(scene, mode, x, y, width, height, properties, hoveredProperties, onClick);
 		scene->AddComponent<UITextComponent>(button, font, textColor, text);

@@ -90,7 +90,7 @@ namespace Sonic::Util {
 		return flippedData;
 	}
 
-	unsigned char* loadCursor(std::string filePath, int& width, int& height, int& offsetX, int& offsetY, bool flipVertically)
+	unsigned char* loadCursor(String filePath, int& width, int& height, int& offsetX, int& offsetY, bool flipVertically)
 	{
 		std::replace(filePath.begin(), filePath.end(), '/', '\\');
 

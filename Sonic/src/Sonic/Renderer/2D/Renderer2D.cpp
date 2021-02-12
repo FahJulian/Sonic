@@ -9,7 +9,6 @@
 #include "Sonic/Graphics/Shader.h"
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/ECS/PairView.h"
-#include "Sonic/Scene/Components/2DComponents.h"
 #include "Renderer2D.h"
 
 using namespace Sonic;
@@ -56,9 +55,9 @@ static float textureSlotOf(const Texture& texture)
 }
 
 
-namespace Sonic::Renderer2D {
+namespace Sonic {
 
-    void init()
+    void Renderer2D::init()
     {
         s_Shader = Shader(coreResourceDir() + "shaders\\rectangle.vs", coreResourceDir() + "shaders\\rectangle.fs");
         s_Shader.Bind();
@@ -90,7 +89,7 @@ namespace Sonic::Renderer2D {
         delete[] indices;
     }
 
-    void drawRect(int index, const glm::vec3& position, const glm::vec2& scale, float rotation, const Sprite& sprite, const Color& color)
+    void Renderer2D::drawRect(int index, const glm::vec3& position, const glm::vec2& scale, float rotation, const Sprite& sprite, const Color& color)
     {
         float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(*sprite.texture);
 
@@ -149,13 +148,13 @@ namespace Sonic::Renderer2D {
         }
     }
 
-    void drawEntity(Scene* scene, Entity e, Renderer2DComponent* r, int index)
+    void Renderer2D::drawEntity(Scene* scene, Entity e, Renderer2DComponent* r, int index)
     {
         auto* t = scene->GetComponent<Transform2DComponent>(e);
         drawRect(index, t->GetPosition(), t->GetScale(), t->GetRotation(), r->GetSprite(), r->GetColor());
     }
 
-    void rebuffer(Scene* scene, const Camera2D* camera)
+    void Renderer2D::rebuffer(Scene* scene, const Camera2D* camera)
     {
         s_Shader.Bind();
         s_Shader.UniformMat4("u_ViewMatrix", camera->GetView());
@@ -191,7 +190,7 @@ namespace Sonic::Renderer2D {
         }
     }
 
-    void render()
+    void Renderer2D::render()
     {
         if (s_RectCount == 0)
             return;
@@ -209,6 +208,11 @@ namespace Sonic::Renderer2D {
 
         s_VAO.Unbind();
         s_Shader.Unbind();
+    }
+
+    void Renderer2D::destroy()
+    {
+        s_Textures.clear();
     }
 
 }

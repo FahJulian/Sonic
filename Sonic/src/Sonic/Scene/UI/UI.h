@@ -1,4 +1,5 @@
 #pragma once
+#include "Sonic/Base.h"
 #include "Sonic/Scene/ECS/Entity.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Renderer/UI/UIRendererProperties.h"
@@ -44,9 +45,9 @@ namespace Sonic {
 		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties, 
 			const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick);
 		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-			EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const std::string& text);
+			EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const String& text);
 		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-			const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const std::string& text);
+			const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const String& text);
 
 		Entity createSlider(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const SliderProperties& properties, const EventListener<UISliderEvent>& onSlide);
 	}

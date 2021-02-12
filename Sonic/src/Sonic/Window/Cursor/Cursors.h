@@ -16,13 +16,13 @@ namespace Sonic {
 		CursorSet() = default;
 
 	public:
-		CursorSet(std::string folderPath);
+		CursorSet(String folderPath);
 		~CursorSet();
 
-		Cursor Get(const std::string& name) const;
+		Cursor Get(const String& name) const;
 
 	private:
-		Ref<std::unordered_map<std::string, Cursor>> m_Cursors;
+		Ref<std::unordered_map<String, Cursor>> m_Cursors;
 
 		friend class StandardCursors;
 	};
@@ -60,7 +60,7 @@ namespace Sonic {
 
 	private:
 		StandardCursors() = default;
-		StandardCursors(const std::string& folderPath);
+		StandardCursors(const String& folderPath);
 
 		Cursor m_StandardCursors[STANDARD_CURSORS_AMOUNT];
 

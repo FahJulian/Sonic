@@ -8,13 +8,9 @@ using namespace Sonic;
 class StartScene : public Scene
 {
 public:
-	StartScene(GameScene* gameScene)
-		: gameScene(gameScene), font(nullptr) {}
+	StartScene() = default;
 
 private:
 	void OnLoad() override;
 	void OnInit() override;
-
-	Font* font;
-	GameScene* gameScene;
 };

@@ -4,6 +4,8 @@
 
 namespace Sonic {
 
+    using String = std::string;
+
     template<typename T>
     using Ref = std::shared_ptr<T>;
 
@@ -13,11 +15,11 @@ namespace Sonic {
         return std::make_shared<T>(std::forward<Args>(args)...);
     }
 
-    extern const std::string& resourceDir();
+    extern const String& resourceDir();
 
-    static const std::string& coreResourceDir()
+    static const String& coreResourceDir()
     {
-        static std::string coreResourceDir = "C:\\dev\\Sonic\\Sonic\\res\\";
+        static String coreResourceDir = "C:\\dev\\Sonic\\Sonic\\res\\";
         return coreResourceDir;
     }
 

@@ -52,7 +52,7 @@ public:
 
 void StartScene::OnLoad()
 {
-	Font font(coreResourceDir() + "fonts/calibri.ttf", static_cast<int>(0.055f * Window::getHeight()));
+	Font font  = Font(coreResourceDir() + "fonts/calibri.ttf", static_cast<int>(0.055f * Window::getHeight()));
 
 	EntityGroup startMenu = AddEntityGroup();
 	EntityGroup optionsMenu = AddEntityGroup();
@@ -87,16 +87,16 @@ void StartScene::OnLoad()
 
 	Entity optionsText = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(optionsText,
-		UISize{ UISize::Mode::RelativeToWindow, (Window::getWidth() - font.StringWidth("Options")) / (2 * Window::getWidth()) },
+		UISize{ UISize::Mode::RelativeToWindow, 0.6f },
 		UISize{ UISize::Mode::RelativeToWindow, 0.9f },
-		UISize{ UISize::Mode::Absolute, static_cast<float>(font.StringWidth("Options")) },
-		UISize{ UISize::Mode::Absolute, static_cast<float>(font.StringHeight("Options")) }
+		UISize{ UISize::Mode::RelativeToWindow, 0.2f },
+		UISize{ UISize::Mode::Absolute, 0.1f }
 	);
 	AddComponent<UITextComponent>(optionsText, font, Colors::White, "Options");
 
 	Entity fovSlider = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(fovSlider,
-		UISize{ UISize::Mode::RelativeToWindow, 520 / Window::getWidth() },
+		UISize{ UISize::Mode::RelativeToWindow, 0.4f },
 		UISize{ UISize::Mode::RelativeToWindow, 0.75f },
 		UISize{ UISize::Mode::Absolute, 310 },
 		UISize{ UISize::Mode::Absolute, 40 }

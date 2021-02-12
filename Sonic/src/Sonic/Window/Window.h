@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "Sonic/Base.h"
 #include "Cursor/Cursors.h"
 
 namespace Sonic {
@@ -24,7 +25,7 @@ namespace Sonic {
         * 
         * @return Whether the initialization was successful
         */
-        static bool init(int width, int height, const std::string&, bool resizable = true);
+        static bool init(int width, int height, const String&, bool resizable = true);
 
         /**
         * Destroys the glfw window and frees all memory related to glfw
@@ -65,9 +66,9 @@ namespace Sonic {
 
         static void setHeight(float height);
 
-        static const std::string& getTitle();
+        static const String& getTitle();
 
-        static void setTitle(const std::string& title);
+        static void setTitle(const String& title);
 
         static void setCursor(Cursor cursor);
 

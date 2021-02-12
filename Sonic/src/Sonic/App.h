@@ -1,4 +1,5 @@
 #pragma once
+#include "Base.h"
 #include <string>
 
 extern int main();
@@ -15,9 +16,8 @@ namespace Sonic {
     {
         int windowWidth;
         int windowHeight;
-        std::string windowTitle;
+        String windowTitle;
         bool windowResizable;
-        Scene* scene;
     };
 
     /**
@@ -34,13 +34,6 @@ namespace Sonic {
         */
         static void stop();
 
-        /**
-        * @return A pointer to the currently active scene
-        */
-        static Scene* getActiveScene();
-
-        static void setScene(Scene* scene);
-        
     private:
         /**
         * Initializes the app. 

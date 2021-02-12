@@ -244,3 +244,8 @@ void UIRenderer::markDirty()
 {
 	s_CompleteRebuffer = true;
 }
+
+void UIRenderer::destroy()
+{
+	s_Textures.clear();
+}

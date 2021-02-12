@@ -24,7 +24,7 @@ namespace Sonic {
         *
         * @param filePath Path to the .png file of the Texture
         */
-        Texture(const std::string& filePath)
+        Texture(const String& filePath)
             : Texture(filePath.c_str()) 
         {
         }

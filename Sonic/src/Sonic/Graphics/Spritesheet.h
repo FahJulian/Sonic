@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string> 
+#include "Sonic/Base.h"
 #include "Sprite.h"
 #include "Texture.h"
 
@@ -36,7 +37,7 @@ namespace Sonic {
         * @param spriteHeight The height of each sprite in pixels
         * @param padding The padding between each sprite (Must be on the lower and right side of each sprite)
         */
-        Spritesheet(const std::string& filePath, int rows, int cols, float spriteWidth, float spriteHeight, int padding)
+        Spritesheet(const String& filePath, int rows, int cols, float spriteWidth, float spriteHeight, int padding)
             : Spritesheet(filePath.c_str(), rows, cols, spriteWidth, spriteHeight, padding)
         {
         }

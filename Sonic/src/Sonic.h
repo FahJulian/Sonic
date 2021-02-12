@@ -26,6 +26,7 @@
 #include "Sonic/Scene/UI/UISize.h"
 
 #include "Sonic/Renderer/2D/Camera2D.h"
+#include "Sonic/Renderer/UI/UIRendererProperties.h"
 
 #include "Sonic/Util/Math/Math.h"
 

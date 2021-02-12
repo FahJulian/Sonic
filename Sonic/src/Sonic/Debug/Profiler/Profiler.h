@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include "Sonic/Base.h"
 #include "Sonic/Window/Window.h"
 
 //#define SONIC_PROFILE
@@ -63,14 +64,14 @@ namespace Sonic
 		}
 
 	public:
-		static FunctionProfiler CreateFunctionProfiler(const std::string& functionName)
+		static FunctionProfiler CreateFunctionProfiler(const String& functionName)
 		{
 			return FunctionProfiler(get()->functions[functionName]);
 		}
 
 	private:
 
-		std::unordered_map<std::string, Function> functions;
+		std::unordered_map<String, Function> functions;
 	};
 }
 

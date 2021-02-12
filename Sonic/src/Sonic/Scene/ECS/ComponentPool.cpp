@@ -1,5 +1,5 @@
 #pragma once
-#include "Sonic/Log/Log.h"
+#include "Sonic/Debug/Log/Log.h"
 #include "ComponentPool.h"
 
 using namespace Sonic;

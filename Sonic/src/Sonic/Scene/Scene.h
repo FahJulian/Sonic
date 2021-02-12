@@ -51,6 +51,8 @@ namespace Sonic {
 
 		virtual void PollCollisionEvents() {}
 
+		virtual ~Scene() {}
+
 	public:
 		SceneUIHandler& GetUIHandler() { return m_UIHandler; }
 
@@ -135,6 +137,7 @@ namespace Sonic {
 		std::unordered_map<EntityGroup, std::vector<Entity>> m_EntityGroups;
 
 		friend class App;
+		friend class SceneManager;
 		template<typename, typename> friend class GroupView;
 	};
 

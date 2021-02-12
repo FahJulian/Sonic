@@ -6,10 +6,9 @@
 #include "Sonic/Graphics/Buffer/VertexArray.h"
 #include "Sonic/Window/Window.h"
 #include "Sonic/Debug/Log/Log.h"
-#include "Font.h"
+#include "Sonic/Graphics/Font.h"
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/ECS/PairView.h"
-#include "Sonic/Scene/UI/UIComponents.h"
 #include "FontRenderer.h"
 
 using namespace Sonic;
@@ -54,9 +53,9 @@ static float indexOf(const Font& font)
 }
 
 
-namespace Sonic::FontRenderer {
+namespace Sonic {
 
-	void init()
+	void FontRenderer::init()
 	{
 		s_Shader = Shader(coreResourceDir() + "shaders\\font.vs", coreResourceDir() + "shaders\\font.fs");
 		s_Shader.Bind();
@@ -90,7 +89,7 @@ namespace Sonic::FontRenderer {
 		delete[] indices;
 	}
 
-	void drawCharacter(int index, float x, float y, float z, unsigned char c, const Font& font, const Color& color)
+	void FontRenderer::drawCharacter(int index, float x, float y, float z, unsigned char c, const Font& font, const Color& color)
 	{
 		float fontIndex = indexOf(font);
 		SONIC_LOG_DEBUG_ASSERT(fontIndex != -1, "Error drawing text: Too many fonts");
@@ -115,7 +114,7 @@ namespace Sonic::FontRenderer {
 		}
 	}
 
-	void drawString(int index, float x, float y, float z, const std::string& string, const Font& font, const Color& color)
+	void FontRenderer::drawString(int index, float x, float y, float z, const String& string, const Font& font, const Color& color)
 	{
 		int size = static_cast<int>(string.size());
 		int kerning = 0;
@@ -133,7 +132,7 @@ namespace Sonic::FontRenderer {
 		}
 	}
 
-	void drawEntity(Scene* scene, Entity e, UITextComponent* t, int index)
+	void FontRenderer::drawEntity(Scene* scene, Entity e, UITextComponent* t, int index)
 	{
 		auto* c = scene->GetComponent<UIComponent>(e);
 
@@ -143,7 +142,7 @@ namespace Sonic::FontRenderer {
 		drawString(index, c->GetX() + (c->GetWidth() - textWidth) / 2, c->GetY() + (c->GetHeight() - textHeight) / 2, c->GetZIndex(), t->GetText(), t->GetFont(), t->GetColor());
 	}
 
-	void rebuffer(Scene* scene)
+	void FontRenderer::rebuffer(Scene* scene)
 	{
 		bool rebuffer = false;
 
@@ -192,7 +191,7 @@ namespace Sonic::FontRenderer {
 		}
 	}
 
-	void render()
+	void FontRenderer::render()
 	{
 		if (s_CharacterCount == 0)
 			return;
@@ -212,7 +211,7 @@ namespace Sonic::FontRenderer {
 		s_Shader.Unbind();
 	}
 
-	void setViewportSize(float width, float height)
+	void FontRenderer::setViewportSize(float width, float height)
 	{
 		s_Shader.Bind();
 		s_Shader.UniformFloat("u_ViewportWidth", width);
@@ -222,9 +221,14 @@ namespace Sonic::FontRenderer {
 		s_CompleteRebuffer = true;
 	}
 
-	void markDirty()
+	void FontRenderer::markDirty()
 	{
 		s_CompleteRebuffer = true;
+	}
+
+	void FontRenderer::destroy()
+	{
+		s_Fonts.clear();
 	}
 
 }

@@ -19,7 +19,7 @@ namespace Sonic {
 	class Font
 	{
 	public:
-		Font(const std::string& filePath, int size);
+		Font(const String& filePath, int size);
 		~Font();
 
 		static void init();
@@ -28,8 +28,8 @@ namespace Sonic {
 		void Bind(int slot) const;
 		void Unbind() const;
 
-		int StringWidth(const std::string& string) const;
-		int StringHeight(const std::string& string) const;
+		int StringWidth(const String& string) const;
+		int StringHeight(const String& string) const;
 
 		const Character& GetCharacter(unsigned char c) const;
 		int GetKerning(unsigned char c1, unsigned char c2) const;

@@ -11,10 +11,10 @@ using namespace Sonic;
 struct ShaderCompilationErrorInfo
 {
     bool compilationSuccessful;
-    std::string infoLog;
+    String infoLog;
 };
 
-static std::string loadFile(const std::string& filePath)
+static String loadFile(const String& filePath)
 {
     std::ifstream file(filePath);
     std::stringstream buffer;
@@ -38,7 +38,7 @@ static ShaderCompilationErrorInfo compilationSuccessful(unsigned int programID, 
         char* infoLog = new char[info];
         glGetShaderInfoLog(vertexShaderID, info, nullptr, infoLog);
 
-        std::string s = std::string("Vertex Shader Compilation Error:\n") + std::string(infoLog);
+        String s = String("Vertex Shader Compilation Error:\n") + String(infoLog);
         delete[] infoLog;
 
         return { false, s };
@@ -51,7 +51,7 @@ static ShaderCompilationErrorInfo compilationSuccessful(unsigned int programID, 
         char* infoLog = new char[info];
         glGetShaderInfoLog(fragmentShaderID, info, nullptr, infoLog);
 
-        std::string s = std::string("Fragment Shader Compilation Error:\n") + std::string(infoLog);
+        String s = String("Fragment Shader Compilation Error:\n") + String(infoLog);
         delete[] infoLog;
 
         return { false, s };
@@ -64,7 +64,7 @@ static ShaderCompilationErrorInfo compilationSuccessful(unsigned int programID, 
         char* infoLog = new char[info];
         glGetProgramInfoLog(programID, info, nullptr, infoLog);
 
-        std::string s = std::string("Shader Linking Error:\n") + std::string(infoLog);
+        String s = String("Shader Linking Error:\n") + String(infoLog);
         delete[] infoLog;
 
         return { false, s };
@@ -73,11 +73,11 @@ static ShaderCompilationErrorInfo compilationSuccessful(unsigned int programID, 
 }
 
 
-Shader::Shader(const std::string& vertexSourcePath, const std::string& fragmentSourcePath)
+Shader::Shader(const String& vertexSourcePath, const String& fragmentSourcePath)
     : m_OpenGL_ID(std::make_shared<unsigned int>(0))
 {
-    const std::string& vertexSource = loadFile(vertexSourcePath);
-    const std::string& fragmentSource = loadFile(fragmentSourcePath);
+    const String& vertexSource = loadFile(vertexSourcePath);
+    const String& fragmentSource = loadFile(fragmentSourcePath);
 
     *m_OpenGL_ID = glCreateProgram();
     unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -108,49 +108,49 @@ void Shader::Unbind()
     glUseProgram(0);
 }
 
-void Shader::UniformInt(const std::string& name, int value)
+void Shader::UniformInt(const String& name, int value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform1i(location, value);
 }
 
-void Shader::UniformIntArray(const std::string& name, const int* values, int count)
+void Shader::UniformIntArray(const String& name, const int* values, int count)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform1iv(location, count, values);
 }
 
-void Shader::UniformFloat(const std::string& name, float value)
+void Shader::UniformFloat(const String& name, float value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform1f(location, value);
 }
 
-void Shader::UniformFloat2(const std::string& name, const glm::vec2& value)
+void Shader::UniformFloat2(const String& name, const glm::vec2& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform2f(location, value.x, value.y);
 }
 
-void Shader::UniformFloat3(const std::string& name, const glm::vec3& value)
+void Shader::UniformFloat3(const String& name, const glm::vec3& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform3f(location, value.x, value.y, value.z);
 }
 
-void Shader::UniformFloat4(const std::string& name, const glm::vec4& value)
+void Shader::UniformFloat4(const String& name, const glm::vec4& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform4f(location, value.x, value.y, value.z, value.w);
 }
 
-void Shader::UniformFloat4(const std::string& name, const Color& value)
+void Shader::UniformFloat4(const String& name, const Color& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform4f(location, value.r, value.g, value.b, value.a);
 }
 
-void Shader::UniformMat4(const std::string& name, const glm::mat4& value)
+void Shader::UniformMat4(const String& name, const glm::mat4& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <gl/glew.h>
 #include <GLFW/glfw3.h>
+#include "Sonic/Scene/SceneManager.h"
 #include "Sonic/Debug/Log/Log.h"
 #include "Sonic/Graphics/Color.h"
 #include "Sonic/Event/Events.h"
@@ -18,13 +19,13 @@ struct WindowData
     GLFWwindow* glfwID;
     float width;
     float height;
-    std::string title;
+    String title;
 };
 
 static WindowData s_Data;
 
 
-bool Window::init(int width, int height, const std::string& title, bool resizable)
+bool Window::init(int width, int height, const String& title, bool resizable)
 {
     if (!glfwInit())
         return false;
@@ -95,7 +96,7 @@ void Window::pollEvents()
 void Window::windowCloseCallback(GLFWwindow* window)
 {
     WindowClosedEvent e;
-    App::getActiveScene()->DispatchEvent(e);
+    SceneManager::getCurrentScene()->DispatchEvent(e);
     App::onWindowClosed(e);
 }
 
@@ -107,7 +108,7 @@ void Window::windowResizeCallback(GLFWwindow* window, int width, int height)
     s_Data.height = static_cast<float>(height);
 
     WindowResizedEvent e = WindowResizedEvent(s_Data.width, s_Data.height);
-    App::getActiveScene()->DispatchEvent(e);
+    SceneManager::getCurrentScene()->DispatchEvent(e);
     App::onWindowResized(e);
 }
 
@@ -136,7 +137,7 @@ void Window::setSize(float width, float height)
     glfwSetWindowSize(s_Data.glfwID, static_cast<int>(width), static_cast<int>(height));
 }
 
-const std::string& Window::getTitle()
+const String& Window::getTitle()
 {
     return s_Data.title;
 }
@@ -151,7 +152,7 @@ void Window::setClearColor(const Color& newClearColor)
     glClearColor(newClearColor.r, newClearColor.g, newClearColor.b, newClearColor.a);
 }
 
-void Window::setTitle(const std::string& title)
+void Window::setTitle(const String& title)
 {
     glfwSetWindowTitle(s_Data.glfwID, title.c_str());
     s_Data.title = title;
