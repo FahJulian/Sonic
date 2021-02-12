@@ -23,8 +23,11 @@ namespace Sonic {
 		Scene();
 
 	private:
+		void Load();
 		void Init();
 		void Update(float deltaTime);
+		void Destroy();
+
 		void Rebuffer();
 		void Render();
 
@@ -36,7 +39,7 @@ namespace Sonic {
 		void OnWindowResized(const WindowResizedEvent& e);
 
 	protected:
-		virtual void Load() = 0;
+		virtual void OnLoad() = 0;
 		virtual void OnInit() {}
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnRender() {}
@@ -122,7 +125,6 @@ namespace Sonic {
 		ComponentRegistry m_Registry;
 
 		Entity m_NextEntity = 1;
-		EntityGroup m_NextEntityGroup = 1;
 		std::unordered_map<EntityGroup, std::vector<Entity>> m_EntityGroups;
 
 		friend class App;

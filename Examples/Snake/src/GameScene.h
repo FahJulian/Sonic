@@ -10,7 +10,7 @@ public:
 	}
 
 protected:
-	void Load() override;
+	void OnLoad() override;
 
 	void OnInit() override;
 

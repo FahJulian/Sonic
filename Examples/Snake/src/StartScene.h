@@ -9,7 +9,7 @@ public:
 		: gameScene(gameScene), font(nullptr) {}
 
 private:
-	void Load() override;
+	void OnLoad() override;
 
 	Font* font;
 	GameScene* gameScene;

@@ -50,8 +50,7 @@ public:
 	bool m_Running = false;
 };
 
-
-void StartScene::Load()
+void StartScene::OnLoad()
 {
 	Window::setClearColor(Colors::DarkGray);
 	Window::setSize(840, 480);
@@ -100,9 +99,9 @@ void StartScene::Load()
 
 	Entity fovSlider = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(fovSlider,
-		UISize{ UISize::Mode::RelativeToWindow, (Window::getWidth() - 420) / (2 * Window::getWidth()) },
+		UISize{ UISize::Mode::RelativeToWindow, 520 / Window::getWidth() },
 		UISize{ UISize::Mode::RelativeToWindow, 0.75f },
-		UISize{ UISize::Mode::Absolute, 200 },
+		UISize{ UISize::Mode::Absolute, 310 },
 		UISize{ UISize::Mode::Absolute, 40 }
 	);
 	AddComponent<UIRendererComponent>(fovSlider, UIRendererProperties(Colors::DarkGray).Border(Colors::Black, 2));

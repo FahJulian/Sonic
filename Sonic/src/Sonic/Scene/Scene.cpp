@@ -34,7 +34,7 @@ Entity Scene::AddEntity(EntityGroup group)
 
 EntityGroup Scene::AddEntityGroup()
 {
-	return m_NextEntityGroup++;
+	return m_NextEntity++;
 }
 
 void Scene::AddToGroup(EntityGroup group, Entity entity)
@@ -95,9 +95,13 @@ void Scene::RemoveEntity(Entity entity)
 	}
 }
 
+void Scene::Load()
+{
+	OnLoad();
+}
+
 void Scene::Init()
 {
-	Load();
 	OnInit();
 
 	View<ScriptComponent>().ForEach([=](auto entity, auto* scriptComponent) 
@@ -172,4 +176,12 @@ void Scene::OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DCom
 {
 	if (HasComponent<Renderer2DComponent>(e.entity))
 		GetComponent<Transform2DComponent>(e.entity)->rendererDirty = GetComponent<Renderer2DComponent>(e.entity)->dirty;
+}
+
+void Scene::Destroy()
+{
+	m_NextEntity = 1;
+	m_EntityGroups.clear();
+	m_UIHandler.Destroy();
+	m_Registry.Destroy();
 }

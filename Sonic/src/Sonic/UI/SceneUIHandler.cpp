@@ -758,3 +758,8 @@ void SceneUIHandler::SetHeight(Entity entity, UIComponent* component, float valu
 	SetHeight(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr);
 }
 
+void SceneUIHandler::Destroy()
+{
+	m_ChildRegistry.clear();
+}
+

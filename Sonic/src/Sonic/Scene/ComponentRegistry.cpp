@@ -9,8 +9,8 @@ void ComponentRegistry::DeactivateEntity(Entity entity)
 
 	for (ComponentType type : it->second)
 	{
-		AnonymousComponentPool* pool = m_ComponentPools.at(type);
-		pool->DeactivateEntity(entity, getComponentSize(type));
+		ComponentPool* pool = m_ComponentPools.at(type);
+		pool->DeactivateEntity(entity);
 	}
 }
 
@@ -20,8 +20,8 @@ void ComponentRegistry::ReactivateEntity(Entity entity)
 
 	for (ComponentType type : it->second)
 	{
-		AnonymousComponentPool* pool = m_ComponentPools.at(type);
-		pool->ReactivateEntity(entity, getComponentSize(type));
+		ComponentPool* pool = m_ComponentPools.at(type);
+		pool->ReactivateEntity(entity);
 	}
 }
 
@@ -34,9 +34,18 @@ void ComponentRegistry::RemoveEntity(Entity entity)
 
 	for (ComponentType type : it->second)
 	{
-		AnonymousComponentPool* pool = m_ComponentPools.at(type);
+		ComponentPool* pool = m_ComponentPools.at(type);
 		pool->RemoveEntity(entity);
 	}
 
 	m_ComponentMap.erase(it);
+}
+
+void ComponentRegistry::Destroy()
+{
+	for (ComponentPool* pool : m_ComponentPools)
+		delete pool;
+
+	m_ComponentPools.clear();
+	m_ComponentMap.clear();
 }

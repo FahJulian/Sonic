@@ -28,12 +28,12 @@ namespace Sonic {
 			using reference = Group&;
 			using pointer = Group*;
 
-			AnonymousComponentPool* pool1;
-			AnonymousComponentPool* pool2;
+			ComponentPool* pool1;
+			ComponentPool* pool2;
 			GroupView* groupView;
 			size_t index;
 
-			Iterator(AnonymousComponentPool* pool1, AnonymousComponentPool* pool2, GroupView<Component1, Component2>* groupView, size_t index)
+			Iterator(ComponentPool* pool1, ComponentPool* pool2, GroupView<Component1, Component2>* groupView, size_t index)
 				: pool1(pool1), pool2(pool2), groupView(groupView), index(index)
 			{
 				groupView->m_ActiveIteratorIndices.push_back(&this->index);
@@ -76,13 +76,13 @@ namespace Sonic {
 		GroupView(ComponentRegistry* registry)
 			: m_Pool1(registry->GetComponentPool<Component1>()), m_Pool2(registry->GetComponentPool<Component2>())
 		{
-			for (size_t i = 0; i < m_Pool1->m_Size; i++)
+			for (size_t i = 0; i < m_Pool1->m_Active.size; i++)
 			{
-				Entity entity = m_Pool1->m_Entities[i];
+				Entity entity = m_Pool1->m_Active.entities[i];
 
-				for (size_t j = 0; j < m_Pool2->m_Size; j++)
+				for (size_t j = 0; j < m_Pool2->m_Active.size; j++)
 				{
-					if (m_Pool2->m_Entities[j] == entity)
+					if (m_Pool2->m_Active.entities[j] == entity)
 					{
 						m_Entities.emplace_back(entity);
 						break;
@@ -114,8 +114,8 @@ namespace Sonic {
 			return static_cast<int>(m_Entities.size());
 		}
 
-		AnonymousComponentPool* m_Pool1;
-		AnonymousComponentPool* m_Pool2;
+		ComponentPool* m_Pool1;
+		ComponentPool* m_Pool2;
 		std::vector<Entity> m_Entities;
 		std::vector<size_t*> m_ActiveIteratorIndices;
 	};

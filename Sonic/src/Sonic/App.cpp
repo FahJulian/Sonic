@@ -39,6 +39,7 @@ bool App::init(const AppData& data)
     FontRenderer::init();
 
     s_Scene = data.scene;
+    s_Scene->Load();
     s_Scene->Init();
         
     return true;
@@ -132,6 +133,7 @@ void App::setScene(Scene* scene)
 
 void App::destroy()
 { 
+    s_Scene->Destroy();
     delete s_Scene;
 
     Font::destroy();

@@ -11,7 +11,7 @@ static bool isOutsideBorders(const glm::vec3& position)
 	return position.x < X0 || position.x > X0 + WIDTH - CELL_SIZE || position.y < Y0 || position.y > Y0 + HEIGHT - CELL_SIZE;
 }
 
-void GameScene::Load()
+void GameScene::OnLoad()
 {
 	Window::setClearColor(Colors::White);
 

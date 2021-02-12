@@ -58,6 +58,8 @@ namespace Sonic {
 		void FitPosition(Entity entity, UIComponent* c, UIPositionConstraintsComponent* constraints);
 		void FitSize(Entity entity, UIComponent* c, UISizeConstraintsComponent* constraints);
 
+		void Destroy();
+
 		Scene* m_Scene;
 		std::unordered_map<Entity, std::vector<Entity>> m_ChildRegistry;
 

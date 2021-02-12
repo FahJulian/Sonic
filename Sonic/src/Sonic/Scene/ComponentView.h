@@ -16,9 +16,9 @@ namespace Sonic {
 			using pointer = Component*;
 
 			size_t index;
-			AnonymousComponentPool* pool;
+			ComponentPool* pool;
 
-			Iterator(AnonymousComponentPool* pool, size_t index)
+			Iterator(ComponentPool* pool, size_t index)
 				: pool(pool), index(index)
 			{
 				pool->m_ActiveIteratorIndices.push_back(&this->index);
@@ -30,7 +30,7 @@ namespace Sonic {
 				pool->m_ActiveIteratorIndices.push_back(&this->index);
 			}
 
-			pointer operator*() { return reinterpret_cast<Component*>(pool->m_Data) + index; }
+			pointer operator*() { return reinterpret_cast<Component*>(pool->m_Active.data) + index; }
 
 			Iterator& operator++() { index++; return *this; }
 			Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
@@ -56,7 +56,7 @@ namespace Sonic {
 		}
 
 		Iterator begin() { return Iterator(m_Pool, 0); }
-		Iterator end() { return Iterator(m_Pool, m_Pool->m_Size); }
+		Iterator end() { return Iterator(m_Pool, m_Pool->m_Active.size); }
 
 		void ForEach(std::function<void(Component*)> function)
 		{
@@ -66,10 +66,10 @@ namespace Sonic {
 
 		int Size()
 		{
-			return static_cast<int>(m_Pool->m_Size);
+			return static_cast<int>(m_Pool->m_Active.size);
 		}
 
-		AnonymousComponentPool* m_Pool;
+		ComponentPool* m_Pool;
 	};
 
 }

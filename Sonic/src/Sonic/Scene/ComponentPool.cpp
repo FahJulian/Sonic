@@ -5,19 +5,57 @@
 using namespace Sonic;
 
 
-void AnonymousComponentPool::DeactivateEntity(Entity entity, size_t componentSize)
+std::vector<std::function<void(uint8_t*)>> ComponentPool::s_ComponentDestructors;
+std::vector<size_t> ComponentPool::s_ComponentSizes;
+ComponentType ComponentPool::s_NextComponentType = 0;
+
+
+size_t ComponentPool::IndexOf(Entity entity, Data* data)
 {
-	size_t index = IndexOf(entity);
+	size_t iteration = 0;
+	while (iteration++ < data->size)
+	{
+		if (data->cursor >= data->size)
+			data->cursor = 0;
 
-	if (m_InactiveSize == m_InactiveCapacity)
-		IncreaseInactiveSize(componentSize);
+		if (data->entities[data->cursor] == entity)
+			return data->cursor;
 
-	std::copy(m_Data + index * componentSize, m_Data + (index + 1) * componentSize, m_InactiveData + m_InactiveSize * componentSize);
-	std::copy(m_Entities + index, m_Entities + index + 1, m_InactiveEntities + m_InactiveSize);
+		data->cursor++;
+	}
 
-	std::copy(m_Data + (index + 1) * componentSize, m_Data + m_Size * componentSize, m_Data + index * componentSize);
-	std::copy(m_Entities + index + 1, m_Entities + m_Size, m_Entities + index);
+	return NOT_FOUND;
+}
 
+void ComponentPool::IncreaseSize(Data* data)
+{
+	data->capacity = (size_t)((double)(data->capacity + 1) * 1.2);
+
+	uint8_t* newData = new uint8_t[data->capacity * m_ComponentSize];
+	std::copy(data->data, data->data + data->size * m_ComponentSize, newData);
+	delete[] data->data;
+	data->data = newData;
+
+	Entity* newEntities = new Entity[data->capacity];
+	std::copy(data->entities, data->entities + data->size, newEntities);
+	delete[] data->entities;
+	data->entities = newEntities;
+}
+
+void ComponentPool::MoveEntity(Data* src, Data* dst, size_t srcIndex)
+{
+	if (dst->size == dst->capacity)
+		IncreaseSize(dst);
+
+	std::copy(src->data + srcIndex * m_ComponentSize, src->data + (srcIndex + 1) * m_ComponentSize, dst->data + dst->size * m_ComponentSize);
+	std::copy(src->entities + srcIndex, src->entities + srcIndex + 1, dst->entities + dst->size);
+
+	std::copy(src->data + (srcIndex + 1) * m_ComponentSize, src->data + src->size * m_ComponentSize, src->data + srcIndex * m_ComponentSize);
+	std::copy(src->entities + srcIndex + 1, src->entities + src->size, src->entities + srcIndex);
+}
+
+void ComponentPool::NotifyEntityRemoved(Entity entity, size_t index)
+{
 	for (size_t* iteratorIndex : m_ActiveIteratorIndices)
 	{
 		if (*iteratorIndex >= index)
@@ -38,97 +76,69 @@ void AnonymousComponentPool::DeactivateEntity(Entity entity, size_t componentSiz
 			}
 		}
 	}
-
-	m_Size--;
-	m_InactiveSize++;
 }
 
-void AnonymousComponentPool::ReactivateEntity(Entity entity, size_t componentSize)
+void ComponentPool::NotifyEntityAdded(Entity entity)
 {
-	size_t index = IndexOfInactive(entity);
-
-	if (m_Size == m_Capacity)
-		IncreaseSize(componentSize);
-
-	std::copy(m_InactiveData + index * componentSize, m_InactiveData + (index + 1) * componentSize, m_Data + m_Size * componentSize);
-	std::copy(m_InactiveEntities + index, m_InactiveEntities + index + 1, m_Entities + m_Size);
-
-	std::copy(m_InactiveData + (index + 1) * componentSize, m_InactiveData + m_InactiveSize * componentSize, m_InactiveData + index * componentSize);
-	std::copy(m_InactiveEntities + index + 1, m_InactiveEntities + m_InactiveSize, m_InactiveEntities + index);
-
 	for (GroupViewInfo groupView : m_GroupViews)
 		if (groupView.otherPool->HasEntity(entity))
 			groupView.entities->push_back(entity);
-
-	m_Size++;
-	m_InactiveSize--;
 }
 
-bool AnonymousComponentPool::HasEntity(Entity entity)
+void ComponentPool::DeactivateEntity(Entity entity)
 {
-	return IndexOf(entity) != NOT_FOUND;
+	size_t index = IndexOf(entity, &m_Active);
+
+	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant deactivate Component: No active Component of the given Entity exists.");
+
+	MoveEntity(&m_Active, &m_Inactive, index);
+
+	NotifyEntityRemoved(entity, index);
+
+	m_Active.size--;
+	m_Inactive.size++;
 }
 
-size_t AnonymousComponentPool::IndexOf(Entity entity)
+void ComponentPool::ReactivateEntity(Entity entity)
 {
-	size_t iteration = 0;
-	while (iteration++ < m_Size)
-	{
-		if (m_Cursor >= m_Size)
-			m_Cursor = 0;
+	size_t index = IndexOf(entity, &m_Inactive);
 
-		if (m_Entities[m_Cursor] == entity)
-			return m_Cursor;
+	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant reactivate Component: No inactive Component of the given Entity exists.");
 
-		m_Cursor++;
-	}
+	MoveEntity(&m_Inactive, &m_Active, index);
 
-	return NOT_FOUND;
+	NotifyEntityAdded(entity);
+
+	m_Active.size++;
+	m_Inactive.size--;
 }
 
-size_t AnonymousComponentPool::IndexOfInactive(Entity entity)
+bool ComponentPool::HasEntity(Entity entity)
 {
-	size_t iteration = 0;
-	while (iteration++ < m_InactiveSize)
-	{
-		if (m_InactiveCursor >= m_InactiveSize)
-			m_InactiveCursor = 0;
-
-		if (m_InactiveEntities[m_InactiveCursor] == entity)
-			return m_InactiveCursor;
-
-		m_InactiveCursor++;
-	}
-
-	return NOT_FOUND;
+	return IndexOf(entity, &m_Active) != NOT_FOUND;
 }
 
-void AnonymousComponentPool::IncreaseSize(size_t componentSize)
+void ComponentPool::RemoveEntity(Entity entity)
 {
-	m_Capacity = (size_t)((double)(m_Capacity + 1) * 1.2);
+	size_t index = IndexOf(entity, &m_Active);
 
-	uint8_t* newData = new uint8_t[m_Capacity * componentSize];
-	std::copy(m_Data, m_Data + m_Size * componentSize, newData);
-	delete[] m_Data;
-	m_Data = newData;
+	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant remove Entity from ComponentPool: Pool does not contain Entity");
 
-	Entity* newEntities = new Entity[m_Capacity];
-	std::copy(m_Entities, m_Entities + m_Size, newEntities);
-	delete[] m_Entities;
-	m_Entities = newEntities;
+	m_ComponentDestructor(m_Active.data + index * m_ComponentSize);
+
+	std::copy(m_Active.data + (index + 1) * m_ComponentSize, m_Active.data + m_Active.size * m_ComponentSize, m_Active.data + index * m_ComponentSize);
+	std::copy(m_Active.entities + index + 1, m_Active.entities + m_Active.size, m_Active.entities + index);
+
+	NotifyEntityRemoved(entity, index);
+
+	m_Active.size--;
 }
 
-void AnonymousComponentPool::IncreaseInactiveSize(size_t componentSize)
+ComponentPool::~ComponentPool()
 {
-	m_InactiveCapacity = (size_t)((double)(m_InactiveCapacity + 1) * 1.2);
+	for (size_t i = 0; i < m_Active.size; i++)
+		m_ComponentDestructor(m_Active.data + i * m_ComponentSize);
 
-	uint8_t* newData = new uint8_t[m_InactiveCapacity * componentSize];
-	std::copy(m_InactiveData, m_InactiveData + m_InactiveSize * componentSize, newData);
-	delete[] m_InactiveData;
-	m_InactiveData = newData;
-
-	Entity* newEntities = new Entity[m_InactiveCapacity];
-	std::copy(m_InactiveEntities, m_InactiveEntities + m_InactiveSize, newEntities);
-	delete[] m_InactiveEntities;
-	m_InactiveEntities = newEntities;
+	for (size_t i = 0; i < m_Inactive.size; i++)
+		m_ComponentDestructor(m_Inactive.data + i * m_ComponentSize);
 }
