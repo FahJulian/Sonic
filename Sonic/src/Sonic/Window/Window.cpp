@@ -1,7 +1,7 @@
 #include <iostream>
 #include <gl/glew.h>
 #include <GLFW/glfw3.h>
-#include "Sonic/Log/Log.h"
+#include "Sonic/Debug/Log/Log.h"
 #include "Sonic/Graphics/Color.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Scene/Scene.h"

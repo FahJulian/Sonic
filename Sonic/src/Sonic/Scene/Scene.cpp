@@ -2,23 +2,15 @@
 #include "Sonic/Debug/Profiler/Profiler.h"
 #include "Sonic/App.h"
 #include "Sonic/Event/Events.h"
-#include "Sonic/Renderer/Renderer2D.h"
-#include "Sonic/UI/Font/FontRenderer.h"
-#include "Sonic/UI/UIRenderer.h"
-#include "Script.h"
+#include "Sonic/Renderer/2D/Renderer2D.h"
+#include "Sonic/Renderer/Font/FontRenderer.h"
+#include "Sonic/Renderer/UI/UIRenderer.h"
+#include "Sonic/Scene/Components/Scripting/Script.h"
+#include "Components.h"
 #include "Scene.h"
 
 using namespace Sonic;
 
-
-Scene::Scene()
-	: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())), m_UIHandler(this)
-{
-	AddListener(this, &Scene::OnRenderer2DComponentAdded);
-	AddListener(this, &Scene::OnTransform2DComponentAdded);
-
-	AddListener(this, &Scene::OnWindowResized);
-}
 
 Entity Scene::AddEntity()
 {
@@ -102,6 +94,11 @@ void Scene::Load()
 
 void Scene::Init()
 {
+	AddListener(this, &Scene::OnRenderer2DComponentAdded);
+	AddListener(this, &Scene::OnTransform2DComponentAdded);
+
+	AddListener(this, &Scene::OnWindowResized);
+
 	OnInit();
 
 	View<ScriptComponent>().ForEach([=](auto entity, auto* scriptComponent) 
@@ -127,24 +124,15 @@ void Scene::UpdateComponents(float deltaTime)
 {
 	SONIC_PROFILE_FUNCTION("Scene::UpdateComponents");
 
-	for (auto [entity, cameraComponent, t] : Group<Camera2DComponent, Transform2DComponent>())
-	{
-		cameraComponent->camera.SetPosition(t->GetPosition());
-		cameraComponent->camera.SetRotation(t->GetRotation());
-
-		if (cameraComponent->isSceneCamera)
-			m_Camera = cameraComponent->camera;
-	}
-
 	ViewComponents<ScriptComponent>().ForEach([=](auto* scriptComponent) 
 	{
 		scriptComponent->script->OnUpdate(deltaTime);
 	});
 }
 
-void Scene::Rebuffer()
+void Scene::RebufferRenderers()
 {
-	SONIC_PROFILE_FUNCTION("Scene::Rebuffer");
+	SONIC_PROFILE_FUNCTION("Scene::RebufferRenderers");
 
 	Renderer2D::rebuffer(this, &m_Camera);
 	UIRenderer::rebuffer(this);

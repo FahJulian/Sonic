@@ -1,10 +1,10 @@
 #include <GL/glew.h>
 #include <string>
 #include "Scene/Scene.h"
-#include "Sonic/UI/Font/Font.h"
-#include "Sonic/UI/Font/FontRenderer.h"
-#include "Renderer/Renderer2D.h"
-#include "UI/UIRenderer.h"
+#include "Sonic/Graphics/Font.h"
+#include "Sonic/Renderer/Font/FontRenderer.h"
+#include "Sonic/Renderer/2D/Renderer2D.h"
+#include "Sonic/Renderer/UI/UIRenderer.h"
 #include "Window/Window.h"
 #include "App.h"
 
@@ -63,7 +63,7 @@ void App::run()
         if (totalDelta >= s_SecondsPerUpdate)
         {
             s_Scene->Update(static_cast<float>(totalDelta));
-            s_Scene->Rebuffer();
+            s_Scene->RebufferRenderers();
             Window::pollEvents();
 
             totalDelta = 0;
@@ -108,7 +108,7 @@ void App::stop()
 
 void App::onWindowResized(const WindowResizedEvent& e)
 {
-    s_Scene->Rebuffer();
+    s_Scene->RebufferRenderers();
 
     Window::clear();
     s_Scene->Render();

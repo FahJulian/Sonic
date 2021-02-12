@@ -2,7 +2,7 @@
 #include <sstream>
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
-#include "Sonic/Log/Log.h"
+#include "Sonic/Debug/Log/Log.h"
 #include "Shader.h"
 
 using namespace Sonic;

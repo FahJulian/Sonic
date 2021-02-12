@@ -1,7 +1,6 @@
 #pragma once
 #include "Sonic/Base.h"
 #include "Sonic/App.h"
-#include "Sonic/Scene/Scene.h"
 
 /*
 * This header file should be included by the main file of the

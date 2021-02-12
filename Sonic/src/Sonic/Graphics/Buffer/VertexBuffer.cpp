@@ -1,5 +1,5 @@
 #include <gl/glew.h>
-#include "Sonic/Log/Log.h"
+#include "Sonic/Debug/Log/Log.h"
 #include "VertexBuffer.h"
 
 using namespace Sonic;

@@ -2,6 +2,9 @@
 #include <Sonic.h>
 #include "GameScene.h"
 
+using namespace Sonic;
+
+
 class StartScene : public Scene
 {
 public:
@@ -10,6 +13,7 @@ public:
 
 private:
 	void OnLoad() override;
+	void OnInit() override;
 
 	Font* font;
 	GameScene* gameScene;

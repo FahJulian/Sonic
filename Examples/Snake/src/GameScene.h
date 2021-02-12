@@ -1,6 +1,9 @@
 #pragma once
 #include <Sonic.h>
 
+using namespace Sonic;
+
+
 class GameScene : public Scene
 {
 public:
@@ -15,8 +18,6 @@ protected:
 	void OnInit() override;
 
 	void OnUpdate(float deltaTime) override;
-
-	void OnRender() override {};
 
 	void PollCollisionEvents() override;
 };

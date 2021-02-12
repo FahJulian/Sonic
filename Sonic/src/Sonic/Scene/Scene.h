@@ -1,16 +1,16 @@
 #pragma once
 #include <algorithm>
-#include "Sonic/Util/GenericContainer.h"
+#include "Sonic/Window/Window.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Event/EventDispatcher.h"
-#include "Sonic/Renderer/Camera2D.h"
-#include "Sonic/UI/SceneUIHandler.h"
-#include "Views.h"
-#include "Entity.h"
-#include "Components.h"
-#include "EntityGroup.h"
-#include "ComponentType.h"
-#include "ComponentRegistry.h"
+#include "Sonic/Renderer/2D/Camera2D.h"
+#include "Sonic/Scene/UI/SceneUIHandler.h"
+#include "Sonic/Scene/ECS/Views.h"
+#include "Sonic/Scene/ECS/Entity.h"
+#include "Sonic/Scene/ECS/ComponentType.h"
+#include "Sonic/Scene/ECS/ComponentRegistry.h"
+#include "Sonic/Scene/ECS/EntityGroup.h"
+#include "Sonic/Scene/Components/2DComponents.h"
 
 namespace Sonic {
 
@@ -20,15 +20,20 @@ namespace Sonic {
 	class Scene : public EventDispatcher
 	{
 	protected:
-		Scene();
+		Scene()
+			: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())), m_UIHandler(this)
+		{
+		}
 
 	private:
 		void Load();
 		void Init();
+
 		void Update(float deltaTime);
+
 		void Destroy();
 
-		void Rebuffer();
+		void RebufferRenderers();
 		void Render();
 
 		void UpdateComponents(float deltaTime);
@@ -41,8 +46,9 @@ namespace Sonic {
 	protected:
 		virtual void OnLoad() = 0;
 		virtual void OnInit() {}
+
 		virtual void OnUpdate(float deltaTime) {}
-		virtual void OnRender() {}
+
 		virtual void PollCollisionEvents() {}
 
 	public:
@@ -53,6 +59,7 @@ namespace Sonic {
 		EntityGroup AddEntityGroup();
 		std::vector<Entity>* GetGroup(EntityGroup group);
 		void AddToGroup(EntityGroup group, Entity entity);
+
 		void DeactivateEntity(Entity entity);
 		void DeactivateEntities(EntityGroup group);
 		void ReactivateEntity(Entity entity);
