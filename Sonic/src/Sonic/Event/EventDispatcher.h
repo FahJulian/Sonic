@@ -3,72 +3,91 @@
 #include <vector>
 #include <unordered_map>
 
-using namespace Sonic;
 
-
-template<typename Event>
-using EventListener = std::function<void(const Event&)>;
-
-class EventDispatcher
-{
-public:
-	template<typename Event>
-	void AddListener(EventListener<Event> listener)
-	{
-		GetListeners<Event>().push_back(listener);
-	}
-
-	template<typename F, typename Event>
-	void AddListener(F* key, void(F::* listenerMethod)(const Event&))
-	{
-		EventListener<Event> listener = [key, listenerMethod](const Event& e) { (key->*listenerMethod)(e); };
-		GetListeners<Event>().push_back(listener);
-	}
-
-	template<typename F, typename Event>
-	void AddKeyedListener(F* key, void(F::* listenerMethod)(const Event&))
-	{
-		EventListener<Event> listener = [key, listenerMethod](const Event& e) { (key->*listenerMethod)(e); };
-		auto& listeners = GetListeners<Event>();
-		listeners.push_back(listener);
-		GetKeys<Event>()[reinterpret_cast<intptr_t>(key)] = static_cast<unsigned int>(listeners.size()) - 1;
-	}
-
-	template<typename Event, typename F>
-	void RemoveKeyedListener(F* object)
-	{
-		auto& keys = GetKeys<Event>();
-		auto& listeners = GetListeners<Event>();
-
-		intptr_t key = reinterpret_cast<intptr_t>(object);
-		unsigned int index = keys[key];
-		keys.erase(key);
-		listeners.erase(listeners.begin() + index);
-
-		for (auto& [_, value] : keys)
-			if (value > index)
-				value--;
-	}
+namespace Sonic {
 
 	template<typename Event>
-	void DispatchEvent(const Event& e)
-	{
-		for (EventListener<Event>& listener : GetListeners<Event>())
-			listener(e);
-	}
+	using EventListener = std::function<void(const Event&)>;
 
-private:
-	template<typename Event>
-	std::vector<EventListener<Event>>& GetListeners()
+	class EventDispatcher
 	{
-		static std::unordered_map<EventDispatcher*, std::vector<EventListener<Event>>> listeners;
-		return listeners[this];
-	}
+	private:
+		template<typename Event>
+		struct ListenerContainer
+		{
+			std::unordered_map<intptr_t, size_t> keys;
+			std::vector<EventListener<Event>> listeners;
 
-	template<typename Event>
-	std::unordered_map<intptr_t, unsigned int>& GetKeys()
-	{
-		static std::unordered_map<EventDispatcher*, std::unordered_map<intptr_t, unsigned int>> keys;
-		return keys[this];
-	}
-};
+			ListenerContainer()
+			{
+				s_ClearFunctions.push_back([this]() {
+					keys.clear();
+					listeners.clear();
+				});
+			}
+		};
+
+		EventDispatcher() = delete;
+		EventDispatcher(const EventDispatcher& other) = delete;
+		EventDispatcher& operator=(const EventDispatcher& other) = delete;
+
+		static void clear();
+
+	public:
+		template<typename Event>
+		static void addListener(EventListener<Event> listener)
+		{
+			getListeners<Event>().listeners.push_back(listener);
+		}
+
+		template<typename F, typename Event>
+		static void addListener(F* object, void(F::* method)(const Event&))
+		{
+			addListener(EventListener<Event>([object, method](const Event& e) { (object->*method)(e); }));
+		}
+
+		template<typename F, typename Event>
+		static void addRemovableListener(F* object, void(F::* method)(const Event&))
+		{
+			addListener(object, method);
+
+			auto& keys = getListeners<Event>().keys;
+			keys.emplace(reinterpret_cast<intptr_t>(object), keys.size());
+		}
+
+		template<typename F, typename Event>
+		static void removeListener(F* object)
+		{
+			auto& listeners = getListeners<Event>().listeners;
+			auto& keys = getListeners<Event>().keys;
+			auto it = keys.find(reinterpret_cast<intptr_t>(object));
+
+			for (auto& [_, index] : keys)
+				if (index > it->second)
+					index--;
+
+			listeners.erase(listeners.begin() + it->second);
+			keys.erase(it);
+		}
+
+		template<typename Event>
+		static void dispatch(const Event& e)
+		{
+			for (auto& listener : getListeners<Event>().listeners)
+				listener(e);
+		}
+
+	private:
+		template<typename Event>
+		static ListenerContainer<Event>& getListeners()
+		{
+			static ListenerContainer<Event> listeners;
+			return listeners;
+		}
+
+		static std::vector<std::function<void()>> s_ClearFunctions;
+
+		friend class SceneManager;
+	};
+
+}

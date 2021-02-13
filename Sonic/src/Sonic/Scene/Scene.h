@@ -17,7 +17,7 @@ namespace Sonic {
 	template<typename Component1, typename Component2>
 	class GroupView;
 
-	class Scene : public EventDispatcher
+	class Scene
 	{
 	protected:
 		Scene()
@@ -72,7 +72,7 @@ namespace Sonic {
 		void AddComponent(Entity entity, Args&&... args)
 		{
 			m_Registry.AddComponent<Component>(entity, std::forward<Args>(args)...);
-			DispatchEvent(ComponentAddedEvent<Component>(entity));
+			EventDispatcher::dispatch(ComponentAddedEvent<Component>(entity));
 		}
 
 		template<typename Component>
@@ -91,7 +91,7 @@ namespace Sonic {
 		void RemoveComponent(Entity entity)
 		{
 			m_Registry.RemoveComponent<Component>(entity);
-			DispatchEvent(ComponentRemovedEvent<Component>(entity));
+			EventDispatcher::dispatch(ComponentRemovedEvent<Component>(entity));
 		}
 
 		template<typename Component>

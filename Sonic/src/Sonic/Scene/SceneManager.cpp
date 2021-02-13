@@ -1,4 +1,5 @@
 #include "Sonic/Debug/Log/Log.h"
+#include "Sonic/Event/EventDispatcher.h"
 #include "Scene.h"
 #include "SceneManager.h"
 
@@ -57,6 +58,7 @@ void SceneManager::setScene(ManagedScene& scene)
 		scene.isLoaded = true;
 	}
 
+	EventDispatcher::clear();
 	s_CurrentScene->Destroy();
 	s_CurrentScene = scene;
 	s_CurrentScene->Init();

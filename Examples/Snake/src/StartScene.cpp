@@ -96,17 +96,17 @@ void StartScene::OnLoad()
 
 	Entity fovSlider = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(fovSlider,
-		UISize{ UISize::Mode::RelativeToWindow, 0.4f },
+		UISize{ UISize::Mode::RelativeToWindow, 0.15f },
 		UISize{ UISize::Mode::RelativeToWindow, 0.75f },
-		UISize{ UISize::Mode::Absolute, 310 },
+		UISize{ UISize::Mode::RelativeToWindow, 0.3f },
 		UISize{ UISize::Mode::Absolute, 40 }
 	);
 	AddComponent<UIRendererComponent>(fovSlider, UIRendererProperties(Colors::DarkGray).Border(Colors::Black, 2));
 
 	Entity slider = AddEntity(optionsMenu);
-	AddComponent<UIComponent>(slider, UISize::Mode::RelativeToEntity, (1.0f - 0.1f) / 2.0f, 0.0f, 0.1f, 1.0f, fovSlider);
+	AddComponent<UIComponent>(slider, UISize::Mode::RelativeToEntity, (1.0f - 0.08f) / 2.0f, 0.0f, 0.08f, 1.0f, fovSlider);
 	AddComponent<UIRendererComponent>(slider, UIRendererProperties(Colors::LightGray).Border(Colors::Black, 2));
-	AddComponent<UIPositionConstraintsComponent>(slider, 0.0f, 0.0f, 1.0f - 0.1f, 0.0f);
+	AddComponent<UIPositionConstraintsComponent>(slider, 0.0f, 0.0f, 1.0f - 0.08f, 0.0f);
 
 	EventListener<UISliderEvent> onSlide = [=](const UISliderEvent& e) {
 		SONIC_LOG_DEBUG("Fov: ", (int)(80 * e.percentage + 30));

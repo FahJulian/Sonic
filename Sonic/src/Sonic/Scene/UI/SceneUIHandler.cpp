@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "Sonic/Util/Math/Math.h"
+#include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Window/Window.h"
 #include "Sonic/Window/Input/Mouse.h"
 #include "Sonic/Scene/Scene.h"
@@ -29,20 +30,20 @@ SceneUIHandler::SceneUIHandler(Scene* scene)
 
 void SceneUIHandler::Init()
 {
-	m_Scene->AddListener(this, &SceneUIHandler::OnMouseButtonPressed);
-	m_Scene->AddListener(this, &SceneUIHandler::OnMouseButtonReleased);
-	m_Scene->AddListener(this, &SceneUIHandler::OnMouseMoved);
-	m_Scene->AddListener(this, &SceneUIHandler::OnWindowResized);
+	EventDispatcher::addListener(this, &SceneUIHandler::OnMouseButtonPressed);
+	EventDispatcher::addListener(this, &SceneUIHandler::OnMouseButtonReleased);
+	EventDispatcher::addListener(this, &SceneUIHandler::OnMouseMoved);
+	EventDispatcher::addListener(this, &SceneUIHandler::OnWindowResized);
 
-	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentAdded);
-	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UIHoverComponent>>(this, &SceneUIHandler::OnComponentAdded);
-	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UITextComponent>>(this, &SceneUIHandler::OnComponentAdded);
-	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UIRendererComponent>>(this, &SceneUIHandler::OnComponentAdded);
-	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UIPositionConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
-	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UISizeConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
-	m_Scene->AddListener<SceneUIHandler, ComponentRemovedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentRemoved);
-	m_Scene->AddListener(this, &SceneUIHandler::OnEntityDeactivated);
-	m_Scene->AddListener(this, &SceneUIHandler::OnEntityReactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentAdded);
+	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UIHoverComponent>>(this, &SceneUIHandler::OnComponentAdded);
+	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UITextComponent>>(this, &SceneUIHandler::OnComponentAdded);
+	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UIRendererComponent>>(this, &SceneUIHandler::OnComponentAdded);
+	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UIPositionConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
+	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UISizeConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
+	EventDispatcher::addListener<SceneUIHandler, ComponentRemovedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentRemoved);
+	EventDispatcher::addListener(this, &SceneUIHandler::OnEntityDeactivated);
+	EventDispatcher::addListener(this, &SceneUIHandler::OnEntityReactivated);
 
 	for (auto [e, h, r] : m_Scene->Group<UIHoverComponent, UIRendererComponent>())
 		h->rendererDirty = r->dirty;

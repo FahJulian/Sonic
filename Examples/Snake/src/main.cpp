@@ -1,4 +1,3 @@
-#pragma once
 #include "Sonic/main.h"
 #include "StartScene.h"
 #include "GameScene.h"

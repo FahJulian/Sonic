@@ -41,7 +41,7 @@ std::vector<Entity>* Scene::GetGroup(EntityGroup group)
 
 void Scene::DeactivateEntity(Entity entity)
 {
-	DispatchEvent(EntityDeactivatedEvent(entity));
+	EventDispatcher::dispatch(EntityDeactivatedEvent(entity));
 	m_Registry.DeactivateEntity(entity);
 }
 
@@ -54,7 +54,7 @@ void Scene::DeactivateEntities(EntityGroup group)
 void Scene::ReactivateEntity(Entity entity)
 {
 	m_Registry.ReactivateEntity(entity);
-	DispatchEvent(EntityReactivatedEvent(entity));
+	EventDispatcher::dispatch(EntityReactivatedEvent(entity));
 }
 
 void Scene::ReactivateEntities(EntityGroup group)
@@ -65,7 +65,7 @@ void Scene::ReactivateEntities(EntityGroup group)
 
 void Scene::RemoveEntity(Entity entity)
 {
-	DispatchEvent(EntityRemovedEvent(entity));
+	EventDispatcher::dispatch(EntityRemovedEvent(entity));
 	m_Registry.RemoveEntity(entity);
 
 	if (HasComponent<UIRendererComponent>(entity))
@@ -82,10 +82,10 @@ void Scene::Load()
 
 void Scene::Init()
 {
-	AddListener(this, &Scene::OnRenderer2DComponentAdded);
-	AddListener(this, &Scene::OnTransform2DComponentAdded);
+	EventDispatcher::addListener(this, &Scene::OnRenderer2DComponentAdded);
+	EventDispatcher::addListener(this, &Scene::OnTransform2DComponentAdded);
 
-	AddListener(this, &Scene::OnWindowResized);
+	EventDispatcher::addListener(this, &Scene::OnWindowResized);
 
 	OnInit();
 
@@ -138,6 +138,7 @@ void Scene::Render()
 
 void Scene::OnWindowResized(const WindowResizedEvent& e)
 {
+	SONIC_LOG_DEBUG("On window resized");
 	UIRenderer::setViewportSize(e.width, e.height);
 	FontRenderer::setViewportSize(e.width, e.height);
 }

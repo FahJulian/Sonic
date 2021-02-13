@@ -1,5 +1,5 @@
-#include "Sonic/Scene/SceneManager.h"
 #include "Sonic/Event/EventDispatcher.h"
+#include "Sonic/Scene/SceneManager.h"
 #include "Sonic/Event/Events.h"
 #include "Sonic/Scene/Scene.h"
 #include "Mouse.h"
@@ -27,9 +27,9 @@ void Mouse::cursorPosCallback(GLFWwindow* window, double posX, double posY)
 
     for (int button = 0; button < GLFW_MOUSE_BUTTON_LAST; button++)
         if (s_Data.pressedButtons[button])
-            SceneManager::getCurrentScene()->DispatchEvent(MouseDraggedEvent(button, x, y, s_Data.x, s_Data.y, x - s_Data.x, y - s_Data.y));
+            EventDispatcher::dispatch(MouseDraggedEvent(button, x, y, s_Data.x, s_Data.y, x - s_Data.x, y - s_Data.y));
 
-    SceneManager::getCurrentScene()->DispatchEvent(MouseMovedEvent(x, y, s_Data.x, s_Data.y, x - s_Data.x, y - s_Data.y));
+    EventDispatcher::dispatch(MouseMovedEvent(x, y, s_Data.x, s_Data.y, x - s_Data.x, y - s_Data.y));
 
     s_Data.x = x;
     s_Data.y = y;
@@ -40,18 +40,18 @@ void Mouse::buttonCallback(GLFWwindow* window, int button, int action, int mods)
     if (action == GLFW_PRESS)
     {
         s_Data.pressedButtons[button] = true;
-        SceneManager::getCurrentScene()->DispatchEvent(MouseButtonPressedEvent(button, s_Data.x, s_Data.y));
+        EventDispatcher::dispatch(MouseButtonPressedEvent(button, s_Data.x, s_Data.y));
     }
     else if (action == GLFW_RELEASE)
     {
         s_Data.pressedButtons[button] = false;
-        SceneManager::getCurrentScene()->DispatchEvent(MouseButtonReleasedEvent(button, s_Data.x, s_Data.y));
+        EventDispatcher::dispatch(MouseButtonReleasedEvent(button, s_Data.x, s_Data.y));
     }
 }
 
 void Mouse::scrollCallback(GLFWwindow* window, double scrollX, double scrollY)
 {
-    SceneManager::getCurrentScene()->DispatchEvent(MouseScrolledEvent(s_Data.x, s_Data.y, static_cast<float>(scrollX), static_cast<float>(scrollY)));
+    EventDispatcher::dispatch(MouseScrolledEvent(s_Data.x, s_Data.y, static_cast<float>(scrollX), static_cast<float>(scrollY)));
 }
 
 bool Mouse::isButtonPressed(MouseButton button) 

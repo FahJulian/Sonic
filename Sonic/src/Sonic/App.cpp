@@ -33,8 +33,6 @@ bool App::init(const AppData& data)
         return false;
     }
 
-    SONIC_LOG_DEBUG("Test", "");
-
     Renderer2D::init();
     UIRenderer::init();
     Font::init();

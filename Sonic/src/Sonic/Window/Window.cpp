@@ -96,7 +96,7 @@ void Window::pollEvents()
 void Window::windowCloseCallback(GLFWwindow* window)
 {
     WindowClosedEvent e;
-    SceneManager::getCurrentScene()->DispatchEvent(e);
+    EventDispatcher::dispatch(e);
     App::onWindowClosed(e);
 }
 
@@ -108,7 +108,7 @@ void Window::windowResizeCallback(GLFWwindow* window, int width, int height)
     s_Data.height = static_cast<float>(height);
 
     WindowResizedEvent e = WindowResizedEvent(s_Data.width, s_Data.height);
-    SceneManager::getCurrentScene()->DispatchEvent(e);
+    EventDispatcher::dispatch(e);
     App::onWindowResized(e);
 }
 
