@@ -4,6 +4,8 @@
 #include "Sonic/Window/Input/Mouse.h"
 #include "Sonic/Scene/Scene.h"
 #include "Sonic/Scene/ECS/Views.h"
+#include "Sonic/Renderer/UI/UIRenderer.h"
+#include "Sonic/Renderer/Font/FontRenderer.h"
 #include "SceneUIHandler.h"
 
 using namespace Sonic;
@@ -23,6 +25,10 @@ static Action s_HoveredAction = Action::None;
 SceneUIHandler::SceneUIHandler(Scene* scene)
 	: m_Scene(scene)
 {
+}
+
+void SceneUIHandler::Init()
+{
 	m_Scene->AddListener(this, &SceneUIHandler::OnMouseButtonPressed);
 	m_Scene->AddListener(this, &SceneUIHandler::OnMouseButtonReleased);
 	m_Scene->AddListener(this, &SceneUIHandler::OnMouseMoved);
@@ -35,11 +41,25 @@ SceneUIHandler::SceneUIHandler(Scene* scene)
 	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UIPositionConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
 	m_Scene->AddListener<SceneUIHandler, ComponentAddedEvent<UISizeConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
 	m_Scene->AddListener<SceneUIHandler, ComponentRemovedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentRemoved);
-}
+	m_Scene->AddListener(this, &SceneUIHandler::OnEntityDeactivated);
+	m_Scene->AddListener(this, &SceneUIHandler::OnEntityReactivated);
 
-void SceneUIHandler::Update(float deltaTime)
-{
-	
+	for (auto [e, h, r] : m_Scene->Group<UIHoverComponent, UIRendererComponent>())
+		h->rendererDirty = r->dirty;
+	for (auto [e, c, r] : m_Scene->Group<UIComponent, UIRendererComponent>())
+		c->uiRendererDirty = r->dirty;
+	for (auto [e, c, t] : m_Scene->Group<UIComponent, UITextComponent>())
+		c->fontRendererDirty = t->dirty;
+
+	for (auto [e, c] : m_Scene->View<UIComponent>())
+	{
+		auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
+
+		Recalculate(e, c, parent);
+
+		if (c->parent != 0)
+			m_ChildRegistry[c->parent].push_back(e);
+	}
 }
 
 void SceneUIHandler::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
@@ -119,57 +139,14 @@ void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIComponent>& e)
 	auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
 	auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
 
-	switch (c->x.mode)
-	{
-	case UISize::Mode::Absolute: c->x.absoluteValue = c->x.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->x.absoluteValue = c->x.relativeValue * Window::getWidth(); break;
-	case UISize::Mode::RelativeToEntity: c->x.absoluteValue = parent->x.absoluteValue + c->x.relativeValue * parent->width.absoluteValue; break;
-	}
+	Recalculate(e.entity, c, parent);
 
-	switch (c->y.mode)
-	{
-	case UISize::Mode::Absolute: c->y.absoluteValue = c->y.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->y.absoluteValue = c->y.relativeValue * Window::getHeight(); break;
-	case UISize::Mode::RelativeToEntity: c->y.absoluteValue = parent->y.absoluteValue + c->y.relativeValue * parent->height.absoluteValue; break;
-	}
-
-	switch (c->width.mode)
-	{
-	case UISize::Mode::Absolute: c->width.absoluteValue = c->width.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->width.absoluteValue = c->width.relativeValue * Window::getWidth(); break;
-	case UISize::Mode::RelativeToEntity: c->width.absoluteValue = c->width.relativeValue * parent->width.absoluteValue; break;
-	}
-
-	switch (c->height.mode)
-	{
-	case UISize::Mode::Absolute: c->height.absoluteValue = c->height.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->height.absoluteValue = c->height.relativeValue * Window::getHeight(); break;
-	case UISize::Mode::RelativeToEntity: c->height.absoluteValue = c->height.relativeValue * parent->height.absoluteValue; break;
-	}
-
+	if (c->parent != 0)
+		m_ChildRegistry[c->parent].push_back(e.entity);
 	if (m_Scene->HasComponent<UIRendererComponent>(e.entity))
 		c->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
 	if (m_Scene->HasComponent<UITextComponent>(e.entity))
 		c->fontRendererDirty = m_Scene->GetComponent<UITextComponent>(e.entity)->dirty;
-
-	if (c->parent != 0)
-		m_ChildRegistry[c->parent].push_back(e.entity);
-
-	if (m_Scene->HasComponent<UIPositionConstraintsComponent>(e.entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UIPositionConstraintsComponent>(e.entity);
-		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
-
-		FitPosition(e.entity, c, constraints);
-	}
-
-	if (m_Scene->HasComponent<UISizeConstraintsComponent>(e.entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(e.entity);
-		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
-
-		FitSize(e.entity, c, constraints);
-	}
 }
 
 void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIHoverComponent>& e)
@@ -221,6 +198,66 @@ void SceneUIHandler::OnComponentRemoved(const ComponentRemovedEvent<UIComponent>
 	{
 		std::vector<Entity>& childs = m_ChildRegistry[c->parent];
 		childs.erase(std::remove(childs.begin(), childs.end(), e.entity));
+
+		if (auto it = m_ChildRegistry.find(e.entity);
+			it != m_ChildRegistry.end())
+		{
+			if (it->second.size() != 0)
+				SONIC_LOG_WARN("Removing UI Entity that has childs. Make sure to remove the childs first");
+
+			m_ChildRegistry.erase(it);
+		}
+	}
+}
+
+void SceneUIHandler::OnEntityDeactivated(const EntityDeactivatedEvent& e)
+{
+	if (m_Scene->HasComponent<UIRendererComponent>(e.entity))
+	{
+		UIRenderer::markDirty();
+		FontRenderer::markDirty();
+	}
+
+	if (m_Scene->HasComponent<UIComponent>(e.entity))
+	{
+		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
+		if (c->parent != 0)
+		{
+			std::vector<Entity>& childs = m_ChildRegistry[c->parent];
+			childs.erase(std::remove(childs.begin(), childs.end(), e.entity));
+
+			if (auto it = m_ChildRegistry.find(e.entity);
+				it != m_ChildRegistry.end())
+			{
+				if (it->second.size() != 0)
+					SONIC_LOG_WARN("Deactivating UI Entity that has childs. Make sure to deactivate the childs first");
+
+				m_ChildRegistry.erase(it);
+			}
+		}
+	}
+}
+
+void SceneUIHandler::OnEntityReactivated(const EntityReactivatedEvent& e)
+{
+	if (m_Scene->HasComponent<UIRendererComponent>(e.entity))
+		UIRenderer::markDirty();
+	if (m_Scene->HasComponent<UITextComponent>(e.entity))
+		FontRenderer::markDirty();
+
+	if (m_Scene->HasComponent<UIComponent>(e.entity))
+	{
+		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
+		auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
+
+		Recalculate(e.entity, c, parent);
+
+		if (c->parent != 0)
+			m_ChildRegistry[c->parent].push_back(e.entity);
+		if (m_Scene->HasComponent<UIRendererComponent>(e.entity))
+			c->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
+		if (m_Scene->HasComponent<UITextComponent>(e.entity))
+			c->fontRendererDirty = m_Scene->GetComponent<UITextComponent>(e.entity)->dirty;
 	}
 }
 
@@ -763,3 +800,54 @@ void SceneUIHandler::Destroy()
 	m_ChildRegistry.clear();
 }
 
+void SceneUIHandler::Recalculate(Entity entity, UIComponent* c, UIComponent* parent)
+{
+	switch (c->x.mode)
+	{
+	case UISize::Mode::Absolute: c->x.absoluteValue = c->x.relativeValue; break;
+	case UISize::Mode::RelativeToWindow: c->x.absoluteValue = c->x.relativeValue * Window::getWidth(); break;
+	case UISize::Mode::RelativeToEntity: c->x.absoluteValue = parent->x.absoluteValue + c->x.relativeValue * parent->width.absoluteValue; break;
+	}
+
+	switch (c->y.mode)
+	{
+	case UISize::Mode::Absolute: c->y.absoluteValue = c->y.relativeValue; break;
+	case UISize::Mode::RelativeToWindow: c->y.absoluteValue = c->y.relativeValue * Window::getHeight(); break;
+	case UISize::Mode::RelativeToEntity: c->y.absoluteValue = parent->y.absoluteValue + c->y.relativeValue * parent->height.absoluteValue; break;
+	}
+
+	switch (c->width.mode)
+	{
+	case UISize::Mode::Absolute: c->width.absoluteValue = c->width.relativeValue; break;
+	case UISize::Mode::RelativeToWindow: c->width.absoluteValue = c->width.relativeValue * Window::getWidth(); break;
+	case UISize::Mode::RelativeToEntity: c->width.absoluteValue = c->width.relativeValue * parent->width.absoluteValue; break;
+	}
+
+	switch (c->height.mode)
+	{
+	case UISize::Mode::Absolute: c->height.absoluteValue = c->height.relativeValue; break;
+	case UISize::Mode::RelativeToWindow: c->height.absoluteValue = c->height.relativeValue * Window::getHeight(); break;
+	case UISize::Mode::RelativeToEntity: c->height.absoluteValue = c->height.relativeValue * parent->height.absoluteValue; break;
+	}
+
+	MarkDirty(c);
+	ResizeChildsWidth(entity, c);
+	ResizeChildsHeight(entity, c);
+
+	if (m_Scene->HasComponent<UIPositionConstraintsComponent>(entity))
+	{
+		auto* constraints = m_Scene->GetComponent<UIPositionConstraintsComponent>(entity);
+		auto* c = m_Scene->GetComponent<UIComponent>(entity);
+
+		FitPosition(entity, c, constraints);
+	}
+
+	if (m_Scene->HasComponent<UISizeConstraintsComponent>(entity))
+	{
+		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(entity);
+		auto* c = m_Scene->GetComponent<UIComponent>(entity);
+
+		FitSize(entity, c, constraints);
+	}
+
+}

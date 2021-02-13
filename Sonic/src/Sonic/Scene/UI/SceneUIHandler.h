@@ -24,11 +24,11 @@ namespace Sonic {
 		void SetHeight(Entity entity, UIComponent* component, float value);
 	
 	private:
+		SceneUIHandler(Scene* scene);
 		SceneUIHandler() = delete;
 		SceneUIHandler(const SceneUIHandler& other) = delete;
-		SceneUIHandler(Scene* scene);
 
-		void Update(float deltaSeconds);
+		void Init();
 
 		void OnMouseButtonPressed(const MouseButtonPressedEvent& e);
 		void OnMouseButtonReleased(const MouseButtonReleasedEvent& e);
@@ -42,6 +42,8 @@ namespace Sonic {
 		void OnComponentAdded(const ComponentAddedEvent<UIPositionConstraintsComponent>& e);
 		void OnComponentAdded(const ComponentAddedEvent<UISizeConstraintsComponent>& e);
 		void OnComponentRemoved(const ComponentRemovedEvent<UIComponent>& e);
+		void OnEntityDeactivated(const EntityDeactivatedEvent& e);
+		void OnEntityReactivated(const EntityReactivatedEvent& e);
 
 		void UpdateUIResizableComponentMouseButtonDown(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e);
 		void UpdateUIResizableComponentMouseButtonUp(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e);
@@ -57,6 +59,7 @@ namespace Sonic {
 
 		void FitPosition(Entity entity, UIComponent* c, UIPositionConstraintsComponent* constraints);
 		void FitSize(Entity entity, UIComponent* c, UISizeConstraintsComponent* constraints);
+		void Recalculate(Entity entity, UIComponent* c, UIComponent* parent);
 
 		void Destroy();
 

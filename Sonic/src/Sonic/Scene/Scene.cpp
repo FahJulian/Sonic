@@ -42,12 +42,6 @@ std::vector<Entity>* Scene::GetGroup(EntityGroup group)
 void Scene::DeactivateEntity(Entity entity)
 {
 	DispatchEvent(EntityDeactivatedEvent(entity));
-	if (HasComponent<UIRendererComponent>(entity))
-	{
-		UIRenderer::markDirty();
-		FontRenderer::markDirty();
-	}
-
 	m_Registry.DeactivateEntity(entity);
 }
 
@@ -61,12 +55,6 @@ void Scene::ReactivateEntity(Entity entity)
 {
 	m_Registry.ReactivateEntity(entity);
 	DispatchEvent(EntityReactivatedEvent(entity));
-
-	if (HasComponent<UIRendererComponent>(entity))
-	{
-		UIRenderer::markDirty();
-		FontRenderer::markDirty();
-	}
 }
 
 void Scene::ReactivateEntities(EntityGroup group)
@@ -101,6 +89,8 @@ void Scene::Init()
 
 	OnInit();
 
+	m_UIHandler.Init();
+
 	View<ScriptComponent>().ForEach([=](auto entity, auto* scriptComponent) 
 	{
 		scriptComponent->script->Init(this, entity);
@@ -114,8 +104,6 @@ void Scene::Update(float deltaTime)
 	OnUpdate(deltaTime);
 
 	UpdateComponents(deltaTime);
-
-	m_UIHandler.Update(deltaTime);
 
 	PollCollisionEvents();
 }

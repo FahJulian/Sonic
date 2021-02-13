@@ -87,7 +87,7 @@ void StartScene::OnLoad()
 
 	Entity optionsText = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(optionsText,
-		UISize{ UISize::Mode::RelativeToWindow, 0.6f },
+		UISize{ UISize::Mode::RelativeToWindow, 0.4f },
 		UISize{ UISize::Mode::RelativeToWindow, 0.9f },
 		UISize{ UISize::Mode::RelativeToWindow, 0.2f },
 		UISize{ UISize::Mode::Absolute, 0.1f }
