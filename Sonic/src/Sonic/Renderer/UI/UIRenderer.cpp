@@ -159,7 +159,7 @@ void UIRenderer::rebuffer(Scene* scene)
 				properties = &r->properties;
 			}
 
-			drawElement(i, c->GetX(), c->GetY(), c->GetWidth(), c->GetHeight(), c->GetZIndex(), properties);
+			drawElement(i, c->x, c->y, c->width, c->height, c->zIndex, properties);
 
 			*r->dirty = false;
 			rebuffer = true;
@@ -190,7 +190,7 @@ void UIRenderer::rebuffer(Scene* scene)
 					properties = &r->properties;
 				}
 
-				drawElement(i, c->GetX(), c->GetY(), c->GetWidth(), c->GetHeight(), c->GetZIndex(), properties);
+				drawElement(i, c->x, c->y, c->width, c->height, c->zIndex, properties);
 
 				*r->dirty = false;
 				rebuffer = true;

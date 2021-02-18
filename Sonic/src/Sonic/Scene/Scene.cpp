@@ -159,6 +159,5 @@ void Scene::Destroy()
 {
 	m_NextEntity = 1;
 	m_EntityGroups.clear();
-	m_UIHandler.Destroy();
 	m_Registry.Destroy();
 }

@@ -7,6 +7,7 @@
 #include "Sonic/Scene/ECS/Views.h"
 #include "Sonic/Renderer/UI/UIRenderer.h"
 #include "Sonic/Renderer/Font/FontRenderer.h"
+#include "UIUtils.h"
 #include "SceneUIHandler.h"
 
 using namespace Sonic;
@@ -42,6 +43,8 @@ void SceneUIHandler::Init()
 	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UIPositionConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
 	EventDispatcher::addListener<SceneUIHandler, ComponentAddedEvent<UISizeConstraintsComponent>>(this, &SceneUIHandler::OnComponentAdded);
 	EventDispatcher::addListener<SceneUIHandler, ComponentRemovedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentRemoved);
+	EventDispatcher::addListener<SceneUIHandler, ComponentRemovedEvent<UIRendererComponent>>(this, &SceneUIHandler::OnComponentRemoved);
+	EventDispatcher::addListener<SceneUIHandler, ComponentRemovedEvent<UITextComponent>>(this, &SceneUIHandler::OnComponentRemoved);
 	EventDispatcher::addListener(this, &SceneUIHandler::OnEntityDeactivated);
 	EventDispatcher::addListener(this, &SceneUIHandler::OnEntityReactivated);
 
@@ -54,12 +57,10 @@ void SceneUIHandler::Init()
 
 	for (auto [e, c] : m_Scene->View<UIComponent>())
 	{
-		auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-
-		Recalculate(e, c, parent);
+		UI::recalculate(m_Scene, c);
 
 		if (c->parent != 0)
-			m_ChildRegistry[c->parent].push_back(e);
+			m_Scene->GetComponent<UIComponent>(c->parent)->childs->push_back(e);
 	}
 }
 
@@ -69,8 +70,8 @@ void SceneUIHandler::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
 	{
 		for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
 		{
-			if (Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
-				Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
+			if (Math::isInRange(e.x, c->x, c->x + c->width) &&
+				Math::isInRange(e.y, c->y, c->y + c->height))
 			{
 				cl->clicked = true;
 			}
@@ -86,8 +87,8 @@ void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 		{
 			m_Scene->Group<UIClickListenerComponent, UIComponent>().ForEach([=](auto entity, auto cl, auto c) {
 				if (cl->clicked &&
-					Math::isInRange(e.x, c->GetX(), c->GetX() + c->GetWidth()) &&
-					Math::isInRange(e.y, c->GetY(), c->GetY() + c->GetHeight()))
+					Math::isInRange(e.x, c->x, c->x + c->width) &&
+					Math::isInRange(e.y, c->y, c->y + c->height))
 				{
 					(*cl->listener)(e);
 					cl->clicked = false;
@@ -131,19 +132,17 @@ void SceneUIHandler::OnMouseMoved(const MouseMovedEvent& e)
 		}
 
 		for (auto [entity, h, c] : m_Scene->Group<UIHoverComponent, UIComponent>())
-		h->SetHovered(e.x >= c->GetX() && e.x < c->GetX() + c->GetWidth() && e.y >= c->GetY() && e.y < c->GetY() + c->GetHeight());
+			h->SetHovered(e.x >= c->x && e.x < c->x + c->width && e.y >= c->y && e.y < c->y + c->height);
 	}
 }
 
 void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIComponent>& e)
 {
 	auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
-	auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-
-	Recalculate(e.entity, c, parent);
+	UI::recalculate(m_Scene, c);
 
 	if (c->parent != 0)
-		m_ChildRegistry[c->parent].push_back(e.entity);
+		m_Scene->GetComponent<UIComponent>(c->parent)->childs->push_back(e.entity);
 	if (m_Scene->HasComponent<UIRendererComponent>(e.entity))
 		c->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
 	if (m_Scene->HasComponent<UITextComponent>(e.entity))
@@ -158,12 +157,16 @@ void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIHoverComponent
 
 void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UITextComponent>& e)
 {
+	FontRenderer::markDirty();
+
 	if (m_Scene->HasComponent<UIComponent>(e.entity))
 		m_Scene->GetComponent<UIComponent>(e.entity)->fontRendererDirty = m_Scene->GetComponent<UITextComponent>(e.entity)->dirty;
 }
 
 void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIRendererComponent>& e)
 {
+	UIRenderer::markDirty();
+
 	if (m_Scene->HasComponent<UIComponent>(e.entity))
 		m_Scene->GetComponent<UIComponent>(e.entity)->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
 	if (m_Scene->HasComponent<UIHoverComponent>(e.entity))
@@ -177,7 +180,7 @@ void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UIPositionConstr
 		auto* constraints = m_Scene->GetComponent<UIPositionConstraintsComponent>(e.entity);
 		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
 
-		FitPosition(e.entity, c, constraints);
+		UI::checkPosition(m_Scene, c, constraints);
 	}
 }
 
@@ -188,7 +191,7 @@ void SceneUIHandler::OnComponentAdded(const ComponentAddedEvent<UISizeConstraint
 		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(e.entity);
 		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
 
-		FitSize(e.entity, c, constraints);
+		UI::checkSize(m_Scene, c, constraints);
 	}
 }
 
@@ -197,18 +200,22 @@ void SceneUIHandler::OnComponentRemoved(const ComponentRemovedEvent<UIComponent>
 	auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
 	if (c->parent != 0)
 	{
-		std::vector<Entity>& childs = m_ChildRegistry[c->parent];
+		std::vector<Entity>& childs = *m_Scene->GetComponent<UIComponent>(c->parent)->childs;
 		childs.erase(std::remove(childs.begin(), childs.end(), e.entity));
 
-		if (auto it = m_ChildRegistry.find(e.entity);
-			it != m_ChildRegistry.end())
-		{
-			if (it->second.size() != 0)
-				SONIC_LOG_WARN("Removing UI Entity that has childs. Make sure to remove the childs first");
-
-			m_ChildRegistry.erase(it);
-		}
+		if (c->childs->size() != 0)
+			SONIC_LOG_WARN("Deactivating UI Entity that has childs. Make sure to deactivate the childs first");
 	}
+}
+
+void SceneUIHandler::OnComponentRemoved(const ComponentRemovedEvent<UIRendererComponent>& e)
+{
+	UIRenderer::markDirty();
+}
+
+void SceneUIHandler::OnComponentRemoved(const ComponentRemovedEvent<UITextComponent>& e)
+{
+	FontRenderer::markDirty();
 }
 
 void SceneUIHandler::OnEntityDeactivated(const EntityDeactivatedEvent& e)
@@ -224,17 +231,11 @@ void SceneUIHandler::OnEntityDeactivated(const EntityDeactivatedEvent& e)
 		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
 		if (c->parent != 0)
 		{
-			std::vector<Entity>& childs = m_ChildRegistry[c->parent];
+			std::vector<Entity>& childs = *m_Scene->GetComponent<UIComponent>(c->parent)->childs;
 			childs.erase(std::remove(childs.begin(), childs.end(), e.entity));
 
-			if (auto it = m_ChildRegistry.find(e.entity);
-				it != m_ChildRegistry.end())
-			{
-				if (it->second.size() != 0)
-					SONIC_LOG_WARN("Deactivating UI Entity that has childs. Make sure to deactivate the childs first");
-
-				m_ChildRegistry.erase(it);
-			}
+			if (c->childs->size() != 0)
+				SONIC_LOG_WARN("Deactivating UI Entity that has childs. Make sure to deactivate the childs first");
 		}
 	}
 }
@@ -249,12 +250,10 @@ void SceneUIHandler::OnEntityReactivated(const EntityReactivatedEvent& e)
 	if (m_Scene->HasComponent<UIComponent>(e.entity))
 	{
 		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
-		auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-
-		Recalculate(e.entity, c, parent);
+		UI::recalculate(m_Scene, c);
 
 		if (c->parent != 0)
-			m_ChildRegistry[c->parent].push_back(e.entity);
+			m_Scene->GetComponent<UIComponent>(c->parent)->childs->push_back(e.entity);
 		if (m_Scene->HasComponent<UIRendererComponent>(e.entity))
 			c->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
 		if (m_Scene->HasComponent<UITextComponent>(e.entity))
@@ -264,20 +263,8 @@ void SceneUIHandler::OnEntityReactivated(const EntityReactivatedEvent& e)
 
 void SceneUIHandler::OnWindowResized(const WindowResizedEvent& e)
 {
-	for (auto [entity, c] : m_Scene->View<UIComponent>())
-	{
-		if (c->x.mode == UISize::Mode::RelativeToWindow)
-			SetX(entity, c, c->x.relativeValue * e.width, nullptr, c->width.mode != UISize::Mode::RelativeToWindow);
-
-		if (c->y.mode == UISize::Mode::RelativeToWindow)
-			SetY(entity, c, c->y.relativeValue * e.height, nullptr, c->height.mode != UISize::Mode::RelativeToWindow);
-
-		if (c->width.mode == UISize::Mode::RelativeToWindow)
-			SetWidth(entity, c, c->width.relativeValue * e.width);
-
-		if (c->height.mode == UISize::Mode::RelativeToWindow)
-			SetHeight(entity, c, c->height.relativeValue * e.height);
-	}
+	for (auto c : m_Scene->ViewComponents<UIComponent>())
+		UI::recalculate(m_Scene, c);
 }
 
 void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
@@ -298,42 +285,39 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(Entity entity, UI
 		s_HoveredAction = Action::Resizing;
 	}
 
-	UIComponent* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
+	auto* positionConstraints = m_Scene->HasComponent<UIPositionConstraintsComponent>(entity) ?
+		m_Scene->GetComponent<UIPositionConstraintsComponent>(entity) : nullptr;
+	auto* sizeConstraints = m_Scene->HasComponent<UISizeConstraintsComponent>(entity) ?
+		m_Scene->GetComponent<UISizeConstraintsComponent>(entity) : nullptr;
 
 	bool resized = false;
 	if (r->bordersHovered.bottom)
 	{
-		float heightBefore = c->GetHeight();
-		SetHeight(entity, c, c->GetHeight() + c->GetY() - e.y, parent);
-
-		float dy = c->GetHeight() - heightBefore;
-		SetY(entity, c, c->GetY() - dy, parent);
-
+		float heightBefore = c->height;
+		UI::setHeight(m_Scene, c, c->height + c->y - e.y, sizeConstraints);
+		float dy = c->height - heightBefore;
+		UI::setY(m_Scene, c, c->y - dy, positionConstraints);
 		resized = true;
 	}
 	else if (r->bordersHovered.top)
 	{
-		float dy = e.y - (c->GetY() + c->GetHeight());
-		SetHeight(entity, c, c->GetHeight() + dy, parent);
-
+		float dy = e.y - (c->y + c->height);
+		UI::setHeight(m_Scene, c, c->height + dy, sizeConstraints);
 		resized = true;
 	}
 
 	if (r->bordersHovered.left)
 	{
-		float widthBefore = c->GetWidth();
-		SetWidth(entity, c, c->GetWidth() + c->GetX() - e.x, parent);
-
-		float dx = c->GetWidth() - widthBefore;
-		SetX(entity, c, c->GetX() - dx, parent);
-
+		float widthBefore = c->width;
+		UI::setWidth(m_Scene, c, c->width + c->x - e.x, sizeConstraints);
+		float dx = c->width - widthBefore;
+		UI::setX(m_Scene, c, c->x - dx, positionConstraints);
 		resized = true;
 	}
 	else if (r->bordersHovered.right)
 	{
-		float dx = e.x - (c->GetX() + c->GetWidth());
-		SetWidth(entity, c, c->GetWidth() + dx, parent);
-
+		float dx = e.x - (c->x + c->width);
+		UI::setWidth(m_Scene, c, c->width + dx, sizeConstraints);
 		resized = true;
 	}
 
@@ -341,7 +325,7 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(Entity entity, UI
 	{
 		s_CurrentAction = Action::Resizing;
 		if (r->onResized)
-			r->onResized(UIEntityResizedEvent{ c->GetWidth(), c->GetHeight() });
+			r->onResized(UIEntityResizedEvent{ c->width, c->height });
 	}
 }
 
@@ -349,19 +333,19 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonUp(Entity entity, UIRe
 {
 	r->bordersHovered = { false, false, false, false };
 
-	if (Math::isInRange(e.beforeX, c->GetX() - r->grabSize, c->GetX() + c->GetWidth() + r->grabSize))
+	if (Math::isInRange(e.beforeX, c->x - r->grabSize, c->x + c->width + r->grabSize))
 	{
-		if (r->bordersResizable.bottom && Math::isInRange(e.beforeY, c->GetY() - r->grabSize, c->GetY() + r->grabSize))
+		if (r->bordersResizable.bottom && Math::isInRange(e.beforeY, c->y - r->grabSize, c->y + r->grabSize))
 			r->bordersHovered.bottom = true;
-		else if (r->bordersResizable.top && Math::isInRange(e.beforeY, c->GetY() + c->GetHeight() - r->grabSize, c->GetY() + c->GetHeight() + r->grabSize))
+		else if (r->bordersResizable.top && Math::isInRange(e.beforeY, c->y + c->height - r->grabSize, c->y + c->height + r->grabSize))
 			r->bordersHovered.top = true;
 	}
 
-	if (Math::isInRange(e.beforeY, c->GetY() - r->grabSize, c->GetY() + c->GetHeight() + r->grabSize))
+	if (Math::isInRange(e.beforeY, c->y - r->grabSize, c->y + c->height + r->grabSize))
 	{
-		if (r->bordersResizable.left && Math::isInRange(e.beforeX, c->GetX() - r->grabSize, c->GetX() + r->grabSize))
+		if (r->bordersResizable.left && Math::isInRange(e.beforeX, c->x - r->grabSize, c->x + r->grabSize))
 			r->bordersHovered.left = true;
-		else if (r->bordersResizable.right && Math::isInRange(e.beforeX, c->GetX() + c->GetWidth() - r->grabSize, c->GetX() + c->GetWidth() + r->grabSize))
+		else if (r->bordersResizable.right && Math::isInRange(e.beforeX, c->x + c->width - r->grabSize, c->x + c->width + r->grabSize))
 			r->bordersHovered.right = true;
 	}
 
@@ -384,8 +368,8 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonUp(Entity entity, UIRe
 
 void SceneUIHandler::UpdateUIMovableComponentMouseButtonUp(UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e)
 {
-	if (Sonic::Math::isInRange(e.beforeX, c->GetX(), c->GetX() + c->GetWidth()) &&
-		Sonic::Math::isInRange(e.beforeY, c->GetY(), c->GetY() + c->GetHeight()))
+	if (Sonic::Math::isInRange(e.beforeX, c->x, c->x + c->width) &&
+		Sonic::Math::isInRange(e.beforeY, c->y, c->y + c->height))
 	{
 		m->hovered = true;
 		Window::setCursor(m->cursor);
@@ -404,451 +388,17 @@ void SceneUIHandler::UpdateUIMovableComponentMouseButtonDown(Entity entity, UIMo
 		Window::setCursor(m->cursor);
 		s_CurrentAction = Action::Moving;
 
-		UIComponent* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-		SetX(entity, c, e.x - c->GetWidth() / 2, parent);
-		SetY(entity, c, e.y - c->GetHeight() / 2, parent);
+		auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
+		auto* constraints = m_Scene->HasComponent<UIPositionConstraintsComponent>(entity) ?
+			m_Scene->GetComponent<UIPositionConstraintsComponent>(entity) : nullptr;
+
+		float deltaX = e.x - c->width / 2 - c->x;
+		float deltaY = e.y - c->height / 2 - c->y;
+
+		UI::setX(m_Scene, c, c->x + deltaX, constraints);
+		UI::setY(m_Scene, c, c->y + deltaY, constraints);
 
 		if (m->onMoved)
-			(*m->onMoved)(UIEntityMovedEvent{ e.deltaX, e.deltaY });
+			(*m->onMoved)(UIEntityMovedEvent{ deltaX, deltaY });
 	}
-}
-
-void SceneUIHandler::SetX(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds)
-{
-	float relativeValue = 0.0f;
-	switch (component->x.mode)
-	{
-	case UISize::Mode::Absolute: relativeValue = value; break;
-	case UISize::Mode::RelativeToWindow: relativeValue = value / Window::getWidth(); break;
-	case UISize::Mode::RelativeToEntity: relativeValue = (value - parent->x.absoluteValue) / parent->width.absoluteValue; break;
-	}
-
-	if (m_Scene->HasComponent<UIPositionConstraintsComponent>(entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UIPositionConstraintsComponent>(entity);
-
-		if (relativeValue < constraints->minX)
-			relativeValue = constraints->minX;
-		else if (relativeValue > constraints->maxX)
-			relativeValue = constraints->maxX;
-
-		component->x.relativeValue = relativeValue;
-
-		switch (component->x.mode)
-		{
-		case UISize::Mode::Absolute: component->x.absoluteValue = relativeValue; break;
-		case UISize::Mode::RelativeToWindow: component->x.absoluteValue = relativeValue *  Window::getWidth(); break;
-		case UISize::Mode::RelativeToEntity: component->x.absoluteValue = parent->x.absoluteValue + relativeValue * parent->width.absoluteValue;
-		}
-	}
-	else
-	{
-		component->x.absoluteValue = value;
-		component->x.relativeValue = relativeValue;
-	}
-
-	MarkDirty(component);
-
-	if (resizeChilds)
-		ResizeChildsX(entity, component);
-}
-
-void SceneUIHandler::SetY(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds)
-{
-	float relativeValue = 0.0f;
-	switch (component->y.mode)
-	{
-	case UISize::Mode::Absolute: relativeValue = value; break;
-	case UISize::Mode::RelativeToWindow: relativeValue = value / Window::getHeight(); break;
-	case UISize::Mode::RelativeToEntity: relativeValue = (value - parent->y.absoluteValue) / parent->height.absoluteValue; break;
-	}
-
-	if (m_Scene->HasComponent<UIPositionConstraintsComponent>(entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UIPositionConstraintsComponent>(entity);
-
-		if (relativeValue < constraints->minY)
-			relativeValue = constraints->minY;
-		else if (relativeValue > constraints->maxY)
-			relativeValue = constraints->maxY;
-
-		component->y.relativeValue = relativeValue;
-
-		switch (component->y.mode)
-		{
-		case UISize::Mode::Absolute: component->y.absoluteValue = relativeValue; break;
-		case UISize::Mode::RelativeToWindow: component->y.absoluteValue = relativeValue * Window::getHeight(); break;
-		case UISize::Mode::RelativeToEntity: component->y.absoluteValue = parent->y.absoluteValue + relativeValue * parent->height.absoluteValue;
-		}
-	}
-	else
-	{
-		component->y.absoluteValue = value;
-		component->y.relativeValue = relativeValue;
-	}
-
-	MarkDirty(component);
-
-	if (resizeChilds)
-		ResizeChildsY(entity, component);
-}
-
-void SceneUIHandler::SetWidth(Entity entity, UIComponent* component, float value, UIComponent* parent)
-{
-	if (value < 0.0f)
-		value = 0.0f;
-
-	float relativeValue = 0.0f;
-	switch (component->width.mode)
-	{
-	case UISize::Mode::Absolute: relativeValue = value; break;
-	case UISize::Mode::RelativeToWindow: relativeValue = value / Window::getWidth(); break;
-	case UISize::Mode::RelativeToEntity: relativeValue = value / parent->width.absoluteValue; break;
-	}
-
-	if (m_Scene->HasComponent<UISizeConstraintsComponent>(entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(entity);
-
-		if (relativeValue < constraints->minWidth)
-			relativeValue = constraints->minWidth;
-		else if (relativeValue > constraints->maxWidth)
-			relativeValue = constraints->maxWidth;
-
-		component->width.relativeValue = relativeValue;
-
-		switch (component->width.mode)
-		{
-		case UISize::Mode::Absolute: component->width.absoluteValue = relativeValue; break;
-		case UISize::Mode::RelativeToWindow: component->width.absoluteValue = relativeValue * Window::getWidth(); break;
-		case UISize::Mode::RelativeToEntity: component->width.absoluteValue = relativeValue * parent->width.absoluteValue;
-		}
-	}
-	else
-	{
-		component->width.absoluteValue = value;
-		component->width.relativeValue = relativeValue;
-	}
-
-	MarkDirty(component);
-	ResizeChildsWidth(entity, component);
-}
-
-void SceneUIHandler::SetHeight(Entity entity, UIComponent* component, float value, UIComponent* parent)
-{
-	if (value < 0.0f)
-		value = 0.0f;
-
-	float relativeValue = 0.0f;
-	switch (component->height.mode)
-	{
-	case UISize::Mode::Absolute: relativeValue = value; break;
-	case UISize::Mode::RelativeToWindow: relativeValue = value / Window::getHeight(); break;
-	case UISize::Mode::RelativeToEntity: relativeValue = value / parent->height.absoluteValue; break;
-	}
-
-	if (m_Scene->HasComponent<UISizeConstraintsComponent>(entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(entity);
-
-		if (relativeValue < constraints->minHeight)
-			relativeValue = constraints->minHeight;
-		else if (relativeValue > constraints->maxHeight)
-			relativeValue = constraints->maxHeight;
-
-		component->height.relativeValue = relativeValue;
-
-		switch (component->height.mode)
-		{
-		case UISize::Mode::Absolute: component->height.absoluteValue = relativeValue; break;
-		case UISize::Mode::RelativeToWindow: component->height.absoluteValue = relativeValue * Window::getHeight(); break;
-		case UISize::Mode::RelativeToEntity: component->height.absoluteValue = relativeValue * parent->height.absoluteValue;
-		}
-	}
-	else
-	{
-		component->height.absoluteValue = value;
-		component->height.relativeValue = relativeValue;
-	}
-
-	MarkDirty(component);
-	ResizeChildsHeight(entity, component);
-}
-
-void SceneUIHandler::MarkDirty(UIComponent* component)
-{
-	if (component->uiRendererDirty)
-		*component->uiRendererDirty = true;
-	if (component->fontRendererDirty)
-		*component->fontRendererDirty = true;
-}
-
-void SceneUIHandler::ResizeChildsX(Entity parent, UIComponent* c)
-{
-	for (Entity child : m_ChildRegistry[parent])
-	{
-		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
-		if (childComponent->x.mode == UISize::Mode::RelativeToEntity)
-		{
-			childComponent->x.absoluteValue = c->x.absoluteValue + childComponent->x.relativeValue * c->width.absoluteValue;
-			ResizeChildsX(child, childComponent);
-			MarkDirty(childComponent);
-		}
-	}
-}
-
-void SceneUIHandler::ResizeChildsY(Entity parent, UIComponent* c)
-{
-	for (Entity child : m_ChildRegistry[parent])
-	{
-		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
-		childComponent->y.absoluteValue = c->y.absoluteValue + childComponent->y.relativeValue * c->height.absoluteValue;
-		ResizeChildsY(child, childComponent);
-		MarkDirty(childComponent);
-	}
-}
-
-void SceneUIHandler::ResizeChildsWidth(Entity parent, UIComponent* c)
-{
-	for (Entity child : m_ChildRegistry[parent])
-	{
-		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
-
-		if (childComponent->x.mode == UISize::Mode::RelativeToEntity)
-		{
-			childComponent->x.absoluteValue = c->x.absoluteValue + childComponent->x.relativeValue * c->width.absoluteValue;
-			if (childComponent->width.mode != UISize::Mode::RelativeToEntity)
-			{
-				ResizeChildsX(child, childComponent);
-				MarkDirty(childComponent);
-			}
-		}
-
-		if (childComponent->width.mode == UISize::Mode::RelativeToEntity)
-		{
-			childComponent->width.absoluteValue = childComponent->width.relativeValue * c->width.absoluteValue;
-			ResizeChildsWidth(child, childComponent);
-			MarkDirty(childComponent);
-		}
-	}
-}
-
-void SceneUIHandler::ResizeChildsHeight(Entity parent, UIComponent* c)
-{
-	for (Entity child : m_ChildRegistry[parent])
-	{
-		UIComponent* childComponent = m_Scene->GetComponent<UIComponent>(child);
-
-		if (childComponent->y.mode == UISize::Mode::RelativeToEntity)
-		{
-			childComponent->y.absoluteValue = c->y.absoluteValue + childComponent->y.relativeValue * c->height.absoluteValue;
-			if (childComponent->height.mode != UISize::Mode::RelativeToEntity)
-			{
-				ResizeChildsY(child, childComponent);
-				MarkDirty(childComponent);
-			}
-		}
-
-		if (childComponent->height.mode == UISize::Mode::RelativeToEntity)
-		{
-			childComponent->height.absoluteValue = childComponent->height.relativeValue * c->height.absoluteValue;
-			ResizeChildsHeight(child, childComponent);
-			MarkDirty(childComponent);
-		}
-	}
-}
-
-void SceneUIHandler::FitPosition(Entity entity, UIComponent* c, UIPositionConstraintsComponent* constraints)
-{
-	auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-
-	if (c->x.absoluteValue < constraints->minX)
-	{
-		c->x.relativeValue = constraints->minX;
-		switch (c->x.mode)
-		{
-		case UISize::Mode::Absolute: c->x.absoluteValue = constraints->minX; break;
-		case UISize::Mode::RelativeToWindow: c->x.absoluteValue = constraints->minX * Window::getWidth(); break;
-		case UISize::Mode::RelativeToEntity: c->x.absoluteValue = parent->x.absoluteValue + constraints->minX * parent->width.absoluteValue; break;
-		}
-
-		ResizeChildsX(entity, c);
-		MarkDirty(c);
-	}
-	else if (c->x.absoluteValue > constraints->maxX)
-	{
-		c->x.relativeValue = constraints->maxX;
-		switch (c->x.mode)
-		{
-		case UISize::Mode::Absolute: c->x.absoluteValue = constraints->maxX; break;
-		case UISize::Mode::RelativeToWindow: c->x.absoluteValue = constraints->maxX * Window::getWidth(); break;
-		case UISize::Mode::RelativeToEntity: c->x.absoluteValue = parent->x.absoluteValue + constraints->maxX * parent->width.absoluteValue; break;
-		}
-
-		ResizeChildsX(entity, c);
-		MarkDirty(c);
-	}
-
-	if (c->y.absoluteValue < constraints->minY)
-	{
-		c->y.relativeValue = constraints->minY;
-		switch (c->y.mode)
-		{
-		case UISize::Mode::Absolute: c->y.absoluteValue = constraints->minY; break;
-		case UISize::Mode::RelativeToWindow: c->y.absoluteValue = constraints->minY * Window::getHeight(); break;
-		case UISize::Mode::RelativeToEntity: c->y.absoluteValue = parent->y.absoluteValue + constraints->minY * parent->height.absoluteValue; break;
-		}
-
-		ResizeChildsY(entity, c);
-		MarkDirty(c);
-	}
-	else if (c->y.absoluteValue > constraints->maxY)
-	{
-		c->y.relativeValue = constraints->maxY;
-		switch (c->y.mode)
-		{
-		case UISize::Mode::Absolute: c->y.absoluteValue = constraints->maxY; break;
-		case UISize::Mode::RelativeToWindow: c->y.absoluteValue = constraints->maxY * Window::getHeight(); break;
-		case UISize::Mode::RelativeToEntity: c->y.absoluteValue = parent->y.absoluteValue + constraints->maxY * parent->height.absoluteValue; break;
-		}
-
-		ResizeChildsY(entity, c);
-		MarkDirty(c);
-	}
-}
-
-void SceneUIHandler::FitSize(Entity entity, UIComponent* c, UISizeConstraintsComponent* constraints)
-{
-	auto* parent = c->parent != 0 ? m_Scene->GetComponent<UIComponent>(c->parent) : nullptr;
-
-	if (c->width.absoluteValue < constraints->minWidth)
-	{
-		c->width.relativeValue = constraints->minWidth;
-		switch (c->width.mode)
-		{
-		case UISize::Mode::Absolute: c->width.absoluteValue = constraints->minWidth; break;
-		case UISize::Mode::RelativeToWindow: c->width.absoluteValue = constraints->minWidth * Window::getWidth(); break;
-		case UISize::Mode::RelativeToEntity: c->width.absoluteValue = constraints->minWidth * parent->width.absoluteValue; break;
-		}
-
-		ResizeChildsWidth(entity, c);
-		MarkDirty(c);
-	}
-	else if (c->width.absoluteValue > constraints->maxWidth)
-	{
-		c->width.relativeValue = constraints->maxWidth;
-		switch (c->width.mode)
-		{
-		case UISize::Mode::Absolute: c->width.absoluteValue = constraints->maxWidth; break;
-		case UISize::Mode::RelativeToWindow: c->width.absoluteValue = constraints->maxWidth * Window::getWidth(); break;
-		case UISize::Mode::RelativeToEntity: c->width.absoluteValue = constraints->maxWidth * parent->width.absoluteValue; break;
-		}
-
-		ResizeChildsWidth(entity, c);
-		MarkDirty(c);
-	}
-
-	if (c->height.absoluteValue < constraints->minHeight)
-	{
-		c->height.relativeValue = constraints->minHeight;
-		switch (c->height.mode)
-		{
-		case UISize::Mode::Absolute: c->height.absoluteValue = constraints->minHeight; break;
-		case UISize::Mode::RelativeToWindow: c->height.absoluteValue = constraints->minHeight * Window::getHeight(); break;
-		case UISize::Mode::RelativeToEntity: c->height.absoluteValue = constraints->minHeight * parent->height.absoluteValue; break;
-		}
-
-		ResizeChildsHeight(entity, c);
-		MarkDirty(c);
-	}
-	else if (c->height.absoluteValue > constraints->maxHeight)
-	{
-		c->height.relativeValue = constraints->maxHeight;
-		switch (c->height.mode)
-		{
-		case UISize::Mode::Absolute: c->height.absoluteValue = constraints->maxHeight; break;
-		case UISize::Mode::RelativeToWindow: c->height.absoluteValue = constraints->maxHeight * Window::getHeight(); break;
-		case UISize::Mode::RelativeToEntity: c->height.absoluteValue = constraints->maxHeight * parent->height.absoluteValue; break;
-		}
-
-		ResizeChildsHeight(entity, c);
-		MarkDirty(c);
-	}
-}
-
-void SceneUIHandler::SetX(Entity entity, UIComponent* component, float value, bool resizeChilds)
-{
-	SetX(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr, resizeChilds);
-}
-
-void SceneUIHandler::SetY(Entity entity, UIComponent* component, float value, bool resizeChilds)
-{
-	SetY(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr, resizeChilds);
-}
-
-void SceneUIHandler::SetWidth(Entity entity, UIComponent* component, float value)
-{
-	SetWidth(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr);
-}
-
-void SceneUIHandler::SetHeight(Entity entity, UIComponent* component, float value)
-{
-	SetHeight(entity, component, value, component->parent != 0 ? m_Scene->GetComponent<UIComponent>(component->parent) : nullptr);
-}
-
-void SceneUIHandler::Destroy()
-{
-	m_ChildRegistry.clear();
-}
-
-void SceneUIHandler::Recalculate(Entity entity, UIComponent* c, UIComponent* parent)
-{
-	switch (c->x.mode)
-	{
-	case UISize::Mode::Absolute: c->x.absoluteValue = c->x.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->x.absoluteValue = c->x.relativeValue * Window::getWidth(); break;
-	case UISize::Mode::RelativeToEntity: c->x.absoluteValue = parent->x.absoluteValue + c->x.relativeValue * parent->width.absoluteValue; break;
-	}
-
-	switch (c->y.mode)
-	{
-	case UISize::Mode::Absolute: c->y.absoluteValue = c->y.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->y.absoluteValue = c->y.relativeValue * Window::getHeight(); break;
-	case UISize::Mode::RelativeToEntity: c->y.absoluteValue = parent->y.absoluteValue + c->y.relativeValue * parent->height.absoluteValue; break;
-	}
-
-	switch (c->width.mode)
-	{
-	case UISize::Mode::Absolute: c->width.absoluteValue = c->width.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->width.absoluteValue = c->width.relativeValue * Window::getWidth(); break;
-	case UISize::Mode::RelativeToEntity: c->width.absoluteValue = c->width.relativeValue * parent->width.absoluteValue; break;
-	}
-
-	switch (c->height.mode)
-	{
-	case UISize::Mode::Absolute: c->height.absoluteValue = c->height.relativeValue; break;
-	case UISize::Mode::RelativeToWindow: c->height.absoluteValue = c->height.relativeValue * Window::getHeight(); break;
-	case UISize::Mode::RelativeToEntity: c->height.absoluteValue = c->height.relativeValue * parent->height.absoluteValue; break;
-	}
-
-	MarkDirty(c);
-	ResizeChildsWidth(entity, c);
-	ResizeChildsHeight(entity, c);
-
-	if (m_Scene->HasComponent<UIPositionConstraintsComponent>(entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UIPositionConstraintsComponent>(entity);
-		auto* c = m_Scene->GetComponent<UIComponent>(entity);
-
-		FitPosition(entity, c, constraints);
-	}
-
-	if (m_Scene->HasComponent<UISizeConstraintsComponent>(entity))
-	{
-		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(entity);
-		auto* c = m_Scene->GetComponent<UIComponent>(entity);
-
-		FitSize(entity, c, constraints);
-	}
-
 }

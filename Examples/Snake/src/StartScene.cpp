@@ -1,6 +1,8 @@
 #include "StartScene.h"
 #include "Settings.h"
 
+#include "Sonic/Scene/UI/UIUtils.h"
+
 class Animation : public Script
 {
 public:
@@ -35,7 +37,7 @@ public:
 			for (Entity entity : *m_Scene->GetGroup(m_Group))
 			{
 				UIComponent* c = m_Scene->GetComponent<UIComponent>(entity);
-				m_Scene->GetUIHandler().SetX(entity, c, c->GetX() - (offset - m_LastOffset));
+				UI::setX(m_Scene, entity, c, c->GetX() - (offset - m_LastOffset));
 			}
 
 			m_LastOffset = offset;
@@ -94,14 +96,23 @@ void StartScene::OnLoad()
 	);
 	AddComponent<UITextComponent>(optionsText, font, Colors::White, "Options");
 
-	Entity fovSlider = AddEntity(optionsMenu);
-	AddComponent<UIComponent>(fovSlider,
-		UISize{ UISize::Mode::RelativeToWindow, 0.15f },
-		UISize{ UISize::Mode::RelativeToWindow, 0.75f },
-		UISize{ UISize::Mode::RelativeToWindow, 0.3f },
-		UISize{ UISize::Mode::Absolute, 40 }
+	Entity test = AddEntity();
+	AddComponent<UIRendererComponent>(test, UIRendererProperties(Colors::Orange));
+	AddComponent<UIComponent>(test,
+		UISize{ UISize::Mode::WindowCenter, 0.0f },
+		UISize{ UISize::Mode::WindowCenter, 0.0f },
+		UISize{ UISize::Mode::Absolute, 400 },
+		UISize{ UISize::Mode::Absolute, 300 }
 	);
-	AddComponent<UIRendererComponent>(fovSlider, UIRendererProperties(Colors::DarkGray).Border(Colors::Black, 2));
+
+	//Entity fovSlider = AddEntity(optionsMenu);
+	//AddComponent<UIComponent>(fovSlider,
+	//	UISize{ UISize::Mode::WindowCenter, 0.35f },
+	//	UISize{ UISize::Mode::RelativeToWindow, 0.75f },
+	//	UISize{ UISize::Mode::RelativeToWindow, 0.3f },
+	//	UISize{ UISize::Mode::Absolute, 40 }
+	//);
+	//AddComponent<UIRendererComponent>(fovSlider, UIRendererProperties(Colors::DarkGray).Border(Colors::Black, 2));
 
 	Entity slider = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(slider, UISize::Mode::RelativeToEntity, (1.0f - 0.08f) / 2.0f, 0.0f, 0.08f, 1.0f, fovSlider);
@@ -116,7 +127,7 @@ void StartScene::OnLoad()
 		auto* sliderComponent = GetComponent<UIComponent>(slider);
 		auto* backgroundComponent = GetComponent<UIComponent>(fovSlider);
 
-		float percentage = (sliderComponent->GetX() - backgroundComponent->GetX()) / (backgroundComponent->GetWidth() * (1.0f - 0.1f));
+		float percentage = (sliderComponent->GetX() - backgroundComponent->GetX()) / (backgroundComponent->GetWidth() * (1.0f - 0.08f));
 		onSlide(UISliderEvent{ percentage });
 		}, StandardCursors::Link
 	);
@@ -125,9 +136,9 @@ void StartScene::OnLoad()
 		auto* sliderComponent = GetComponent<UIComponent>(slider);
 		auto* backgroundComponent = GetComponent<UIComponent>(fovSlider);
 
-		GetUIHandler().SetX(slider, sliderComponent, e.x - sliderComponent->GetWidth() / 2, backgroundComponent);
+		UI::setX(this, slider, sliderComponent, e.x - sliderComponent->GetWidth() / 2);
 
-		float percentage = (sliderComponent->GetX() - backgroundComponent->GetX()) / (backgroundComponent->GetWidth() * (1.0f - 0.1f));
+		float percentage = (sliderComponent->GetX() - backgroundComponent->GetX()) / (backgroundComponent->GetWidth() * (1.0f - 0.08f));
 		onSlide(UISliderEvent{ percentage });
 	});
 

@@ -1,10 +1,7 @@
 #pragma once
-#include <vector>
-#include <unordered_map>
-#include "Sonic/Scene/ECS/Entity.h"
 #include "Sonic/Event/Events.h"
+#include "Sonic/Scene/ECS/Entity.h"
 #include "Sonic/Scene/Components/UIComponents.h"
-#include "UISize.h"
 
 namespace Sonic {
 
@@ -12,17 +9,6 @@ namespace Sonic {
 
 	class SceneUIHandler
 	{
-	public:
-		void SetX(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds = true);
-		void SetY(Entity entity, UIComponent* component, float value, UIComponent* parent, bool resizeChilds = true);
-		void SetWidth(Entity entity, UIComponent* component, float value, UIComponent* parent);
-		void SetHeight(Entity entity, UIComponent* component, float value, UIComponent* paren);
-
-		void SetX(Entity entity, UIComponent* component, float value, bool resizeChilds = true);
-		void SetY(Entity entity, UIComponent* component, float value, bool resizeChilds = true);
-		void SetWidth(Entity entity, UIComponent* component, float value);
-		void SetHeight(Entity entity, UIComponent* component, float value);
-	
 	private:
 		SceneUIHandler(Scene* scene);
 		SceneUIHandler() = delete;
@@ -42,6 +28,8 @@ namespace Sonic {
 		void OnComponentAdded(const ComponentAddedEvent<UIPositionConstraintsComponent>& e);
 		void OnComponentAdded(const ComponentAddedEvent<UISizeConstraintsComponent>& e);
 		void OnComponentRemoved(const ComponentRemovedEvent<UIComponent>& e);
+		void OnComponentRemoved(const ComponentRemovedEvent<UIRendererComponent>& e);
+		void OnComponentRemoved(const ComponentRemovedEvent<UITextComponent>& e);
 		void OnEntityDeactivated(const EntityDeactivatedEvent& e);
 		void OnEntityReactivated(const EntityReactivatedEvent& e);
 
@@ -50,21 +38,7 @@ namespace Sonic {
 		void UpdateUIMovableComponentMouseButtonDown(Entity entity, UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e);
 		void UpdateUIMovableComponentMouseButtonUp(UIMovableComponent* m, UIComponent* c, const MouseMovedEvent& e);
 
-		void ResizeChildsX(Entity parent, UIComponent* c);
-		void ResizeChildsY(Entity parent, UIComponent* c);
-		void ResizeChildsWidth(Entity parent, UIComponent* c);
-		void ResizeChildsHeight(Entity parent, UIComponent* c);
-
-		void MarkDirty(UIComponent* component);
-
-		void FitPosition(Entity entity, UIComponent* c, UIPositionConstraintsComponent* constraints);
-		void FitSize(Entity entity, UIComponent* c, UISizeConstraintsComponent* constraints);
-		void Recalculate(Entity entity, UIComponent* c, UIComponent* parent);
-
-		void Destroy();
-
 		Scene* m_Scene;
-		std::unordered_map<Entity, std::vector<Entity>> m_ChildRegistry;
 
 		friend class Scene;
 	};

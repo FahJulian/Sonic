@@ -6,12 +6,21 @@ namespace Sonic {
 	{
 		enum class Mode : uint8_t
 		{
-			Absolute, RelativeToEntity, RelativeToWindow
+			Absolute, 
+			WindowCenter,
+			RelativeToEntity, 
+			RelativeToWindow,
 		};
 	
+		float absoluteValue;
+
 		Mode mode;
 		float relativeValue;
-		float absoluteValue;
+
+		UISize(Mode mode, float relativeValue)
+			: absoluteValue(mode == Mode::Absolute ? relativeValue : 0.0f), mode(mode), relativeValue(relativeValue)
+		{
+		}
 	};
 
 }

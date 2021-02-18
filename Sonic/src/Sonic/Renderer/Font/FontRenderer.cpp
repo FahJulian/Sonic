@@ -139,7 +139,7 @@ namespace Sonic {
 		int textWidth = t->GetFont().StringWidth(t->GetText());
 		int textHeight = t->GetFont().StringHeight(t->GetText());
 
-		drawString(index, c->GetX() + (c->GetWidth() - textWidth) / 2, c->GetY() + (c->GetHeight() - textHeight) / 2, c->GetZIndex(), t->GetText(), t->GetFont(), t->GetColor());
+		drawString(index, c->x + (c->width - textWidth) / 2, c->y + (c->height - textHeight) / 2, c->zIndex, t->GetText(), t->GetFont(), t->GetColor());
 	}
 
 	void FontRenderer::rebuffer(Scene* scene)
