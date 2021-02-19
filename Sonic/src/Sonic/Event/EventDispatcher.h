@@ -1,13 +1,10 @@
 #pragma once
-#include <functional>
 #include <vector>
 #include <unordered_map>
+#include "EventListener.h"
 
 
 namespace Sonic {
-
-	template<typename Event>
-	using EventListener = std::function<void(const Event&)>;
 
 	class EventDispatcher
 	{

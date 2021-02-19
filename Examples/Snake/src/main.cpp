@@ -5,18 +5,17 @@
 
 Sonic::AppData Sonic::init()
 {
-	GameScene* gameScene = new GameScene();
-	StartScene* startScene = new StartScene();
-
-	SceneManager::registerScene(gameScene, "gameScene");
-	SceneManager::registerScene(startScene, "startScene");
+	SceneManager::registerScene(new StartScene(), "startScene");
+	SceneManager::registerScene(new GameScene(), "gameScene");
 	SceneManager::setScene("startScene");
 
 	return {
-		WINDOW_WIDTH,
-		WINDOW_HEIGHT,
+		WindowMode::Windowed,
 		WINDOW_TITLE,
+		Colors::DarkGray,
 		true,
+		840,
+		480,
 	};
 }
 

@@ -96,7 +96,7 @@ namespace Sonic {
 
 		Character character = font.GetCharacter(c);
 
-		Vertex* vertex = s_Vertices + 4 * index;
+		Vertex* vertex = s_Vertices + 4 * static_cast<size_t>(index);
 		for (int i = 0; i < 4; i++)
 		{
 			vertex->x = x + (i % 2) * character.width;
@@ -116,10 +116,10 @@ namespace Sonic {
 
 	void FontRenderer::drawString(int index, float x, float y, float z, const String& string, const Font& font, const Color& color)
 	{
-		int size = static_cast<int>(string.size());
+		size_t size = string.size();
 		int kerning = 0;
 
-		for (int i = 0; i < size; i++)
+		for (size_t i = 0; i < size; i++)
 		{
 			char c = string[i];
 			Character ch = font.GetCharacter(c);

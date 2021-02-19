@@ -1,23 +1,22 @@
 #pragma once
 #include "Base.h"
+#include "Sonic/Window/Window.h"
+#include "Sonic/Graphics/Color.h"
+#include "Sonic/Event/Events/WindowEvents.h"
 #include <string>
 
 extern int main();
 
 namespace Sonic {
 
-    class Scene;
-
-    struct WindowClosedEvent;
-
-    struct WindowResizedEvent;
-
     struct AppData
     {
+        WindowMode windowMode;
+        String windowTitle;
+        Color clearColor;
+        bool windowResizable;
         int windowWidth;
         int windowHeight;
-        String windowTitle;
-        bool windowResizable;
     };
 
     /**

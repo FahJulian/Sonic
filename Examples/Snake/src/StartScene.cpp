@@ -65,7 +65,7 @@ void StartScene::OnLoad()
 	AddComponent<ScriptComponent>(startMenu, animation);
 
 	button = UI::createButton(this, UISize::Mode::Absolute, 210, 240, 420, 40, UIRendererProperties(Colors::LightGray).Border(Colors::Black, 2),
-		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) {}, font, 0xbbbbbbff, "Singleplayer");
+		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) {}, font, Colors::Red, "Singleplayer");
 	AddToGroup(startMenu, button);
 
 	button = UI::createButton(this, UISize::Mode::Absolute, 210, 190, 420, 40, UIRendererProperties(Colors::Red).Border(Colors::Black, 2),
@@ -146,8 +146,19 @@ void StartScene::OnLoad()
 	DeactivateEntities(optionsMenu);
 }
 
+void StartScene::OnKeyPressed(const KeyPressedEvent& e)
+{
+	if (e.key == Keys::A)
+		Window::setWindowMode(WindowMode::Windowed);
+	else if (e.key == Keys::B)
+		Window::setWindowMode(WindowMode::Borderless);
+	else if (e.key == Keys::C)
+		Window::setWindowMode(WindowMode::BorderlessFullscreen);
+	else if (e.key == Keys::D)
+		Window::setWindowMode(WindowMode::Fullscreen);
+}
+
 void StartScene::OnInit()
 {
-	Window::setClearColor(Colors::DarkGray);
-	Window::setSize(840, 480);
+	EventDispatcher::addListener(this, &StartScene::OnKeyPressed);
 }

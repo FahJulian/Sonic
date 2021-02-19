@@ -21,7 +21,8 @@
 #include "Sonic/Scene/Components/Scripting/Script.h"
 #include "Sonic/Scene/ECS/Entity.h"
 #include "Sonic/Scene/ECS/Views.h"
-#include "Sonic/Scene/UI/UI.h"
+#include "Sonic/Scene/UI/UIButton.h"
+#include "Sonic/Scene/UI/UISlider.h"
 #include "Sonic/Scene/UI/SceneUIHandler.h"
 #include "Sonic/Scene/UI/UISize.h"
 

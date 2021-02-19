@@ -54,7 +54,7 @@ static float toAbsoluteWidth(UIComponent* c, UIComponent* parent, float value)
 	case UISize::Mode::RelativeToWindow: return value * Window::getWidth();
 	case UISize::Mode::RelativeToEntity: return value * parent->width;
 	default:
-		SONIC_LOG_WARN("Illegal UISize::Mode for width value");
+		SONIC_LOG_WARN("Illegal UISize::Mode for unmaximizedWidth value");
 		return 0.0f;
 	}
 }
@@ -67,7 +67,7 @@ static float toAbsoluteHeight(UIComponent* c, UIComponent* parent, float value)
 	case UISize::Mode::RelativeToWindow: return value * Window::getHeight();
 	case UISize::Mode::RelativeToEntity: return value * parent->height;
 	default:
-		SONIC_LOG_WARN("Illegal UISize::Mode for height value");
+		SONIC_LOG_WARN("Illegal UISize::Mode for unmaximizedHeight value");
 		return 0.0f;
 	}
 }
@@ -108,7 +108,7 @@ static float toRelativeWidth(UIComponent* c, UIComponent* parent, float value)
 	case UISize::Mode::RelativeToWindow: return value / Window::getWidth();
 	case UISize::Mode::RelativeToEntity: return value / parent->width;
 	default:
-		SONIC_LOG_WARN("Illegal UISize::Mode for width value");
+		SONIC_LOG_WARN("Illegal UISize::Mode for unmaximizedWidth value");
 		return 0.0f;
 	}
 }
@@ -121,7 +121,7 @@ static float toRelativeHeight(UIComponent* c, UIComponent* parent, float value)
 	case UISize::Mode::RelativeToWindow: return value / Window::getHeight();
 	case UISize::Mode::RelativeToEntity: return value / parent->height;
 	default:
-		SONIC_LOG_WARN("Illegal UISize::Mode for height value");
+		SONIC_LOG_WARN("Illegal UISize::Mode for unmaximizedHeight value");
 		return 0.0f;
 	}
 }

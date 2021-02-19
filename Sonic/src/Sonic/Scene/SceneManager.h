@@ -13,15 +13,15 @@ namespace Sonic {
 		struct ManagedScene
 		{
 		public:
-			String name;
+			Ref<String> name;
 			size_t sceneIndex;
 
 		private:
 			Scene* scene;
-			bool isLoaded = false;
+			Ref<bool> isLoaded = createRef<bool>(false);
 
 			ManagedScene(const String& name, size_t sceneIndex, Scene* scene)
-				: name(name), sceneIndex(sceneIndex), scene(scene)
+				: name(createRef<String>(name)), sceneIndex(sceneIndex), scene(scene)
 			{
 			}
 
@@ -29,16 +29,17 @@ namespace Sonic {
 				return scene1.scene == scene2.scene; }
 
 		public:
-			Scene* operator->() { return scene; }
-			Scene& operator*() { return *scene; }
+			Scene* operator->() const { return scene; }
+			Scene& operator*() const { return *scene; }
 
 			friend class SceneManager;
 		};
 
 		SceneManager() = delete;
 		SceneManager(const SceneManager& other) = delete;
+		SceneManager& operator=(const SceneManager& other) = delete;
 
-		static ManagedScene& getCurrentScene();
+		static const ManagedScene& getCurrentScene();
 		static void registerScene(Scene* scene, const String& name);
 
 		static void loadScene(const String& name);
@@ -55,10 +56,8 @@ namespace Sonic {
 
 		static void destroy();
 
-		static ManagedScene& s_CurrentScene;
+		static ManagedScene s_CurrentScene;
 		static std::vector<ManagedScene> s_Scenes;
-
-		static ManagedScene INITIAL_SCENE;
 
 		friend class App;
 	};

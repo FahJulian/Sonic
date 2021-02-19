@@ -5,6 +5,14 @@
 
 namespace Sonic {
 
+    enum class WindowMode : uint8_t
+    {
+        Windowed,
+        Borderless,
+        BorderlessFullscreen,
+        Fullscreen
+    };
+
     struct Color;
 
     /**
@@ -25,7 +33,7 @@ namespace Sonic {
         * 
         * @return Whether the initialization was successful
         */
-        static bool init(int width, int height, const String&, bool resizable = true);
+        static bool init(WindowMode mode, const Color& clearColor, const String& title, int width, int height, bool resizable = true);
 
         /**
         * Destroys the glfw window and frees all memory related to glfw
@@ -66,6 +74,10 @@ namespace Sonic {
 
         static void setHeight(float height);
 
+        static void setWindowMode(WindowMode newMode);
+
+        static WindowMode getWindowMode();
+
         static const String& getTitle();
 
         static void setTitle(const String& title);
@@ -79,7 +91,9 @@ namespace Sonic {
     private:
         static void windowCloseCallback(GLFWwindow* window);
 
-        static void windowResizeCallback(GLFWwindow* window, int width, int height);
+        static void glfwWindowResizeCallback(GLFWwindow* window, int width, int height);
+
+        static void windowResizeCallback(int width, int height);
     };
     
 }

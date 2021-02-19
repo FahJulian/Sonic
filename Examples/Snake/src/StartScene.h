@@ -13,4 +13,6 @@ public:
 private:
 	void OnLoad() override;
 	void OnInit() override;
+
+	void OnKeyPressed(const KeyPressedEvent& e);
 };

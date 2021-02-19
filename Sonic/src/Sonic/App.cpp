@@ -21,8 +21,7 @@ static bool s_Running = false;
 
 bool App::init(const AppData& data)
 {
-    if (!Sonic::Window::init(data.windowWidth, data.windowHeight,
-        data.windowTitle, data.windowResizable))
+    if (!Sonic::Window::init(data.windowMode, data.clearColor, data.windowTitle, data.windowWidth, data.windowHeight, data.windowResizable))
     {
         return false;
     }
@@ -69,6 +68,7 @@ void App::run()
         glClear(GL_COLOR_BUFFER_BIT);
         SceneManager::getCurrentScene()->Render();
         Window::swapBuffers();
+        glFlush();
 
         const double endTime = Window::getTime();
         const double delta = endTime - startTime;

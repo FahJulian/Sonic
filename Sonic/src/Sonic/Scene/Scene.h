@@ -1,13 +1,9 @@
 #pragma once
 #include <algorithm>
-#include "Sonic/Window/Window.h"
 #include "Sonic/Event/Events.h"
-#include "Sonic/Event/EventDispatcher.h"
+#include "Sonic/Window/Window.h"
 #include "Sonic/Renderer/2D/Camera2D.h"
 #include "Sonic/Scene/UI/SceneUIHandler.h"
-#include "Sonic/Scene/ECS/Views.h"
-#include "Sonic/Scene/ECS/Entity.h"
-#include "Sonic/Scene/ECS/ComponentType.h"
 #include "Sonic/Scene/ECS/ComponentRegistry.h"
 #include "Sonic/Scene/Components/2DComponents.h"
 

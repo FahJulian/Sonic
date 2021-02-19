@@ -8,12 +8,11 @@ using namespace Sonic;
 
 static bool s_Initialized = false;
 
-SceneManager::ManagedScene SceneManager::INITIAL_SCENE = SceneManager::ManagedScene("NULL", 0, nullptr);
-SceneManager::ManagedScene & SceneManager::s_CurrentScene = INITIAL_SCENE;
+SceneManager::ManagedScene SceneManager::s_CurrentScene = SceneManager::ManagedScene("NULL", 0, nullptr);
 std::vector<SceneManager::ManagedScene> SceneManager::s_Scenes;
 
 
-SceneManager::ManagedScene& SceneManager::getCurrentScene()
+const SceneManager::ManagedScene& SceneManager::getCurrentScene()
 {
 	return s_CurrentScene;
 }
@@ -27,7 +26,7 @@ void SceneManager::setScene(const String& name)
 {
 	for (ManagedScene& scene : s_Scenes)
 	{
-		if (scene.name == name)
+		if (*scene.name == name)
 		{
 			setScene(scene);
 			return;
@@ -52,12 +51,7 @@ void SceneManager::setScene(ManagedScene& scene)
 		return;
 	}
 
-	if(!scene.isLoaded)
-	{
-		scene->Load();
-		scene.isLoaded = true;
-	}
-
+	loadScene(scene);
 	EventDispatcher::clear();
 	s_CurrentScene->Destroy();
 	s_CurrentScene = scene;
@@ -68,7 +62,7 @@ void SceneManager::loadScene(const String& name)
 {
 	for (ManagedScene& scene : s_Scenes)
 	{
-		if (scene.name == name)
+		if (*scene.name == name)
 		{
 			loadScene(scene);
 			return;
@@ -87,10 +81,10 @@ void SceneManager::loadScene(size_t index)
 
 void SceneManager::loadScene(ManagedScene& scene)
 {
-	if (!scene.isLoaded)
+	if (!*scene.isLoaded)
 	{
 		scene->Load();
-		scene.isLoaded = true;
+		*scene.isLoaded = true;
 	}
 }
 
@@ -99,7 +93,7 @@ void SceneManager::init()
 	if (s_CurrentScene.scene == nullptr)
 		s_CurrentScene = s_Scenes.at(0);
 
-	s_CurrentScene->Load();
+	loadScene(s_CurrentScene);
 	s_CurrentScene->Init();
 
 	s_Initialized = true;

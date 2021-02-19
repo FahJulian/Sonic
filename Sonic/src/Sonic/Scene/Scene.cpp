@@ -77,7 +77,7 @@ void Scene::Render()
 
 void Scene::OnWindowResized(const WindowResizedEvent& e)
 {
-	SONIC_LOG_DEBUG("On window resized");
+	SONIC_LOG_DEBUG("Resized: (", e.width, ", ", e.height, ")");
 	UIRenderer::setViewportSize(e.width, e.height);
 	FontRenderer::setViewportSize(e.width, e.height);
 }
