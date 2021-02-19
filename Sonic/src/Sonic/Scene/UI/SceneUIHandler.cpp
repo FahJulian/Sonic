@@ -45,6 +45,14 @@ void SceneUIHandler::Init()
 	EventDispatcher::addListener<SceneUIHandler, ComponentRemovedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentRemoved);
 	EventDispatcher::addListener<SceneUIHandler, ComponentRemovedEvent<UIRendererComponent>>(this, &SceneUIHandler::OnComponentRemoved);
 	EventDispatcher::addListener<SceneUIHandler, ComponentRemovedEvent<UITextComponent>>(this, &SceneUIHandler::OnComponentRemoved);
+	EventDispatcher::addListener<SceneUIHandler, ComponentDeactivatedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentDeactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentDeactivatedEvent<UITextComponent>>(this, &SceneUIHandler::OnComponentDeactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentDeactivatedEvent<UIRendererComponent>>(this, &SceneUIHandler::OnComponentDeactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentReactivatedEvent<UIComponent>>(this, &SceneUIHandler::OnComponentReactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentReactivatedEvent<UITextComponent>>(this, &SceneUIHandler::OnComponentReactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentReactivatedEvent<UIRendererComponent>>(this, &SceneUIHandler::OnComponentReactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentReactivatedEvent<UIPositionConstraintsComponent>>(this, &SceneUIHandler::OnComponentReactivated);
+	EventDispatcher::addListener<SceneUIHandler, ComponentReactivatedEvent<UISizeConstraintsComponent>>(this, &SceneUIHandler::OnComponentReactivated);
 	EventDispatcher::addListener(this, &SceneUIHandler::OnEntityDeactivated);
 	EventDispatcher::addListener(this, &SceneUIHandler::OnEntityReactivated);
 
@@ -258,6 +266,70 @@ void SceneUIHandler::OnEntityReactivated(const EntityReactivatedEvent& e)
 			c->uiRendererDirty = m_Scene->GetComponent<UIRendererComponent>(e.entity)->dirty;
 		if (m_Scene->HasComponent<UITextComponent>(e.entity))
 			c->fontRendererDirty = m_Scene->GetComponent<UITextComponent>(e.entity)->dirty;
+	}
+}
+
+void SceneUIHandler::OnComponentDeactivated(const ComponentDeactivatedEvent<UIComponent>& e)
+{
+	auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
+	if (c->parent != 0)
+	{
+		std::vector<Entity>& childs = *m_Scene->GetComponent<UIComponent>(c->parent)->childs;
+		childs.erase(std::remove(childs.begin(), childs.end(), e.entity));
+
+		if (c->childs->size() != 0)
+			SONIC_LOG_WARN("Deactivating UI Entity that has childs. Make sure to deactivate the childs first");
+	}
+}
+
+void SceneUIHandler::OnComponentDeactivated(const ComponentDeactivatedEvent<UITextComponent>& e)
+{
+	FontRenderer::markDirty();
+}
+
+void SceneUIHandler::OnComponentDeactivated(const ComponentDeactivatedEvent<UIRendererComponent>& e)
+{
+	UIRenderer::markDirty();
+}
+
+void SceneUIHandler::OnComponentReactivated(const ComponentReactivatedEvent<UIComponent>& e)
+{
+	auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
+	UI::recalculate(m_Scene, c);
+
+	if (c->parent != 0)
+		m_Scene->GetComponent<UIComponent>(c->parent)->childs->push_back(e.entity);
+}
+
+void SceneUIHandler::OnComponentReactivated(const ComponentReactivatedEvent<UITextComponent>& e)
+{
+	FontRenderer::markDirty();
+}
+
+void SceneUIHandler::OnComponentReactivated(const ComponentReactivatedEvent<UIRendererComponent>& e)
+{
+	UIRenderer::markDirty();
+}
+
+void SceneUIHandler::OnComponentReactivated(const ComponentReactivatedEvent<UIPositionConstraintsComponent>& e)
+{
+	if (m_Scene->HasComponent<UIComponent>(e.entity))
+	{
+		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(e.entity);
+		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
+
+		UI::checkSize(m_Scene, c, constraints);
+	}
+}
+
+void SceneUIHandler::OnComponentReactivated(const ComponentReactivatedEvent<UISizeConstraintsComponent>& e)
+{
+	if (m_Scene->HasComponent<UIComponent>(e.entity))
+	{
+		auto* constraints = m_Scene->GetComponent<UISizeConstraintsComponent>(e.entity);
+		auto* c = m_Scene->GetComponent<UIComponent>(e.entity);
+
+		UI::checkSize(m_Scene, c, constraints);
 	}
 }
 

@@ -2,12 +2,11 @@
 #include <vector>
 #include <iterator>
 #include <functional>
-#include "Sonic/Event/Events.h"
+#include "Sonic/Event/Events/ECSEvents.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Entity.h"
-#include "ComponentType.h"
 #include "ComponentPool.h"
-#include "ComponentRegistry.h"
+
 
 namespace Sonic {
 
@@ -73,8 +72,8 @@ namespace Sonic {
 		};
 
 	public:
-		GroupView(ComponentRegistry* registry)
-			: m_Pool1(registry->GetComponentPool(ComponentPool::getComponentType<Component1>())), m_Pool2(registry->GetComponentPool(ComponentPool::getComponentType<Component2>()))
+		GroupView(ComponentPool* pool1, ComponentPool* pool2)
+			: m_Pool1(pool1), m_Pool2(pool2)
 		{
 			for (size_t i = 0; i < m_Pool1->m_Active.size; i++)
 			{

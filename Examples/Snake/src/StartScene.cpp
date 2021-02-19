@@ -1,6 +1,7 @@
 #include "StartScene.h"
 #include "Settings.h"
 
+#include <functional>
 #include "Sonic/Scene/UI/UIUtils.h"
 
 class Animation : public Script
@@ -96,23 +97,23 @@ void StartScene::OnLoad()
 	);
 	AddComponent<UITextComponent>(optionsText, font, Colors::White, "Options");
 
-	Entity test = AddEntity();
-	AddComponent<UIRendererComponent>(test, UIRendererProperties(Colors::Orange));
-	AddComponent<UIComponent>(test,
-		UISize{ UISize::Mode::WindowCenter, 0.0f },
-		UISize{ UISize::Mode::WindowCenter, 0.0f },
-		UISize{ UISize::Mode::Absolute, 400 },
-		UISize{ UISize::Mode::Absolute, 300 }
-	);
-
-	//Entity fovSlider = AddEntity(optionsMenu);
-	//AddComponent<UIComponent>(fovSlider,
-	//	UISize{ UISize::Mode::WindowCenter, 0.35f },
-	//	UISize{ UISize::Mode::RelativeToWindow, 0.75f },
-	//	UISize{ UISize::Mode::RelativeToWindow, 0.3f },
-	//	UISize{ UISize::Mode::Absolute, 40 }
+	//Entity test = AddEntity();
+	//AddComponent<UIRendererComponent>(test, UIRendererProperties(Colors::Orange));
+	//AddComponent<UIComponent>(test,
+	//	UISize{ UISize::Mode::WindowCenter, 0.0f },
+	//	UISize{ UISize::Mode::WindowCenter, 0.0f },
+	//	UISize{ UISize::Mode::Absolute, 400 },
+	//	UISize{ UISize::Mode::Absolute, 300 }
 	//);
-	//AddComponent<UIRendererComponent>(fovSlider, UIRendererProperties(Colors::DarkGray).Border(Colors::Black, 2));
+
+	Entity fovSlider = AddEntity(optionsMenu);
+	AddComponent<UIComponent>(fovSlider,
+		UISize{ UISize::Mode::WindowCenter, 0.35f },
+		UISize{ UISize::Mode::RelativeToWindow, 0.75f },
+		UISize{ UISize::Mode::RelativeToWindow, 0.3f },
+		UISize{ UISize::Mode::Absolute, 40 }
+	);
+	AddComponent<UIRendererComponent>(fovSlider, UIRendererProperties(Colors::DarkGray).Border(Colors::Black, 2));
 
 	Entity slider = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(slider, UISize::Mode::RelativeToEntity, (1.0f - 0.08f) / 2.0f, 0.0f, 0.08f, 1.0f, fovSlider);

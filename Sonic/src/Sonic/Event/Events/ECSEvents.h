@@ -25,6 +25,28 @@ namespace Sonic {
         }
     };
 
+    template<typename Component>
+    struct ComponentDeactivatedEvent
+    {
+        Entity entity;
+
+        ComponentDeactivatedEvent(Entity entity)
+            : entity(entity)
+        {
+        }
+    };
+
+    template<typename Component>
+    struct ComponentReactivatedEvent
+    {
+        Entity entity;
+
+        ComponentReactivatedEvent(Entity entity)
+            : entity(entity)
+        {
+        }
+    };
+
     struct EntityDeactivatedEvent
     {
         Entity entity;

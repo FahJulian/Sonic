@@ -32,6 +32,14 @@ namespace Sonic {
 		void OnComponentRemoved(const ComponentRemovedEvent<UITextComponent>& e);
 		void OnEntityDeactivated(const EntityDeactivatedEvent& e);
 		void OnEntityReactivated(const EntityReactivatedEvent& e);
+		void OnComponentDeactivated(const ComponentDeactivatedEvent<UIComponent>& e);
+		void OnComponentDeactivated(const ComponentDeactivatedEvent<UITextComponent>& e);
+		void OnComponentDeactivated(const ComponentDeactivatedEvent<UIRendererComponent>& e);
+		void OnComponentReactivated(const ComponentReactivatedEvent<UIComponent>& e);
+		void OnComponentReactivated(const ComponentReactivatedEvent<UITextComponent>& e);
+		void OnComponentReactivated(const ComponentReactivatedEvent<UIRendererComponent>& e);
+		void OnComponentReactivated(const ComponentReactivatedEvent<UIPositionConstraintsComponent>& e);
+		void OnComponentReactivated(const ComponentReactivatedEvent<UISizeConstraintsComponent>& e);
 
 		void UpdateUIResizableComponentMouseButtonDown(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e);
 		void UpdateUIResizableComponentMouseButtonUp(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e);

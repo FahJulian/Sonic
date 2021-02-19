@@ -12,68 +12,7 @@
 using namespace Sonic;
 
 
-Entity Scene::AddEntity()
-{
-	return m_NextEntity++;
-}
 
-Entity Scene::AddEntity(EntityGroup group)
-{
-	Entity entity = m_NextEntity++;
-	m_EntityGroups[group].push_back(entity);
-	return entity;
-}
-
-EntityGroup Scene::AddEntityGroup()
-{
-	return m_NextEntity++;
-}
-
-void Scene::AddToGroup(EntityGroup group, Entity entity)
-{
-	m_EntityGroups[group].push_back(entity);
-}
-
-std::vector<Entity>* Scene::GetGroup(EntityGroup group)
-{
-	return &m_EntityGroups[group];
-}
-
-void Scene::DeactivateEntity(Entity entity)
-{
-	EventDispatcher::dispatch(EntityDeactivatedEvent(entity));
-	m_Registry.DeactivateEntity(entity);
-}
-
-void Scene::DeactivateEntities(EntityGroup group)
-{
-	for (Entity entity : m_EntityGroups[group])
-		DeactivateEntity(entity);
-}
-
-void Scene::ReactivateEntity(Entity entity)
-{
-	m_Registry.ReactivateEntity(entity);
-	EventDispatcher::dispatch(EntityReactivatedEvent(entity));
-}
-
-void Scene::ReactivateEntities(EntityGroup group)
-{
-	for (Entity entity : m_EntityGroups[group])
-		ReactivateEntity(entity);
-}
-
-void Scene::RemoveEntity(Entity entity)
-{
-	EventDispatcher::dispatch(EntityRemovedEvent(entity));
-	m_Registry.RemoveEntity(entity);
-
-	if (HasComponent<UIRendererComponent>(entity))
-	{
-		UIRenderer::markDirty();
-		FontRenderer::markDirty();
-	}
-}
 
 void Scene::Load()
 {
@@ -157,7 +96,5 @@ void Scene::OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DCom
 
 void Scene::Destroy()
 {
-	m_NextEntity = 1;
-	m_EntityGroups.clear();
-	m_Registry.Destroy();
+	ComponentRegistry::Destroy();
 }

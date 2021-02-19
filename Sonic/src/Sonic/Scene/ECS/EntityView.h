@@ -1,8 +1,8 @@
 #pragma once
+#include <iterator>
+#include <functional>
 #include "Entity.h"
-#include "ComponentType.h"
 #include "ComponentPool.h"
-#include "ComponentRegistry.h"
 
 namespace Sonic {
 
@@ -51,8 +51,8 @@ namespace Sonic {
 		};
 
 	public:
-		EntityView(ComponentRegistry* registry)
-			: m_Pool(registry->GetComponentPool(ComponentPool::getComponentType<Component>()))
+		EntityView(ComponentPool* pool)
+			: m_Pool(pool)
 		{
 		}
 

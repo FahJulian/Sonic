@@ -9,7 +9,6 @@
 #include "Sonic/Scene/ECS/Entity.h"
 #include "Sonic/Scene/ECS/ComponentType.h"
 #include "Sonic/Scene/ECS/ComponentRegistry.h"
-#include "Sonic/Scene/ECS/EntityGroup.h"
 #include "Sonic/Scene/Components/2DComponents.h"
 
 namespace Sonic {
@@ -17,11 +16,12 @@ namespace Sonic {
 	template<typename Component1, typename Component2>
 	class GroupView;
 
-	class Scene
+	class Scene : public ComponentRegistry
 	{
 	protected:
 		Scene()
-			: m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())), m_UIHandler(this)
+			: ComponentRegistry::ComponentRegistry(),
+			m_Camera(Camera2D(0, Window::getWidth(), 0, Window::getHeight())), m_UIHandler(this)
 		{
 		}
 
@@ -56,85 +56,9 @@ namespace Sonic {
 	public:
 		SceneUIHandler& GetUIHandler() { return m_UIHandler; }
 
-		Entity AddEntity();
-		Entity AddEntity(EntityGroup group);
-		EntityGroup AddEntityGroup();
-		std::vector<Entity>* GetGroup(EntityGroup group);
-		void AddToGroup(EntityGroup group, Entity entity);
-
-		void DeactivateEntity(Entity entity);
-		void DeactivateEntities(EntityGroup group);
-		void ReactivateEntity(Entity entity);
-		void ReactivateEntities(EntityGroup group);
-		void RemoveEntity(Entity entity);
-
-		template<typename Component, typename... Args>
-		void AddComponent(Entity entity, Args&&... args)
-		{
-			m_Registry.AddComponent<Component>(entity, std::forward<Args>(args)...);
-			EventDispatcher::dispatch(ComponentAddedEvent<Component>(entity));
-		}
-
-		template<typename Component>
-		bool HasComponent(Entity entity)
-		{
-			return m_Registry.HasComponent<Component>(entity);
-		}
-
-		template<typename Component>
-		Component* GetComponent(Entity entity)
-		{
-			return m_Registry.GetComponent<Component>(entity);
-		}
-
-		template<typename Component>
-		void RemoveComponent(Entity entity)
-		{
-			m_Registry.RemoveComponent<Component>(entity);
-			EventDispatcher::dispatch(ComponentRemovedEvent<Component>(entity));
-		}
-
-		template<typename Component>
-		EntityView<Component> ViewEntities()
-		{
-			return EntityView<Component>(&m_Registry);
-		}
-
-		template<typename Component>
-		ComponentView<Component> ViewComponents()
-		{
-			return ComponentView<Component>(&m_Registry);
-		}
-
-		template<typename Component>
-		PairView<Component> View()
-		{
-			return PairView<Component>(&m_Registry);
-		}
-
-		template<typename Component1, typename Component2>
-		GroupView<Component1, Component2>& Group()
-		{
-			static std::unordered_map<Scene*, GroupView<Component1, Component2>*> groups;
-
-			auto it = groups.find(this);
-			if (it == groups.end())
-			{
-				groups.emplace(this, new GroupView<Component1, Component2>(&m_Registry));
-				it = --(groups.end());
-			}
-
-			return *it->second;
-		}
-
 	private:
 		Camera2D m_Camera;
 		SceneUIHandler m_UIHandler;
-
-		ComponentRegistry m_Registry;
-
-		Entity m_NextEntity = 1;
-		std::unordered_map<EntityGroup, std::vector<Entity>> m_EntityGroups;
 
 		friend class App;
 		friend class SceneManager;
