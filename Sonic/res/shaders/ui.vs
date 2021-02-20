@@ -41,15 +41,13 @@ void main()
 	f_RectPosition = v_RectPosition;
 	f_RectScale = v_RectScale;
 
-	if (v_BorderWeight != 0.0)
-	{
-		f_BorderColor = v_BorderColor;
-		f_BorderWeight = v_BorderWeight;
-	}
+	f_BorderColor = v_BorderColor;
+	f_BorderWeight = v_BorderWeight;
+
+	f_EdgeRadius = v_EdgeRadius;
 
 	if (v_EdgeRadius != 0.0)
 	{
-		f_EdgeRadius = v_EdgeRadius;
 		f_BottomLeft = vec2(v_EdgeRadius, v_EdgeRadius);
 		f_BottomRight = vec2(v_RectScale.x - v_EdgeRadius, v_EdgeRadius);
 		f_TopLeft = vec2(v_EdgeRadius, v_RectScale.y - v_EdgeRadius);

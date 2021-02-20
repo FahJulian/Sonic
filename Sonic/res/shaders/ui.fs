@@ -25,7 +25,7 @@ void main()
 {   
 	vec2 innerPos = gl_FragCoord.xy - f_RectPosition;
 
-	if (f_EdgeRadius != 0)
+	if (f_EdgeRadius != 0.0)
 	{
 		if (innerPos.x <= f_BottomLeft.x && innerPos.y <= f_BottomLeft.y)
 		{
@@ -86,8 +86,8 @@ void main()
 
 	if (f_BorderWeight != 0)
 	{
-		if (innerPos.x < f_BorderWeight || f_RectScale.x - innerPos.x < f_BorderWeight || 
-			innerPos.y < f_BorderWeight || f_RectScale.y - innerPos.y < f_BorderWeight)
+		if (innerPos.x < f_BorderWeight || f_RectScale.x - innerPos.x <= f_BorderWeight || 
+			innerPos.y < f_BorderWeight || f_RectScale.y - innerPos.y <= f_BorderWeight)
 		{
 			out_Color = f_BorderColor;
 			return;

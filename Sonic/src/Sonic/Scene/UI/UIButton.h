@@ -9,19 +9,16 @@ namespace Sonic {
 
 	namespace UI {
 
-		struct ButtonProperties
-		{
-			UISize x, y, width, height;
-		};
-
-		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-			EventListener<MouseButtonReleasedEvent> onClick);
-		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-			const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick);
-		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-			EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const String& text);
-		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
-			const UIRendererProperties& hoveredProperties, EventListener<MouseButtonReleasedEvent> onClick, const Font& font, const Color& textColor, const String& text);
+		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties, 
+			const EventListener<MouseButtonReleasedEvent>& listener, Entity parent = 0);
+		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties, 
+			const UIRendererProperties& hovereredProperties, const EventListener<MouseButtonReleasedEvent>& listener, Entity parent = 0);
+		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties,
+			const EventListener<MouseButtonReleasedEvent>& listener, 
+			const Font& font, const Color& textColor, const String& text, Entity parent = 0);
+		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties,
+			const UIRendererProperties& hovereredProperties, const EventListener<MouseButtonReleasedEvent>& listener, 
+			const Font& font, const Color& textColor, const String& text, Entity parent = 0);
 
 	}
 

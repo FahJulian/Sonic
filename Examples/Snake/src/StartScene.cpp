@@ -59,34 +59,107 @@ void StartScene::OnLoad()
 
 	EntityGroup startMenu = AddEntityGroup();
 	EntityGroup optionsMenu = AddEntityGroup();
-	Entity button;
 
 	Animation* animation = new Animation(startMenu, 0.2f, 50.0f);
 	AddComponent<ScriptComponent>(startMenu, animation);
 
-	button = UI::createButton(this, UISize::Mode::Absolute, 210, 240, 420, 40, UIRendererProperties(Colors::LightGray).Border(Colors::Black, 2),
-		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) {}, font, Colors::Red, "Singleplayer");
-	AddToGroup(startMenu, button);
+	EntityGroup startPanel = AddEntityGroup();
+	AddComponent<UIComponent>(startPanel, UISize{ UISize::Mode::WindowCenter, 0.0f }, UISize{ UISize::Mode::WindowCenter, 0.0f }, 440.0f, 220.0f);
 
-	button = UI::createButton(this, UISize::Mode::Absolute, 210, 190, 420, 40, UIRendererProperties(Colors::Red).Border(Colors::Black, 2),
-		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) { animation->Start(); }, font, 0xddddddff, "Multiplayer");
-	AddToGroup(startMenu, button);
+	AddToGroup(startPanel, UI::createButton(this,
+		UISize{ UISize::Mode::RelativeToEntity, 0.15f },
+		UISize{ UISize::Mode::RelativeToEntity, 1.0f - 0.18f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.85f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.18f },
+		UIRendererProperties(0x6f6f6fff).Border(Colors::Black, 1).EdgeRadius(7),
+		UIRendererProperties(0x7d87beff).Border(Colors::Black, 1).EdgeRadius(7),
+		[](const MouseButtonReleasedEvent& e) { SONIC_LOG_DEBUG("Singleplayer"); },
+		font, 0xe0e0e0ff, "Singleplayer",
+		startPanel
+	));
 
-	button = UI::createButton(this, UISize::Mode::Absolute, 210, 140, 420, 40, UIRendererProperties(Colors::DarkBlue).Border(Colors::Black, 2),
-		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [](const auto& e) {}, font, 0xddddddff, "Minecraft Realms");
-	AddToGroup(startMenu, button);
+	AddToGroup(startPanel, UI::createButton(this,
+		UISize{ UISize::Mode::RelativeToEntity, 0.15f },
+		UISize{ UISize::Mode::RelativeToEntity, 1.0f - 2 * 0.18f - 0.05f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.85f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.18f },
+		UIRendererProperties(0x6f6f6fff).Border(Colors::Black, 1).EdgeRadius(7),
+		UIRendererProperties(0x7d87beff).Border(Colors::Black, 1).EdgeRadius(7),
+		[](const MouseButtonReleasedEvent& e) { SONIC_LOG_DEBUG("Multiplayer"); },
+		font, 0xe0e0e0ff, "Multiplayer",
+		startPanel
+	));
 
-	button = UI::createButton(this, UISize::Mode::Absolute, 150, 70, 40, 40, UIRendererProperties(Colors::Transparent).Border(Colors::Black, 2),
-		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [](const auto& e) {});
-	AddToGroup(startMenu, button);
+	AddToGroup(startPanel, UI::createButton(this,
+		UISize{ UISize::Mode::RelativeToEntity, 0.15f },
+		UISize{ UISize::Mode::RelativeToEntity, 1.0f - 3 * 0.18f - 2 * 0.05f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.85f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.18f },
+		UIRendererProperties(0x6f6f6fff).Border(Colors::Black, 1).EdgeRadius(7),
+		UIRendererProperties(0x7d87beff).Border(Colors::Black, 1).EdgeRadius(7),
+		[](const MouseButtonReleasedEvent& e) { SONIC_LOG_DEBUG("Minecraft Realms"); },
+		font, 0xe0e0e0ff, "Minecraft Realms",
+		startPanel
+	));
 
-	button = UI::createButton(this, UISize::Mode::Absolute, 210, 70, 200, 40, UIRendererProperties(Colors::Green).Border(Colors::Black, 2),
-		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) { DeactivateEntities(startMenu); ReactivateEntities(optionsMenu); }, font, 0xddddddff, "Options...");
-	AddToGroup(startMenu, button);
+	AddToGroup(startPanel, UI::createButton(this,
+		UISize{ UISize::Mode::RelativeToEntity, 0.15f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.0f },
+		UISize{ UISize::Mode::RelativeToEntity, (0.85f - 0.025f) / 2 },
+		UISize{ UISize::Mode::RelativeToEntity, 0.18f },
+		UIRendererProperties(0x6f6f6fff).Border(Colors::Black, 1).EdgeRadius(7),
+		UIRendererProperties(0x7d87beff).Border(Colors::Black, 1).EdgeRadius(7),
+		[](const MouseButtonReleasedEvent& e) { SONIC_LOG_DEBUG("Options"); },
+		font, 0xe0e0e0ff, "Options",
+		startPanel
+	));
 
-	button = UI::createButton(this, UISize::Mode::Absolute, 430, 70, 200, 40, UIRendererProperties(Colors::Orange).Border(Colors::Black, 2),
-		UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [](const auto& e) { App::stop(); }, font, 0xddddddff, "Quit Game");
-	AddToGroup(startMenu, button);
+	AddToGroup(startPanel, UI::createButton(this,
+		UISize{ UISize::Mode::RelativeToEntity, 1.0f - (0.85f - 0.025f) / 2 },
+		UISize{ UISize::Mode::RelativeToEntity, 0.0f },
+		UISize{ UISize::Mode::RelativeToEntity, (0.85f - 0.0275f) / 2 },
+		UISize{ UISize::Mode::RelativeToEntity, 0.18f },
+		UIRendererProperties(0x6f6f6fff).Border(Colors::Black, 1).EdgeRadius(7),
+		UIRendererProperties(0x7d87beff).Border(Colors::Black, 1).EdgeRadius(7),
+		[](const MouseButtonReleasedEvent& e) { SONIC_LOG_DEBUG("Quit Game"); },
+		font, 0xe0e0e0ff, "Quit Game",
+		startPanel
+	));
+
+	AddToGroup(startPanel, UI::createButton(this,
+		UISize{ UISize::Mode::RelativeToEntity, 0.0f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.0f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.09f },
+		UISize{ UISize::Mode::RelativeToEntity, 0.18f },
+		UIRendererProperties(0x6f6f6fff).Border(Colors::Black, 1).EdgeRadius(7),
+		UIRendererProperties(0x7d87beff).Border(Colors::Black, 1).EdgeRadius(7),
+		[](const MouseButtonReleasedEvent& e) { SONIC_LOG_DEBUG("Language"); },
+		startPanel
+	));
+
+	//button = UI::createButton(this, UISize::Mode::Absolute, 210, 240, 420, 40, UIRendererProperties(Colors::LightGray).Border(Colors::Black, 2),
+	//	UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) {}, font, Colors::Red, "Singleplayer");
+	//AddToGroup(startMenu, button);
+
+	//button = UI::createButton(this, UISize::Mode::Absolute, 210, 190, 420, 40, UIRendererProperties(Colors::Red).Border(Colors::Black, 2),
+	//	UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) { animation->Start(); }, font, 0xddddddff, "Multiplayer");
+	//AddToGroup(startMenu, button);
+
+	//button = UI::createButton(this, UISize::Mode::Absolute, 210, 140, 420, 40, UIRendererProperties(Colors::DarkBlue).Border(Colors::Black, 2),
+	//	UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [](const auto& e) {}, font, 0xddddddff, "Minecraft Realms");
+	//AddToGroup(startMenu, button);
+
+	//button = UI::createButton(this, UISize::Mode::Absolute, 150, 70, 40, 40, UIRendererProperties(Colors::Transparent).Border(Colors::Black, 2),
+	//	UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [](const auto& e) {});
+	//AddToGroup(startMenu, button);
+
+	//button = UI::createButton(this, UISize::Mode::Absolute, 210, 70, 200, 40, UIRendererProperties(Colors::Green).Border(Colors::Black, 2),
+	//	UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [=](const auto& e) { DeactivateEntities(startMenu); ReactivateEntities(optionsMenu); }, font, 0xddddddff, "Options...");
+	//AddToGroup(startMenu, button);
+
+	//button = UI::createButton(this, UISize::Mode::Absolute, 430, 70, 200, 40, UIRendererProperties(Colors::Orange).Border(Colors::Black, 2),
+	//	UIRendererProperties(Colors::Cyan).Border(Colors::Black, 2), [](const auto& e) { App::stop(); }, font, 0xddddddff, "Quit Game");
+	//AddToGroup(startMenu, button);
 
 	Entity optionsText = AddEntity(optionsMenu);
 	AddComponent<UIComponent>(optionsText,

@@ -16,7 +16,7 @@ namespace Sonic {
 		static void destroy();
 
 	private:
-		static void drawElement(int index, float x, float y, float width, float height, float zIndex, const UIRendererProperties* properties);
+		static void drawElement(int index, int x, int y, int width, int height, float zIndex, const UIRendererProperties* properties);
 	};
 
 }

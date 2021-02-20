@@ -11,9 +11,8 @@ namespace Sonic {
 		Color color;
 
 		Color borderColor = Colors::Black;
-		float borderWeight = 0.0f;
-
-		float edgeRadius = 0.0f;
+		int borderWeight = 0;
+		int edgeRadius = 0;
 
 	public:
 		UIRendererProperties()
@@ -36,14 +35,14 @@ namespace Sonic {
 		{
 		}
 
-		UIRendererProperties& Border(Color color, float weight)
+		UIRendererProperties& Border(Color color, int weight)
 		{
 			borderColor = color;
 			borderWeight = weight;
 			return *this;
 		}
 
-		UIRendererProperties& EdgeRadius(float radius)
+		UIRendererProperties& EdgeRadius(int radius)
 		{
 			edgeRadius = radius;
 			return *this;

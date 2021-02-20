@@ -21,14 +21,14 @@ namespace Sonic {
 		void SetSprite(const Sprite& sprite) { properties.sprite = sprite; *rendererDirty = true; }
 		void SetColor(const Color& color) { properties.color = color; *rendererDirty = true; }
 		void SetBorderColor(const Color& color) { properties.borderColor = color; *rendererDirty = true; }
-		void SetBorderWeight(float borderWeight) { properties.borderWeight = borderWeight; *rendererDirty = true; }
-		void SetEdgeRadius(float edgeRadius) { properties.edgeRadius = edgeRadius; *rendererDirty = true; }
+		void SetBorderWeight(int borderWeight) { properties.borderWeight = borderWeight; *rendererDirty = true; }
+		void SetEdgeRadius(int edgeRadius) { properties.edgeRadius = edgeRadius; *rendererDirty = true; }
 
 		const Sprite& GetSprite() const { return properties.sprite; }
 		const Color& GetColor() const { return properties.color; }
 		const Color& GetBorderColor() const { return properties.borderColor; }
-		float GetBorderWeight() const { return properties.borderWeight; }
-		float GetEdgeRadius() const { return properties.edgeRadius; }
+		int GetBorderWeight() const { return properties.borderWeight; }
+		int GetEdgeRadius() const { return properties.edgeRadius; }
 
 	private:
 		void SetHovered(bool newHovered) { if (newHovered == hovered) *rendererDirty = true; hovered = newHovered; }
