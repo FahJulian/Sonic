@@ -56,7 +56,12 @@ namespace Sonic {
 
 		static void destroy();
 
+		static bool isSceneChangeScheduled();
+		static void executeSceneChange();
+
+		static bool s_ChangeScheduled;
 		static ManagedScene s_CurrentScene;
+		static ManagedScene s_ChangedScene;
 		static std::vector<ManagedScene> s_Scenes;
 
 		friend class App;

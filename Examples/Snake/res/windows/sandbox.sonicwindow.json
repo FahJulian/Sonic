@@ -1,0 +1,31 @@
+{
+  "title": "Sandbox App",
+  "saveTitle": true,
+
+  "size": "600x400",
+  "saveSize": true,
+
+  "mode": "Windowed",
+  "saveMode": true,
+
+  "clearColor": "0x555555ff",
+
+  "resizable": true,
+  "closeButton": true,
+  "closeOnAltF4": true,
+
+  "saveClearColor": true,
+
+  "minimized": false,
+  "saveMinimized": false,
+
+  "maximized": false,
+  "saveMaximized": true,
+
+  "icons": [
+  ],
+
+  "standardCursorSet": "Dark",
+  "cursors": {
+  }
+}

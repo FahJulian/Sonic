@@ -91,7 +91,7 @@ namespace Sonic {
 
     void Renderer2D::drawRect(int index, const glm::vec3& position, const glm::vec2& scale, float rotation, const Sprite& sprite, const Color& color)
     {
-        float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(*sprite.texture);
+        float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(sprite.texture);
 
         Vertex* vertex = s_Vertices + 4 * (size_t)index;
         if (rotation == 0)

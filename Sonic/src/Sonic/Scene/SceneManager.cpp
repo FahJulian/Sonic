@@ -8,7 +8,9 @@ using namespace Sonic;
 
 static bool s_Initialized = false;
 
+bool SceneManager::s_ChangeScheduled = false;
 SceneManager::ManagedScene SceneManager::s_CurrentScene = SceneManager::ManagedScene("NULL", 0, nullptr);
+SceneManager::ManagedScene SceneManager::s_ChangedScene = SceneManager::ManagedScene("NULL", 0, nullptr);
 std::vector<SceneManager::ManagedScene> SceneManager::s_Scenes;
 
 
@@ -50,12 +52,27 @@ void SceneManager::setScene(ManagedScene& scene)
 		s_CurrentScene = scene;
 		return;
 	}
+	else
+	{
+		s_ChangedScene = scene;
+		s_ChangeScheduled = true;
+	}
+}
 
-	loadScene(scene);
+bool SceneManager::isSceneChangeScheduled()
+{
+	return s_ChangeScheduled;
+}
+
+void SceneManager::executeSceneChange()
+{
+	loadScene(s_ChangedScene);
 	EventDispatcher::clear();
 	s_CurrentScene->Destroy();
-	s_CurrentScene = scene;
-	s_CurrentScene->Init();
+	*s_CurrentScene.isLoaded = false;
+	s_ChangedScene->Init();
+	s_CurrentScene = s_ChangedScene;
+	s_ChangeScheduled = false;
 }
 
 void SceneManager::loadScene(const String& name)

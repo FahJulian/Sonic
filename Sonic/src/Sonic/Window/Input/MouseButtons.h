@@ -1,25 +1,19 @@
 #pragma once
-#include <gl/glew.h>
-#include <GLFW/glfw3.h>
+#include <cstdint>
 
 namespace Sonic {
 
-    using MouseButton = unsigned char;
-    
-    namespace Buttons {
+    using MouseButton = uint8_t;
+
+    namespace MouseButtons {
         
-        enum : MouseButton
-        {
-            Left = GLFW_MOUSE_BUTTON_LEFT,
-            Right = GLFW_MOUSE_BUTTON_RIGHT,
-            Middle = GLFW_MOUSE_BUTTON_MIDDLE,
-            MB_4 = GLFW_MOUSE_BUTTON_4,
-            MB_5 = GLFW_MOUSE_BUTTON_5,
-            MB_6 = GLFW_MOUSE_BUTTON_6,
-            MB_7 = GLFW_MOUSE_BUTTON_7,
-            MB_8 = GLFW_MOUSE_BUTTON_8
-        };
+        const MouseButton Left = 0x00;
+        const MouseButton Right = 0x01;
+        const MouseButton Middle = 0x02;
+        const MouseButton MB_4 = 0x03;
+        const MouseButton MB_5 = 0x04;
 
     }
 
+    const MouseButton HIGHEST_BUTTON = 0x04;
 }

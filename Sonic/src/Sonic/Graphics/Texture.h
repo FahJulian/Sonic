@@ -11,6 +11,12 @@ namespace Sonic {
     */
     class Texture
     {
+    private:
+        Texture()
+            : m_OpenGL_ID(nullptr), m_Width(0), m_Height(0)
+        {
+        }
+
     public:
         /**
         * Constructs a new Texture
@@ -44,12 +50,15 @@ namespace Sonic {
         int GetWidth() const { return m_Width; }
         int GetHeight() const { return m_Height; }
 
+        bool IsNull() const { return !m_OpenGL_ID; }
+
         bool operator==(const Texture& other) const { return *other.m_OpenGL_ID == *this->m_OpenGL_ID; }
 
-    //private:
         Ref<unsigned int> m_OpenGL_ID;
         int m_Width;
         int m_Height;
+
+        friend struct Sprite;
     };
 
 }

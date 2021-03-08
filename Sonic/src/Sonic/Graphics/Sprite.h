@@ -12,7 +12,7 @@ namespace Sonic {
     {
     public:
         Sprite()
-            : texture(nullptr), x0(0), x1(1), y0(0), y1(1) {}
+            : texture(Texture()), x0(0), x1(1), y0(0), y1(1) {}
 
         /**
         * Constructs a new Sprite
@@ -21,20 +21,29 @@ namespace Sonic {
         * @param textureCoords float Array with the texture coordinates ot the 
         *                      sprite on the texture
         */
-        Sprite(const Texture* texture, float x0, float x1, float y0, float y1)
-            : texture(texture), x0(x0), x1(x1), y0(y0), y1(y1) {}
+        Sprite(const Texture& texture, float x0, float x1, float y0, float y1)
+            : texture(texture), x0(x0), x1(x1), y0(y0), y1(y1) 
+        {
+        }
+
+        Sprite(const Texture& texture)
+            : texture(texture), x0(0.0f), x1(1.0f), y0(0.0f), y1(1.0f)
+        {
+        }
 
         Sprite(const Sprite& other)
-            : texture(other.texture), x0(other.x0), x1(other.x1), y0(other.y0), y1(other.y1) {}
+            : texture(other.texture), x0(other.x0), x1(other.x1), y0(other.y0), y1(other.y1) 
+        {
+        }
 
         Sprite operator=(const Sprite& other)
         {
             return Sprite(other);
         }
 
-        bool IsNull() const { return texture == nullptr; }
+        bool IsNull() const { return texture.IsNull(); }
 
-        const Texture* const texture;
+        const Texture texture;
         const float x0, x1, y0, y1;
     };
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include <functional>
 #include <vector>
 #include "Sonic/Debug/Log/Log.h"
 #include "Sonic/Event/EventDispatcher.h"
@@ -31,6 +32,7 @@ namespace Sonic {
 		void DeactivateEntities(EntityGroup group);
 		void ReactivateEntities(EntityGroup group);
 
+		void Init();
 		void Destroy();
 
 	private:
@@ -43,7 +45,9 @@ namespace Sonic {
 			ComponentPool* pool = GetComponentPool(ComponentPool::getComponentType<Component>());
 			pool->AddComponent<Component>(entity, std::forward<Args>(args)...);
 			m_ComponentMap[entity].push_back(ComponentPool::getComponentType<Component>());
-			EventDispatcher::dispatch(ComponentAddedEvent<Component>(entity));
+
+			if (m_Initialized)
+				EventDispatcher::dispatch(ComponentAddedEvent<Component>(entity));
 		}
 
 		template<typename Component>
@@ -63,7 +67,9 @@ namespace Sonic {
 		template<typename Component>
 		void DeactivateComponent(Entity entity)
 		{
-			EventDispatcher::dispatch(ComponentDeactivatedEvent<Component>(entity));
+			if (m_Initialized)
+				EventDispatcher::dispatch(ComponentDeactivatedEvent<Component>(entity));
+
 			ComponentPool* pool = GetComponentPool(ComponentPool::getComponentType<Component>());
 			pool->DeactivateEntity(entity);
 			m_ComponentMap[entity].erase(std::remove(m_ComponentMap[entity].begin(), m_ComponentMap[entity].end(), ComponentPool::getComponentType<Component>()));
@@ -75,7 +81,9 @@ namespace Sonic {
 			ComponentPool* pool = GetComponentPool(ComponentPool::getComponentType<Component>());
 			pool->ReactivateEntity(entity);
 			m_ComponentMap[entity].push_back(ComponentPool::getComponentType<Component>());
-			EventDispatcher::dispatch(ComponentReactivatedEvent<Component>(entity));
+
+			if (m_Initialized)
+				EventDispatcher::dispatch(ComponentReactivatedEvent<Component>(entity));
 		}
 
 		template<typename Component>
@@ -84,7 +92,9 @@ namespace Sonic {
 			ComponentPool* pool = GetComponentPool(ComponentPool::getComponentType<Component>());
 			pool->RemoveEntity(entity);
 			m_ComponentMap[entity].erase(std::remove(m_ComponentMap[entity].begin(), m_ComponentMap[entity].end(), ComponentPool::getComponentType<Component>()));
-			EventDispatcher::dispatch(ComponentRemovedEvent<Component>(entity));
+
+			if (m_Initialized)
+				EventDispatcher::dispatch(ComponentRemovedEvent<Component>(entity));
 		}
 
 		template<typename Component>
@@ -108,16 +118,15 @@ namespace Sonic {
 		template<typename Component1, typename Component2>
 		GroupView<Component1, Component2>& Group()
 		{
-			static std::unordered_map<ComponentRegistry*, GroupView<Component1, Component2>*> groups;
+			static GroupView<Component1, Component2>* groupView = nullptr;
 
-			auto it = groups.find(this);
-			if (it == groups.end())
+			if (groupView == nullptr)
 			{
-				groups.emplace(this, new GroupView<Component1, Component2>(GetComponentPool(ComponentPool::getComponentType<Component1>()), GetComponentPool(ComponentPool::getComponentType<Component2>())));
-				it = --(groups.end());
+				groupView = new GroupView<Component1, Component2>(GetComponentPool(ComponentPool::getComponentType<Component1>()), GetComponentPool(ComponentPool::getComponentType<Component2>()));
+				m_GroupViewClearers.push_back([&]() { delete groupView; groupView = nullptr; });
 			}
 
-			return *it->second;
+			return *groupView;
 		}
 
 	private:
@@ -126,6 +135,10 @@ namespace Sonic {
 
 		Entity m_NextEntity = 1;
 		std::unordered_map<EntityGroup, std::vector<Entity>> m_EntityGroups;
+
+		std::vector<std::function<void()>> m_GroupViewClearers;
+
+		bool m_Initialized = false;
 	};
 
 }

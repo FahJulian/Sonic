@@ -94,9 +94,14 @@ void UIRenderer::init()
 	delete[] indices;
 }
 
-void UIRenderer::drawElement(int index, int x, int y, int width, int height, float zIndex, const UIRendererProperties* properties)
+void UIRenderer::drawElement(int index, float x, float y, float width, float height, float zIndex, const UIRendererProperties* properties)
 {
-	float textureSlot = properties->sprite.IsNull() ? -1.0f : textureSlotOf(*properties->sprite.texture);
+	x = (float)((int)x);
+	y = (float)((int)y);
+	width = (float)((int)width);
+	height = (float)((int)height);
+
+	float textureSlot = properties->sprite.IsNull() ? -1.0f : textureSlotOf(properties->sprite.texture);
 
 	Vertex* vertex = s_Vertices + 4 * static_cast<size_t>(index);
 	for (int i = 0; i < 4; i++)
@@ -122,8 +127,8 @@ void UIRenderer::drawElement(int index, int x, int y, int width, int height, flo
 		vertex->borderG = properties->borderColor.g;
 		vertex->borderB = properties->borderColor.b;
 		vertex->borderA = properties->borderColor.a;
-		vertex->borderWeight = properties->borderWeight;
-		vertex->edgeRadius = properties->edgeRadius;
+		vertex->borderWeight = (float)properties->borderWeight;
+		vertex->edgeRadius = (float)properties->edgeRadius;
 
 		vertex++;
 	}
@@ -159,7 +164,7 @@ void UIRenderer::rebuffer(Scene* scene)
 				properties = &r->properties;
 			}
 
-			drawElement(i, (int)c->x, (int)c->y, (int)c->width, (int)c->height, c->zIndex, properties);
+			drawElement(i, c->x, c->y, c->width, c->height, c->zIndex, properties);
 
 			*r->dirty = false;
 			rebuffer = true;
@@ -190,7 +195,7 @@ void UIRenderer::rebuffer(Scene* scene)
 					properties = &r->properties;
 				}
 
-				drawElement(i, (int)c->x, (int)c->y, (int)c->width, (int)c->height, c->zIndex, properties);
+				drawElement(i, c->x, c->y, c->width, c->height, c->zIndex, properties);
 
 				*r->dirty = false;
 				rebuffer = true;

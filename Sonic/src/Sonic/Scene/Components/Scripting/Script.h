@@ -1,8 +1,9 @@
 #pragma once
 #include "Sonic/Scene/ECS/Entity.h"
-#include "Scene.h"
 
 namespace Sonic {
+
+	class Scene;
 
 	class Script
 	{
@@ -10,6 +11,11 @@ namespace Sonic {
 		virtual void OnInit() {}
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnDestroy() {}
+
+		~Script()
+		{
+			OnDestroy();
+		}
 
 	private:
 		void Init(Scene* scene, Entity entity)
@@ -21,10 +27,11 @@ namespace Sonic {
 		}
 
 	protected:
-		Scene* m_Scene;
-		Entity m_Entity;
+		Scene* m_Scene = nullptr;
+		Entity m_Entity = 0;
 
 		friend class Scene;
+		friend struct ScriptComponent;
 	};
 
 }

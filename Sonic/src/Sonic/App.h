@@ -9,16 +9,6 @@ extern int main();
 
 namespace Sonic {
 
-    struct AppData
-    {
-        WindowMode windowMode;
-        String windowTitle;
-        Color clearColor;
-        bool windowResizable;
-        int windowWidth;
-        int windowHeight;
-    };
-
     /**
     * Class that should be subclassed by the App that is created. Holds the 
     * currently active scene of the app.
@@ -39,7 +29,8 @@ namespace Sonic {
         * 
         * @return Whether or not initialization was successful
         */
-        static bool init(const AppData& data);
+        static bool init(const WindowInfo& data);
+        static bool init(const String& infoFilePath, bool overrideBinary = false);
 
         /**
         * Runs the app.

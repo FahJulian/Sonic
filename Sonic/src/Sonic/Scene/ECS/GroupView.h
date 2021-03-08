@@ -38,11 +38,8 @@ namespace Sonic {
 				groupView->m_ActiveIteratorIndices.push_back(&this->index);
 			}
 
-			Iterator(const Iterator& other)
-				: pool1(other.pool1), pool2(other.pool2), groupView(other.groupView), index(other.index)
-			{
-				groupView->m_ActiveIteratorIndices.push_back(&this->index);
-			}
+			Iterator(const Iterator& other) = delete;
+			Iterator& operator=(const Iterator& other) = delete;
 
 			value_type operator*() 
 			{
@@ -51,11 +48,10 @@ namespace Sonic {
 					entity,
 					pool1->GetComponent<Component1>(entity),
 					pool2->GetComponent<Component2>(entity)
-				};
+				}; 
 			}
 
-			Iterator operator++() { index++; return *this; }
-			Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+			Iterator& operator++() { index++; return *this; }
 
 			friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; }
 			friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; }
@@ -71,7 +67,7 @@ namespace Sonic {
 			}
 		};
 
-	public:
+	private:
 		GroupView(ComponentPool* pool1, ComponentPool* pool2)
 			: m_Pool1(pool1), m_Pool2(pool2)
 		{
@@ -96,6 +92,7 @@ namespace Sonic {
 		GroupView(const GroupView& other) = delete;
 		GroupView& operator=(const GroupView& other) = delete;
 
+	public:
 		Iterator begin() { return Iterator(m_Pool1, m_Pool2, this, 0); }
 		Iterator end() { return Iterator(m_Pool1, m_Pool2, this, m_Entities.size()); }
 
@@ -113,10 +110,13 @@ namespace Sonic {
 			return static_cast<int>(m_Entities.size());
 		}
 
+	private:
 		ComponentPool* m_Pool1;
 		ComponentPool* m_Pool2;
 		std::vector<Entity> m_Entities;
 		std::vector<size_t*> m_ActiveIteratorIndices;
+
+		friend class ComponentRegistry;
 	};
 
 }

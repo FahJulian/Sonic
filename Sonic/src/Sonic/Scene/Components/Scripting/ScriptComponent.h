@@ -11,6 +11,11 @@ namespace Sonic {
 			: script(script)
 		{
 		}
+
+		~ScriptComponent()
+		{
+			delete script;
+		}
 	};
 
 }

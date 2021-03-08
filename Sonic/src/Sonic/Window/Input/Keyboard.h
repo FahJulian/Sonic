@@ -1,35 +1,21 @@
 #pragma once
-#include <gl/glew.h>
-#include <GLFW/glfw3.h>
+#include <array>
 #include "Keys.h"
 
 namespace Sonic {
+	
+	class Keyboard
+	{
+	public:
+		static bool isKeyPressed(Key key) 
+		{ 
+			return s_Keys[key]; 
+		}
 
-    /**
-    * Uninstantiable class that is responsible for turning glfw keyboard events
-    * into Sonic events and calling the scenes event dispatcher with that event
-    */
-    class Keyboard
-    {
-    private:
-        Keyboard() = delete;
-        Keyboard(const Keyboard& other) = delete;
+	private:
+		static std::array<bool, HIGHEST_KEY + 1> s_Keys;
 
-        /**
-        * Should be called with the data of the glfw key event. Converts it into a
-        * sonic KeyPressedEvent or KeyReleaedEvent and dispatches it to the scene
-        */
-        static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    public:
-        /**
-        * Checks if the given key is currently pressed.
-        * 
-        * @param key The key to check
-        */
-        static bool isKeyPressed(Key key);
-
-    private:
-        friend class Window;
-    };
+		friend class Window;
+	};
 
 }

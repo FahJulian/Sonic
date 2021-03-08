@@ -7,6 +7,7 @@
 #include "Sonic/Renderer/2D/Renderer2D.h"
 #include "Sonic/Renderer/UI/UIRenderer.h"
 #include "Sonic/Scene/SceneManager.h"
+#include "Window/WindowInfoLoader.h"
 #include "Window/Window.h"
 #include "App.h"
 
@@ -16,27 +17,27 @@ using namespace Sonic;
 static const int INITIAL_UPDATE_CAP = 60;
 static double s_SecondsPerUpdate = 1.0 / INITIAL_UPDATE_CAP;
 
+static bool s_Initialized = false;
 static bool s_Running = false;
 
 
-bool App::init(const AppData& data)
+bool App::init(const String& infoFilePath, bool overrideBinary)
 {
-    if (!Sonic::Window::init(data.windowMode, data.clearColor, data.windowTitle, data.windowWidth, data.windowHeight, data.windowResizable))
-    {
-        return false;
-    }
+    return App::init(Util::loadWindowInfo(infoFilePath, overrideBinary));
+}
 
-    if (glewInit() != GLEW_OK)
-    {
-        Window::destroy();
+bool App::init(const WindowInfo& info)
+{
+    if (!Sonic::Window::init(info))
         return false;
-    }
 
     Renderer2D::init();
     UIRenderer::init();
     Font::init();
     FontRenderer::init();
     SceneManager::init();
+
+    s_Initialized = true;
         
     return true;
 }
@@ -63,16 +64,22 @@ void App::run()
             Window::pollEvents();
 
             totalDelta = 0;
+
+            if (SceneManager::isSceneChangeScheduled())
+            {
+                SceneManager::executeSceneChange();
+                continue;
+            }
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
         SceneManager::getCurrentScene()->Render();
         Window::swapBuffers();
-        glFlush();
+        //glFlush();
 
         const double endTime = Window::getTime();
         const double delta = endTime - startTime;
-            
+           
 #ifdef SONIC_DEBUG
         frames++;
         fpsTimer += delta;
@@ -105,6 +112,11 @@ void App::stop()
 
 void App::onWindowResized(const WindowResizedEvent& e)
 {
+    if (!s_Initialized)
+        return;
+
+    glViewport(0, 0, (int)e.width, (int)e.height);
+
     SceneManager::getCurrentScene()->RebufferRenderers();
 
     Window::clear();
@@ -125,5 +137,7 @@ void App::destroy()
 
     SceneManager::destroy();
     Font::destroy();
+
+    Window::saveInfo();
     Window::destroy();
 }

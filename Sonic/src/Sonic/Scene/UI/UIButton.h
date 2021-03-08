@@ -12,12 +12,23 @@ namespace Sonic {
 		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties, 
 			const EventListener<MouseButtonReleasedEvent>& listener, Entity parent = 0);
 		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties, 
-			const UIRendererProperties& hovereredProperties, const EventListener<MouseButtonReleasedEvent>& listener, Entity parent = 0);
+			const UIRendererProperties& hoveredProperties, const EventListener<MouseButtonReleasedEvent>& listener, Entity parent = 0);
 		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties,
-			const EventListener<MouseButtonReleasedEvent>& listener, 
+			const EventListener<MouseButtonReleasedEvent>& listener,
 			const Font& font, const Color& textColor, const String& text, Entity parent = 0);
 		Entity createButton(Scene* scene, UISize x, UISize y, UISize width, UISize height, const UIRendererProperties& properties,
-			const UIRendererProperties& hovereredProperties, const EventListener<MouseButtonReleasedEvent>& listener, 
+			const UIRendererProperties& hoveredProperties, const EventListener<MouseButtonReleasedEvent>& listener,
+			const Font& font, const Color& textColor, const String& text, Entity parent = 0);
+
+		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
+			const EventListener<MouseButtonReleasedEvent>& listener, Entity parent = 0);
+		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
+			const UIRendererProperties& hoveredProperties, const EventListener<MouseButtonReleasedEvent>& listener, Entity parent = 0);
+		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
+			const EventListener<MouseButtonReleasedEvent>& listener,
+			const Font& font, const Color& textColor, const String& text, Entity parent = 0);
+		Entity createButton(Scene* scene, UISize::Mode mode, float x, float y, float width, float height, const UIRendererProperties& properties,
+			const UIRendererProperties& hoveredProperties, const EventListener<MouseButtonReleasedEvent>& listener,
 			const Font& font, const Color& textColor, const String& text, Entity parent = 0);
 
 	}

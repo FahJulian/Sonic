@@ -1,5 +1,5 @@
 #pragma once
-#include "Sonic/Window/Cursor/Cursors.h"
+#include "Sonic/Window/Window.h"
 #include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Event/Events/UIEvents.h"
 
@@ -8,17 +8,17 @@ namespace Sonic {
 	struct UIMovableComponent
 	{
 	private:
-		StandardCursor cursor;
+		String cursor;
 		Ref<EventListener<UIEntityMovedEvent>> onMoved;
 		bool hovered = false;
 
 	public:
-		UIMovableComponent(StandardCursor cursor = StandardCursors::Move)
+		UIMovableComponent(String cursor = Cursors::Move)
 			: cursor(cursor), onMoved(createRef<EventListener<UIEntityMovedEvent>>(nullptr))
 		{
 		}
 
-		UIMovableComponent(EventListener<UIEntityMovedEvent> onMoved, StandardCursor cursor = StandardCursors::Move)
+		UIMovableComponent(EventListener<UIEntityMovedEvent> onMoved, String cursor = Cursors::Move)
 			: cursor(cursor), onMoved(createRef<EventListener<UIEntityMovedEvent>>(onMoved))
 		{
 		}

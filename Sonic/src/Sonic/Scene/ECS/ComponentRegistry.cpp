@@ -34,10 +34,12 @@ void ComponentRegistry::DeactivateEntities(EntityGroup group)
 {
 	for (Entity entity : m_EntityGroups[group])
 		DeactivateEntity(entity);
+	DeactivateEntity(group);
 }
 
 void ComponentRegistry::ReactivateEntities(EntityGroup group)
 {
+	ReactivateEntity(group);
 	for (Entity entity : m_EntityGroups[group])
 		ReactivateEntity(entity);
 }
@@ -52,7 +54,8 @@ ComponentPool* ComponentRegistry::GetComponentPool(ComponentType type)
 
 void ComponentRegistry::DeactivateEntity(Entity entity)
 {
-	EventDispatcher::dispatch(EntityDeactivatedEvent(entity));
+	if (m_Initialized)
+		EventDispatcher::dispatch(EntityDeactivatedEvent(entity));
 
 	auto it = m_ComponentMap.find(entity);
 
@@ -73,12 +76,14 @@ void ComponentRegistry::ReactivateEntity(Entity entity)
 		pool->ReactivateEntity(entity);
 	}
 
-	EventDispatcher::dispatch(EntityReactivatedEvent(entity));
+	if (m_Initialized)
+		EventDispatcher::dispatch(EntityReactivatedEvent(entity));
 }
 
 void ComponentRegistry::RemoveEntity(Entity entity)
 {
-	EventDispatcher::dispatch(EntityRemovedEvent(entity));
+	if (m_Initialized)
+		EventDispatcher::dispatch(EntityRemovedEvent(entity));
 
 	auto it = m_ComponentMap.find(entity);
 
@@ -94,6 +99,11 @@ void ComponentRegistry::RemoveEntity(Entity entity)
 	m_ComponentMap.erase(it);
 }
 
+void ComponentRegistry::Init()
+{
+	m_Initialized = true;
+}
+
 void ComponentRegistry::Destroy()
 {
 	for (ComponentPool* pool : m_ComponentPools)
@@ -104,4 +114,10 @@ void ComponentRegistry::Destroy()
 
 	m_NextEntity = 1;
 	m_EntityGroups.clear();
+
+	m_Initialized = false;
+
+	for (auto& clearer : m_GroupViewClearers)
+		clearer();
+	m_GroupViewClearers.clear();
 }

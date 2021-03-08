@@ -17,4 +17,11 @@ namespace Sonic {
         }
     };
 
+    struct WindowGainedFocusEvent
+    {
+    };
+
+    struct WindowLostFocusEvent
+    {
+    };
 }

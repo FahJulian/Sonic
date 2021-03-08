@@ -74,7 +74,7 @@ void SceneUIHandler::Init()
 
 void SceneUIHandler::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
 {
-	if (e.button == Buttons::Left)
+	if (e.button == MouseButtons::Left)
 	{
 		for (auto [entity, cl, c] : m_Scene->Group<UIClickListenerComponent, UIComponent>())
 		{
@@ -89,7 +89,7 @@ void SceneUIHandler::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
 
 void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 {
-	if (e.button == Buttons::Left)
+	if (e.button == MouseButtons::Left)
 	{
 		if (s_CurrentAction == Action::None)
 		{
@@ -110,9 +110,9 @@ void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 
 void SceneUIHandler::OnMouseMoved(const MouseMovedEvent& e)
 {
-	Window::setCursor(StandardCursors::Arrow);
+	Window::setCursor(Cursors::Arrow);
 
-	if (Mouse::isButtonPressed(Buttons::Left))
+	if (Mouse::isButtonPressed(MouseButtons::Left))
 	{
 		if (s_CurrentAction == Action::None || s_CurrentAction == Action::Resizing)
 		{
@@ -342,13 +342,13 @@ void SceneUIHandler::OnWindowResized(const WindowResizedEvent& e)
 void SceneUIHandler::UpdateUIResizableComponentMouseButtonDown(Entity entity, UIResizableComponent* r, UIComponent* c, const MouseMovedEvent& e)
 {
 	if ((r->bordersHovered.bottom && r->bordersHovered.right) || (r->bordersHovered.top && r->bordersHovered.left))
-		Window::setCursor(StandardCursors::ResizeDiagonalLeft);
+		Window::setCursor(Cursors::ResizeDiagonalLeft);
 	else if ((r->bordersHovered.bottom && r->bordersHovered.left) || (r->bordersHovered.top && r->bordersHovered.right))
-		Window::setCursor(StandardCursors::ResizeDiagonalRight);
+		Window::setCursor(Cursors::ResizeDiagonalRight);
 	else if (r->bordersHovered.bottom || r->bordersHovered.top)
-		Window::setCursor(StandardCursors::ResizeVertical);
+		Window::setCursor(Cursors::ResizeVertical);
 	else if (r->bordersHovered.left || r->bordersHovered.right)
-		Window::setCursor(StandardCursors::ResizeHorizontal);
+		Window::setCursor(Cursors::ResizeHorizontal);
 
 	if (r->bordersHovered)
 	{
@@ -422,13 +422,13 @@ void SceneUIHandler::UpdateUIResizableComponentMouseButtonUp(Entity entity, UIRe
 	}
 
 	if ((r->bordersHovered.bottom && r->bordersHovered.right) || (r->bordersHovered.top && r->bordersHovered.left))
-		Window::setCursor(StandardCursors::ResizeDiagonalLeft);
+		Window::setCursor(Cursors::ResizeDiagonalLeft);
 	else if ((r->bordersHovered.bottom && r->bordersHovered.left) || (r->bordersHovered.top && r->bordersHovered.right))
-		Window::setCursor(StandardCursors::ResizeDiagonalRight);
+		Window::setCursor(Cursors::ResizeDiagonalRight);
 	else if (r->bordersHovered.bottom || r->bordersHovered.top)
-		Window::setCursor(StandardCursors::ResizeVertical);
+		Window::setCursor(Cursors::ResizeVertical);
 	else if (r->bordersHovered.left || r->bordersHovered.right)
-		Window::setCursor(StandardCursors::ResizeHorizontal);
+		Window::setCursor(Cursors::ResizeHorizontal);
 
 	if (r->bordersHovered)
 	{

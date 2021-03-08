@@ -6,9 +6,10 @@ namespace Sonic {
     struct KeyPressedEvent
     {
         Key key;
+        wchar_t character;
 
-        KeyPressedEvent(Key key)
-            : key(key)
+        KeyPressedEvent(Key key, wchar_t character)
+            : key(key), character(character)
         {
         }
     };

@@ -1,99 +1,84 @@
 #pragma once
-#include <string>
-#include "Sonic/Base.h"
-#include "Cursor/Cursors.h"
+#include "Sonic/Graphics/Color.h"
+#include "Input/Keyboard.h"
+#include "Input/Mouse.h"
+#include "WindowInfo.h"
+
+
+struct HWND__;
 
 namespace Sonic {
 
-    enum class WindowMode : uint8_t
-    {
-        Windowed,
-        Borderless,
-        BorderlessFullscreen,
-        Fullscreen
-    };
+	namespace Cursors {
 
-    struct Color;
+		const String Arrow = "arrow";
+		const String Alternate = "alternate";
+		const String IBeam = "ibeam";
+		const String Move = "move";
+		const String Crosshair = "crosshair";
+		const String ResizeHorizontal = "resize_horizontal";
+		const String ResizeVertical = "resize_vertical";
+		const String ResizeDiagonalLeft = "resize_diagonal_left";
+		const String ResizeDiagonalRight = "resize_diagonal_right";
+		const String Unavailable = "unavailable";
+		const String Pen = "pen";
+		const String Link = "link";
+		const String Help = "help";
 
-    /**
-    * Uninstantiable class that is responsible for initializing glfw windows, turning glfw 
-    * window events into Sonic events and calling the scenes event dispatcher with that event
-    * and wrapping around other glfw functions
-    */
-    class Window
-    {
-    public:
-        /**
-        * Initializes the Window class by creating a glfw window with the given props
-        * 
-        * @param width The width of the created window
-        * @param height The height of the created window
-        * @param title The title of the created window
-        * @param resizable Whether or not the created window should be resizable by the user
-        * 
-        * @return Whether the initialization was successful
-        */
-        static bool init(WindowMode mode, const Color& clearColor, const String& title, int width, int height, bool resizable = true);
+	}
 
-        /**
-        * Destroys the glfw window and frees all memory related to glfw
-        */
-        static void destroy();
+	class Window
+	{
+	private:
+		Window() = delete;
+		Window(const Window& other) = delete;
+		Window& operator=(const Window& other) = delete;
 
-        /**
-        * @return Whether or not the window has been closed
-        */
-        static bool isClosed();
+		static bool createWin32Window();
+		static void onResized(int width, int height);
+		static void onMouseButtonPressed(MouseButton button);
+		static void onMouseButtonReleased(MouseButton button);
+		static __int64 __stdcall WindowProc(HWND__* handle, unsigned int msg, unsigned __int64 wParam, __int64 lParam);
 
-        /**
-        * Swaps the buffers of the glfw window
-        */
-        static void swapBuffers();
+		static bool createContext();
+	public:
+		static bool init(const WindowInfo& info);
+		static bool init(const String& infoFilePath, bool overrideBinary = false);
 
-        /**
-        * Polls all glfw window events
-        */
-        static void pollEvents();
+		static void saveInfo();
+		static void destroy();
 
-        static void setClearColor(const Color& color);
+		static void pollEvents();
 
-        static void clear();
+		static void clear();
+		static void swapBuffers();
 
-        /**
-        * @return The time that has since window initialization passed in seconds
-        */
-        static double getTime();
+		static void setClearColor(const Color& color);
 
-        static float getHeight();
+		static void setCursor(const String& cursorName);
 
-        static float getWidth();
+		static void setTitle(String title);
+		static String getTitle();
 
-        static void setSize(float width, float height);
+		static void setWidth(float width);
+		static void setHeight(float height);
+		static void setSize(float width, float height);
+		static float getWidth();
+		static float getHeight();
 
-        static void setWidth(float width);
+		static void setMaximized(bool b);
+		static void setMinimized(bool b);
 
-        static void setHeight(float height);
+		static bool isMinimized();
+		static bool isMaximized();
 
-        static void setWindowMode(WindowMode newMode);
+		static float getMonitorWidth();
+		static float getMonitorHeight();
 
-        static WindowMode getWindowMode();
+		static void setWindowMode(WindowMode mode);
+		static WindowMode getWindowMode();
 
-        static const String& getTitle();
+		static double getTime();
+	};
 
-        static void setTitle(const String& title);
-
-        static void setCursor(Cursor cursor);
-
-        static void setCursor(StandardCursor cursor);
-
-        static void setDefaultCursorSet(StandardCursorSet cursorSet);
-
-    private:
-        static void windowCloseCallback(GLFWwindow* window);
-
-        static void glfwWindowResizeCallback(GLFWwindow* window, int width, int height);
-
-        static void windowResizeCallback(int width, int height);
-    };
-    
 }

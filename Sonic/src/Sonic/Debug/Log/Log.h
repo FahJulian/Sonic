@@ -1,6 +1,6 @@
 #pragma once
+#include <assert.h>
 #include <iostream>
-#include "Sonic/App.h"
 
 namespace Sonic {
 
@@ -13,7 +13,7 @@ namespace Sonic {
             if (!b)
             {
                 Log::debug(std::forward<Arg>(arg), std::forward<Args>(args)...);
-                App::stop();
+                assert(false);
             }
         }
 
@@ -30,13 +30,13 @@ namespace Sonic {
 }
 
 #ifdef SONIC_DEBUG
-    #define SONIC_LOG_DEBUG(...) Sonic::Log::debug(__VA_ARGS__)
-    #define SONIC_LOG_DEBUG_ASSERT(b, ...) Sonic::Log::debugAssert(b, __VA_ARGS__)
-    #define SONIC_LOG_ERROR(...) SONIC_LOG_DEBUG(__VA_ARGS__)
-    #define SONIC_LOG_WARN(...) SONIC_LOG_DEBUG(__VA_ARGS__)    
+#define SONIC_LOG_DEBUG(...) Sonic::Log::debug(__VA_ARGS__)
+#define SONIC_LOG_DEBUG_ASSERT(b, ...) Sonic::Log::debugAssert(b, __VA_ARGS__)
+#define SONIC_LOG_ERROR(...) SONIC_LOG_DEBUG(__VA_ARGS__)
+#define SONIC_LOG_WARN(...) SONIC_LOG_DEBUG(__VA_ARGS__)    
 #else
-    #define SONIC_LOG_DEBUG(...) 
-    #define SONIC_LOG_DEBUG_ASSERT(b, ...)
-    #define SONIC_LOG_ERROR(...)
-    #define SONIC_LOG_WARN(...)   
+#define SONIC_LOG_DEBUG(...) 
+#define SONIC_LOG_DEBUG_ASSERT(b, ...)
+#define SONIC_LOG_ERROR(...)
+#define SONIC_LOG_WARN(...)   
 #endif

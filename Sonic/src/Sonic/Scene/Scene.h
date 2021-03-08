@@ -6,6 +6,7 @@
 #include "Sonic/Scene/UI/SceneUIHandler.h"
 #include "Sonic/Scene/ECS/ComponentRegistry.h"
 #include "Sonic/Scene/Components/2DComponents.h"
+#include "Sonic/Scene/Components/Scripting/ScriptComponent.h"
 
 namespace Sonic {
 
@@ -36,6 +37,13 @@ namespace Sonic {
 
 		void OnRenderer2DComponentAdded(const ComponentAddedEvent<Renderer2DComponent>& e);
 		void OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DComponent>& e);
+
+		void OnScriptComponentAdded(const ComponentAddedEvent<ScriptComponent>& e);
+		void OnScriptComponentDeactivated(const ComponentDeactivatedEvent<ScriptComponent>& e);
+		void OnScriptComponentReactivated(const ComponentReactivatedEvent<ScriptComponent>& e);
+
+		void OnEntityReactivated(const EntityReactivatedEvent& e);
+		void OnEntityDeactivated(const EntityDeactivatedEvent& e);
 
 		void OnWindowResized(const WindowResizedEvent& e);
 

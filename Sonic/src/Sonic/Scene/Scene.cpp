@@ -12,8 +12,6 @@
 using namespace Sonic;
 
 
-
-
 void Scene::Load()
 {
 	OnLoad();
@@ -21,12 +19,19 @@ void Scene::Load()
 
 void Scene::Init()
 {
+	ComponentRegistry::Init();
+
 	EventDispatcher::addListener(this, &Scene::OnRenderer2DComponentAdded);
 	EventDispatcher::addListener(this, &Scene::OnTransform2DComponentAdded);
 
-	EventDispatcher::addListener(this, &Scene::OnWindowResized);
+	EventDispatcher::addListener(this, &Scene::OnScriptComponentAdded);
+	EventDispatcher::addListener(this, &Scene::OnScriptComponentDeactivated);
+	EventDispatcher::addListener(this, &Scene::OnScriptComponentReactivated);
 
-	OnInit();
+	EventDispatcher::addListener(this, &Scene::OnEntityDeactivated);
+	EventDispatcher::addListener(this, &Scene::OnEntityReactivated);
+
+	EventDispatcher::addListener(this, &Scene::OnWindowResized);
 
 	m_UIHandler.Init();
 
@@ -34,6 +39,8 @@ void Scene::Init()
 	{
 		scriptComponent->script->Init(this, entity);
 	});
+
+	OnInit();
 }
 
 void Scene::Update(float deltaTime)
@@ -92,6 +99,33 @@ void Scene::OnTransform2DComponentAdded(const ComponentAddedEvent<Transform2DCom
 {
 	if (HasComponent<Renderer2DComponent>(e.entity))
 		GetComponent<Transform2DComponent>(e.entity)->rendererDirty = GetComponent<Renderer2DComponent>(e.entity)->dirty;
+}
+
+void Scene::OnScriptComponentAdded(const ComponentAddedEvent<ScriptComponent>& e)
+{
+	GetComponent<ScriptComponent>(e.entity)->script->Init(this, e.entity);	
+}
+
+void Scene::OnScriptComponentDeactivated(const ComponentDeactivatedEvent<ScriptComponent>& e)
+{
+	GetComponent<ScriptComponent>(e.entity)->script->OnDestroy();
+}
+
+void Scene::OnScriptComponentReactivated(const ComponentReactivatedEvent<ScriptComponent>& e)
+{
+	GetComponent<ScriptComponent>(e.entity)->script->OnInit();
+}
+
+void Scene::OnEntityReactivated(const EntityReactivatedEvent& e)
+{
+	if (HasComponent<ScriptComponent>(e.entity))
+		GetComponent<ScriptComponent>(e.entity)->script->OnInit();
+}
+
+void Scene::OnEntityDeactivated(const EntityDeactivatedEvent& e)
+{
+	if (HasComponent<ScriptComponent>(e.entity))
+		GetComponent<ScriptComponent>(e.entity)->script->OnDestroy();
 }
 
 void Scene::Destroy()

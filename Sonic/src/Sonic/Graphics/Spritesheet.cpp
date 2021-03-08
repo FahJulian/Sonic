@@ -17,7 +17,7 @@ Spritesheet::Spritesheet(const char* filePath, int rows, int cols, float spriteW
             float y1 = (y * (spriteHeight + padding)) / Texture::GetHeight();
             float y0 = y1 - (spriteHeight / Texture::GetHeight());
 
-            m_Sprites.emplace_back(this, x0, x1, y0, y1);
+            m_Sprites.emplace_back(*this, x0, x1, y0, y1);
         }
     }
 }

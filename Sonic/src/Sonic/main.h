@@ -12,18 +12,12 @@
 
 namespace Sonic
 {
-    /**
-    * Function that has to be defined by the client which should 
-    * return a pointer to the instance of the subclassed App that 
-    * should be ran
-    */
-    AppData init();
+    String init();
 }
 
 int main()
 {
-    Sonic::AppData data = Sonic::init();
-    Sonic::App::init(data);
+    Sonic::App::init(Sonic::init());
 
     Sonic::App::run();
 

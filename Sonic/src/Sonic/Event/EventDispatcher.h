@@ -49,10 +49,10 @@ namespace Sonic {
 			addListener(object, method);
 
 			auto& keys = getListeners<Event>().keys;
-			keys.emplace(reinterpret_cast<intptr_t>(object), keys.size());
+			keys.emplace(reinterpret_cast<intptr_t>(object), getListeners<Event>().listeners.size() - 1);
 		}
 
-		template<typename F, typename Event>
+		template<typename Event, typename F>
 		static void removeListener(F* object)
 		{
 			auto& listeners = getListeners<Event>().listeners;

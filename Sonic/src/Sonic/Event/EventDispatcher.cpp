@@ -1,4 +1,4 @@
-#include "EventDispatcher.h"
+#include "Sonic/Event/EventDispatcher.h"
 
 using namespace Sonic;
 

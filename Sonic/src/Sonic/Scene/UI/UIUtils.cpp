@@ -23,7 +23,7 @@ static float toAbsoluteX(UIComponent* c, UIComponent* parent, float value)
 	switch (c->xPattern.mode)
 	{
 	case UISize::Mode::Absolute: return value;
-	case UISize::Mode::WindowCenter: return (Window::getWidth() - toAbsoluteWidth(c, parent, c->widthPattern.relativeValue)) / 2.0f - toAbsoluteWidth(c, parent, value);
+	case UISize::Mode::WindowCenter: return (Window::getWidth() - toAbsoluteWidth(c, parent, c->widthPattern.relativeValue)) / 2.0f + toAbsoluteWidth(c, parent, value);
 	case UISize::Mode::RelativeToWindow: return value * Window::getWidth();
 	case UISize::Mode::RelativeToEntity: return parent->x + value * parent->width;
 	default:
@@ -37,7 +37,7 @@ static float toAbsoluteY(UIComponent* c, UIComponent* parent, float value)
 	switch (c->yPattern.mode)
 	{
 	case UISize::Mode::Absolute: return value;
-	case UISize::Mode::WindowCenter: return (Window::getHeight() - toAbsoluteHeight(c, parent, c->heightPattern.relativeValue)) / 2.0f - toAbsoluteHeight(c, parent, value);
+	case UISize::Mode::WindowCenter: return (Window::getHeight() - toAbsoluteHeight(c, parent, c->heightPattern.relativeValue)) / 2.0f + toAbsoluteHeight(c, parent, value);
 	case UISize::Mode::RelativeToWindow: return value * Window::getHeight();
 	case UISize::Mode::RelativeToEntity: return parent->y + value * parent->height;
 	default:
