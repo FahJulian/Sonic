@@ -1,3 +1,4 @@
+#include <set>
 #include <optional>
 #include <gl/glew.h>
 #include <gl/wglew.h>
@@ -10,6 +11,7 @@
 #include "Sonic/Event/Events/MouseEvents.h"
 #include "Sonic/Event/Events/KeyEvents.h"
 #include "Sonic/Util/StringUtils.h"
+#include "Sonic/Util/Math/Math.h"
 #include "WindowInfoLoader.h"
 #include "Window.h"
 
@@ -17,12 +19,12 @@ using namespace Sonic;
 
 
 #ifdef SONIC_DEBUG
-const uint32_t VULKAN_EXTENSION_COUNT = 3;
+const uint32_t VULKAN_INSTANCE_EXTENSION_COUNT = 3;
 #else
-const uint32_t VULKAN_EXTENSION_COUNT = 2;
+const uint32_t VULKAN_INSTANCE_EXTENSION_COUNT = 2;
 #endif
 
-const char* const VULKAN_EXTENSION_NAMES[VULKAN_EXTENSION_COUNT] = {
+const char* const VULKAN_INSTANCE_EXTENSION_NAMES[VULKAN_INSTANCE_EXTENSION_COUNT] = {
     "VK_KHR_surface",
     "VK_KHR_win32_surface",
 #ifdef SONIC_DEBUG
@@ -30,20 +32,40 @@ const char* const VULKAN_EXTENSION_NAMES[VULKAN_EXTENSION_COUNT] = {
 #endif
 };
 
+const uint32_t VULKAN_DEVICE_EXTENSION_COUNT = 1;
+const char* const VULKAN_DEVICE_EXTENSION_NAMES[VULKAN_DEVICE_EXTENSION_COUNT] = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
 
 const uint32_t VULKAN_VALIDATION_LAYER_COUNT = 1;
 const char* const VULKAN_VALIDATION_LAYER_NAMES[VULKAN_VALIDATION_LAYER_COUNT] = {
     "VK_LAYER_KHRONOS_validation"
 };
 
+const wchar_t* const WIN32_WINDOW_CLASS_NAME = L"Sonic";
+
 
 struct VulkanQueueFamilieIndices
 {
     std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
 
     bool IsComplete()
     {
-        return graphicsFamily.has_value();
+        return graphicsFamily.has_value() &&
+            presentFamily.has_value();
+    }
+};
+
+struct VulkanSwapChainDetails 
+{
+    VkSurfaceCapabilitiesKHR surfaceCapabilities;
+    std::vector<VkSurfaceFormatKHR> availableSurfaceFormats;
+    std::vector<VkPresentModeKHR> availableSurfacePresentationModes;
+
+    bool IsSuitable()
+    {
+        return !availableSurfaceFormats.empty() && !availableSurfacePresentationModes.empty();
     }
 };
 
@@ -60,6 +82,8 @@ static Color s_ClearColor;
 static bool s_CloseOnAltF4 = true;
 
 static HWND s_Win32Handle;
+static HINSTANCE s_Win32Module;
+
 static uint64_t s_TimerOffset;
 static uint64_t s_TimerFrequency;
 
@@ -85,11 +109,18 @@ static HCURSOR s_CurrentCursor;
 static std::unordered_map<String, HCURSOR> s_Cursors;
 
 static VkInstance s_VulkanInstance;
-static VkDebugUtilsMessengerEXT s_VulkanDebugMessenger; 
+static VkDebugUtilsMessengerEXT s_VulkanDebugMessenger;
 static PFN_vkDestroyDebugUtilsMessengerEXT s_VulkanDebugMessengerDestroyFunc;
+static VkSurfaceKHR s_VulkanSurface;
 static VkPhysicalDevice s_VulkanPhysicalDevice;
 static VkDevice s_VulkanLogicalDevice;
 static VkQueue s_VulkanGraphicsQueue;
+static VkQueue s_VulkanPresentQueue;
+static VkSwapchainKHR s_VulkanSwapChain;
+static std::vector<VkImage> s_VulkanSwapChainImages;
+static VkFormat s_VulkanSwapChainImageFormat;
+static VkExtent2D s_VulkanSwapChainExtent;
+static std::vector<VkImageView> s_VulkanSwapChainImageViews;
 
 
 static void initVulkan();
@@ -98,12 +129,25 @@ static bool checkRequiredVulkanExtensions();
 static bool checkRequiredVulkanValidationLayers();
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+
 static void initVulkanDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT* messengerInfo);
 static void initVulkanDebugMessenger();
+static void initVulkanSurface();
+static bool checkVulkanPhysicalDeviceExtensionSupport(VkPhysicalDevice* physicalDevice);
+
+static VulkanSwapChainDetails getVulkanSwapChainDetails(VkPhysicalDevice* physicalDevice);
 static bool isVulkanPhysicalDeviceSuitable(VkPhysicalDevice* physicalDevice);
 static VulkanQueueFamilieIndices findVulkanQueueFamilies(VkPhysicalDevice* physicalDevice);
 static void initVulkanPhysicalDevice();
 static void initVulkanLogicalDevice();
+
+static VkSurfaceFormatKHR chooseVulkanSurfaceFormat(VulkanSwapChainDetails* swapChainDetails);
+static VkPresentModeKHR chooseVulkanPresentationMode(VulkanSwapChainDetails* swapChainDetails);
+static VkExtent2D chooseSwapExtent(VulkanSwapChainDetails* swapChainDetails);
+static void initVulkanSwapChain();
+static void initVulkanSwapChainImageViews();
+
+static void initVulkanGraphicsPipeline();
 
 static void initTimer();
 static void initCursors();
@@ -169,20 +213,19 @@ bool Window::init(const WindowInfo& info)
 
 bool Window::createWin32Window()
 {
-    const wchar_t* className = L"Sample Window Class";
-    HMODULE win32ModuleHandle = GetModuleHandle(0);
+    s_Win32Module = GetModuleHandle(NULL);
 
     WNDCLASSEX win32WindowClass = { };
     win32WindowClass.cbSize = sizeof(WNDCLASSEX);
     win32WindowClass.lpfnWndProc = Window::WindowProc;
-    win32WindowClass.hInstance = win32ModuleHandle;
-    win32WindowClass.lpszClassName = className;
+    win32WindowClass.hInstance = s_Win32Module;
+    win32WindowClass.lpszClassName = WIN32_WINDOW_CLASS_NAME;
     win32WindowClass.style = CS_OWNDC;
 
     RegisterClassEx(&win32WindowClass);
 
-    s_Win32Handle = CreateWindowEx(0, className, Util::toWideString(s_Title).c_str(), 0,
-        0, 0, 0, 0, NULL, NULL, win32ModuleHandle, NULL
+    s_Win32Handle = CreateWindowEx(0, WIN32_WINDOW_CLASS_NAME, Util::toWideString(s_Title).c_str(), 0,
+        0, 0, 0, 0, NULL, NULL, s_Win32Module, NULL
     );
 
     if (s_Win32Handle == NULL)
@@ -491,8 +534,9 @@ void Window::destroy()
     s_VulkanDebugMessengerDestroyFunc(s_VulkanInstance, s_VulkanDebugMessenger, nullptr);
 #endif
 
+    vkDestroySwapchainKHR(s_VulkanLogicalDevice, s_VulkanSwapChain, nullptr);
+    vkDestroySurfaceKHR(s_VulkanInstance, s_VulkanSurface, nullptr);
     vkDestroyDevice(s_VulkanLogicalDevice, nullptr);
-
     vkDestroyInstance(s_VulkanInstance, nullptr);
 
     if (s_Mode == WindowMode::Fullscreen)
@@ -657,6 +701,16 @@ LRESULT CALLBACK Window::WindowProc(HWND handle, UINT msg, WPARAM wParam, LPARAM
 static void initVulkan()
 {
     createVulkanInstance();
+
+#ifdef SONIC_DEBUG
+    initVulkanDebugMessenger();
+#endif
+
+    initVulkanSurface();
+    initVulkanPhysicalDevice();
+    initVulkanLogicalDevice();
+    initVulkanSwapChain();
+    initVulkanSwapChainImageViews();
 }
 
 static void createVulkanInstance()
@@ -668,12 +722,12 @@ static void createVulkanInstance()
     appInfo.pEngineName = "Sonic Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
     appInfo.apiVersion = VK_API_VERSION_1_0;
-    
+
     VkInstanceCreateInfo instanceInfo = {};
     instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceInfo.pApplicationInfo = &appInfo;
-    instanceInfo.enabledExtensionCount = VULKAN_EXTENSION_COUNT;
-    instanceInfo.ppEnabledExtensionNames = VULKAN_EXTENSION_NAMES;
+    instanceInfo.enabledExtensionCount = VULKAN_INSTANCE_EXTENSION_COUNT;
+    instanceInfo.ppEnabledExtensionNames = VULKAN_INSTANCE_EXTENSION_NAMES;
     instanceInfo.enabledLayerCount = 0;
 
 #ifdef SONIC_DEBUG
@@ -693,13 +747,6 @@ static void createVulkanInstance()
 
     VkResult err = vkCreateInstance(&instanceInfo, nullptr, &s_VulkanInstance);
     SONIC_ASSERT(err == VK_SUCCESS, "Failed to create Vulkan instance (Vulkan error code: ", err, ")");
-
-#ifdef SONIC_DEBUG
-    initVulkanDebugMessenger();
-#endif
-
-    initVulkanPhysicalDevice();
-    initVulkanLogicalDevice();
 }
 
 static bool checkRequiredVulkanExtensions()
@@ -710,12 +757,12 @@ static bool checkRequiredVulkanExtensions()
     std::vector<VkExtensionProperties> availableExtensions = std::vector<VkExtensionProperties>(availableExtensionCount);
     vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.data());
 
-    for (int i = 0; i < VULKAN_EXTENSION_COUNT; i++)
+    for (int i = 0; i < VULKAN_INSTANCE_EXTENSION_COUNT; i++)
     {
         bool found = false;
         for (auto& extension : availableExtensions)
         {
-            if (strcmp(extension.extensionName, VULKAN_EXTENSION_NAMES[i]))
+            if (strcmp(extension.extensionName, VULKAN_INSTANCE_EXTENSION_NAMES[i]))
             {
                 found = true;
                 break;
@@ -769,10 +816,10 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(VkDebugUtilsMessageSev
 
     switch (messageSeverity)
     {
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: [[fallthrough]];
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-        SONIC_LOG_DEBUG("Vulkan validation layer: ", messageTypeName, pCallbackData->pMessage);
-        break;
+    //case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: [[fallthrough]];
+    //case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        //SONIC_LOG_DEBUG("Vulkan validation layer: ", messageTypeName, pCallbackData->pMessage);
+        //break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
         SONIC_LOG_WARN("Vulkan validation layer: ", messageTypeName, pCallbackData->pMessage);
         break;
@@ -809,6 +856,67 @@ static void initVulkanDebugMessenger()
     vulkanDebugMessengerCreateFunc(s_VulkanInstance, &messengerInfo, nullptr, &s_VulkanDebugMessenger);
 }
 
+static void initVulkanSurface()
+{
+    VkWin32SurfaceCreateInfoKHR surfaceInfo = { };
+    surfaceInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    surfaceInfo.hwnd = s_Win32Handle;
+    surfaceInfo.hinstance = s_Win32Module;
+
+    VkResult err = vkCreateWin32SurfaceKHR(s_VulkanInstance, &surfaceInfo, nullptr, &s_VulkanSurface);
+    SONIC_ASSERT(err == VK_SUCCESS, "Failed to initialize vulkan: Could not initiaize win32 surface");
+}
+
+static bool checkVulkanPhysicalDeviceExtensionSupport(VkPhysicalDevice* physicalDevice)
+{
+    uint32_t availableExtensionCount;
+    vkEnumerateDeviceExtensionProperties(*physicalDevice, nullptr, &availableExtensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> availableExtensions = std::vector<VkExtensionProperties>(availableExtensionCount);
+    vkEnumerateDeviceExtensionProperties(*physicalDevice, nullptr, &availableExtensionCount, availableExtensions.data());
+
+    for (int i = 0; i < VULKAN_DEVICE_EXTENSION_COUNT; i++)
+    {
+        bool found = false;
+        for (auto& extension : availableExtensions)
+        {
+            if (strcmp(extension.extensionName, VULKAN_DEVICE_EXTENSION_NAMES[i]))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            return false;
+    }
+
+    return true;
+}
+
+static VulkanSwapChainDetails getVulkanSwapChainDetails(VkPhysicalDevice* physicalDevice)
+{
+    VulkanSwapChainDetails swapChainDetails;
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*physicalDevice, s_VulkanSurface, &swapChainDetails.surfaceCapabilities);
+
+    uint32_t availableSurfaceFormatCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(*physicalDevice, s_VulkanSurface, &availableSurfaceFormatCount, nullptr);
+
+    swapChainDetails.availableSurfaceFormats = std::vector<VkSurfaceFormatKHR>(availableSurfaceFormatCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(*physicalDevice, s_VulkanSurface, &availableSurfaceFormatCount, 
+        swapChainDetails.availableSurfaceFormats.data());
+
+    uint32_t availableSurfacePresentationModesCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(*physicalDevice, s_VulkanSurface, &availableSurfacePresentationModesCount, nullptr);
+
+    swapChainDetails.availableSurfacePresentationModes = std::vector<VkPresentModeKHR>(availableSurfaceFormatCount);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(*physicalDevice, s_VulkanSurface, &availableSurfacePresentationModesCount, 
+        swapChainDetails.availableSurfacePresentationModes.data());
+
+    return swapChainDetails;
+}
+
 static bool isVulkanPhysicalDeviceSuitable(VkPhysicalDevice* physicalDevice)
 {
     VkPhysicalDeviceProperties properties;
@@ -818,11 +926,12 @@ static bool isVulkanPhysicalDeviceSuitable(VkPhysicalDevice* physicalDevice)
     vkGetPhysicalDeviceFeatures(*physicalDevice, &features);
 
     VulkanQueueFamilieIndices queueFamilies = findVulkanQueueFamilies(physicalDevice);
+    VulkanSwapChainDetails swapChainDetails = getVulkanSwapChainDetails(physicalDevice);
 
-    return queueFamilies.IsComplete();
+    return checkVulkanPhysicalDeviceExtensionSupport(physicalDevice) && queueFamilies.IsComplete() && swapChainDetails.IsSuitable();
 }
 
-static VulkanQueueFamilieIndices findVulkanQueueFamilies(VkPhysicalDevice* physicalDevice) 
+static VulkanQueueFamilieIndices findVulkanQueueFamilies(VkPhysicalDevice* physicalDevice)
 {
     VulkanQueueFamilieIndices queueFamilies;
 
@@ -832,12 +941,18 @@ static VulkanQueueFamilieIndices findVulkanQueueFamilies(VkPhysicalDevice* physi
     std::vector<VkQueueFamilyProperties> availableQueueFamilies = std::vector<VkQueueFamilyProperties>(availableQueueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &availableQueueFamilyCount, availableQueueFamilies.data());
 
-    for (size_t i = 0, size = availableQueueFamilies.size(); i < size; i++)
+    for (uint32_t i = 0, size = (uint32_t)availableQueueFamilies.size(); i < size; i++)
     {
         auto& queueFamily = availableQueueFamilies.at(i);
 
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-            queueFamilies.graphicsFamily = (uint32_t)i;
+            queueFamilies.graphicsFamily = i;
+
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(*physicalDevice, i, s_VulkanSurface, &presentSupport);
+
+        if (presentSupport)
+            queueFamilies.presentFamily = i;
 
         if (queueFamilies.IsComplete())
             break;
@@ -871,21 +986,33 @@ static void initVulkanLogicalDevice()
 {
     VulkanQueueFamilieIndices queueFamilies = findVulkanQueueFamilies(&s_VulkanPhysicalDevice);
 
-    VkDeviceQueueCreateInfo queueInfo = { };
-    queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueInfo.queueFamilyIndex = queueFamilies.graphicsFamily.value();
-    queueInfo.queueCount = 1;
+    std::set<uint32_t> uniqueQueueFamilies = {
+        queueFamilies.graphicsFamily.value(),
+        queueFamilies.presentFamily.value()
+    };
 
     float queuePriority = 1.0f;
-    queueInfo.pQueuePriorities = &queuePriority;
+    std::vector<VkDeviceQueueCreateInfo> queueInfos;
+    for (uint32_t queueFamily : uniqueQueueFamilies)
+    {
+        VkDeviceQueueCreateInfo queueInfo = { };
+        queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueInfo.queueFamilyIndex = queueFamily;
+        queueInfo.queueCount = 1;
+        queueInfo.pQueuePriorities = &queuePriority;
+
+        queueInfos.push_back(queueInfo);
+    }
 
     VkPhysicalDeviceFeatures features = { };
 
     VkDeviceCreateInfo deviceInfo = { };
     deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceInfo.queueCreateInfoCount = 1;
-    deviceInfo.pQueueCreateInfos = &queueInfo;
+    deviceInfo.queueCreateInfoCount = (uint32_t)queueInfos.size();
+    deviceInfo.pQueueCreateInfos = queueInfos.data();
     deviceInfo.pEnabledFeatures = &features;
+    deviceInfo.enabledExtensionCount = VULKAN_DEVICE_EXTENSION_COUNT;
+    deviceInfo.ppEnabledExtensionNames = VULKAN_DEVICE_EXTENSION_NAMES;
 
 #ifdef SONIC_DEBUG
     deviceInfo.enabledLayerCount = VULKAN_VALIDATION_LAYER_COUNT;
@@ -899,6 +1026,134 @@ static void initVulkanLogicalDevice()
     SONIC_ASSERT(err == VK_SUCCESS, "Failed to initialized Vulkan logical device");
 
     vkGetDeviceQueue(s_VulkanLogicalDevice, queueFamilies.graphicsFamily.value(), 0, &s_VulkanGraphicsQueue);
+    vkGetDeviceQueue(s_VulkanLogicalDevice, queueFamilies.presentFamily.value(), 0, &s_VulkanPresentQueue);
+}
+
+static VkSurfaceFormatKHR chooseVulkanSurfaceFormat(VulkanSwapChainDetails* swapChainDetails)
+{
+    for (auto& surfaceFormat : swapChainDetails->availableSurfaceFormats)
+    {
+        if (surfaceFormat.format == VK_FORMAT_R8G8B8A8_SRGB && surfaceFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            return surfaceFormat;
+    }
+
+    return swapChainDetails->availableSurfaceFormats.at(0);
+}
+
+static VkPresentModeKHR chooseVulkanPresentationMode(VulkanSwapChainDetails* swapChainDetails)
+{
+    for (auto& presentationMode : swapChainDetails->availableSurfacePresentationModes)
+    {
+        if (presentationMode == VK_PRESENT_MODE_MAILBOX_KHR)
+            return presentationMode;
+    }
+
+    return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+static VkExtent2D chooseSwapExtent(VulkanSwapChainDetails* swapChainDetails)
+{
+    if (swapChainDetails->surfaceCapabilities.currentExtent.width != UINT32_MAX)
+    {
+        return swapChainDetails->surfaceCapabilities.currentExtent;
+    }
+    else
+    {
+        VkExtent2D extent;
+        VkExtent2D* minExtent = &swapChainDetails->surfaceCapabilities.minImageExtent;
+        VkExtent2D* maxExtent = &swapChainDetails->surfaceCapabilities.minImageExtent;
+
+        extent.width = Math::clamp((uint32_t)s_CurrentWidth, minExtent->width, maxExtent->width);
+        extent.width = Math::clamp((uint32_t)s_CurrentHeight, minExtent->height, maxExtent->height);
+
+        return extent;
+    }
+}
+
+static void initVulkanSwapChain()
+{
+    VulkanSwapChainDetails swapChainDetails = getVulkanSwapChainDetails(&s_VulkanPhysicalDevice);
+
+    VkSurfaceFormatKHR surfaceFormat = chooseVulkanSurfaceFormat(&swapChainDetails);
+    VkPresentModeKHR presentationMode = chooseVulkanPresentationMode(&swapChainDetails);
+    VkExtent2D swapExtent = chooseSwapExtent(&swapChainDetails);
+
+    uint32_t imageCount = swapChainDetails.surfaceCapabilities.minImageCount + 1;
+    if (imageCount > swapChainDetails.surfaceCapabilities.maxImageCount && swapChainDetails.surfaceCapabilities.maxImageCount != 0)
+        imageCount = swapChainDetails.surfaceCapabilities.maxImageCount;
+
+    VkSwapchainCreateInfoKHR swapChainInfo = { };
+    swapChainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapChainInfo.surface = s_VulkanSurface;
+    swapChainInfo.minImageCount = imageCount;
+    swapChainInfo.imageFormat = surfaceFormat.format;
+    swapChainInfo.imageColorSpace = surfaceFormat.colorSpace;
+    swapChainInfo.imageExtent = swapExtent;
+    swapChainInfo.imageArrayLayers = 1;
+    swapChainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+    VulkanQueueFamilieIndices queueFamilies = findVulkanQueueFamilies(&s_VulkanPhysicalDevice);
+    uint32_t queueFamilyIndices[] = { queueFamilies.graphicsFamily.value(), queueFamilies.presentFamily.value() };
+
+    if (queueFamilies.graphicsFamily != queueFamilies.presentFamily) {
+        swapChainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        swapChainInfo.queueFamilyIndexCount = 2;
+        swapChainInfo.pQueueFamilyIndices = queueFamilyIndices;
+    }
+    else {
+        swapChainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        swapChainInfo.queueFamilyIndexCount = 0; // Optional
+        swapChainInfo.pQueueFamilyIndices = nullptr; // Optional
+    }
+
+    swapChainInfo.preTransform = swapChainDetails.surfaceCapabilities.currentTransform;
+    swapChainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    swapChainInfo.presentMode = presentationMode;
+    swapChainInfo.clipped = VK_TRUE;
+    swapChainInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    VkResult err = vkCreateSwapchainKHR(s_VulkanLogicalDevice, &swapChainInfo, nullptr, &s_VulkanSwapChain);
+    SONIC_ASSERT(err == VK_SUCCESS, "Failed to initialize Vulkan: Swap chain initialization failed.");
+
+    uint32_t swapChainImagesAmount;
+    vkGetSwapchainImagesKHR(s_VulkanLogicalDevice, s_VulkanSwapChain, &swapChainImagesAmount, nullptr);
+
+    s_VulkanSwapChainImages.reserve(swapChainImagesAmount);
+    vkGetSwapchainImagesKHR(s_VulkanLogicalDevice, s_VulkanSwapChain, &swapChainImagesAmount, s_VulkanSwapChainImages.data());
+
+    s_VulkanSwapChainImageFormat = surfaceFormat.format;
+    s_VulkanSwapChainExtent = swapExtent;
+}
+
+static void initVulkanSwapChainImageViews()
+{
+    s_VulkanSwapChainImageViews.reserve(s_VulkanSwapChainImages.size());
+
+    for (size_t i = 0, size = s_VulkanSwapChainImages.size(); i < size; i++)
+    {
+        VkImageViewCreateInfo imageViewInfo = { };
+        imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewInfo.image = s_VulkanSwapChainImages.at(i);
+        imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewInfo.format = s_VulkanSwapChainImageFormat;
+        imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageViewInfo.subresourceRange.baseMipLevel = 0;
+        imageViewInfo.subresourceRange.levelCount = 1;
+        imageViewInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewInfo.subresourceRange.layerCount = 1;
+
+        VkResult err = vkCreateImageView(s_VulkanLogicalDevice, &imageViewInfo, nullptr, &s_VulkanSwapChainImageViews.at(i));
+        SONIC_ASSERT(err == VK_SUCCESS, "Failed to initialize Vulkan: Could not create swap chain image view");
+    }
+}
+
+static void initVulkanGraphicsPipeline()
+{
+
 }
 
 static void initTimer()
