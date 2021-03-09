@@ -92,7 +92,7 @@ namespace Sonic {
 	void FontRenderer::drawCharacter(int index, float x, float y, float z, unsigned char c, const Font& font, const Color& color)
 	{
 		float fontIndex = indexOf(font);
-		SONIC_LOG_DEBUG_ASSERT(fontIndex != -1, "Error drawing text: Too many fonts");
+		SONIC_DEBUG_ASSERT(fontIndex != -1, "Error drawing text: Too many fonts");
 
 		Character character = font.GetCharacter(c);
 

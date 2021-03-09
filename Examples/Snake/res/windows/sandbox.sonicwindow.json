@@ -1,6 +1,6 @@
 {
   "title": "Sandbox App",
-  "saveTitle": true,
+  "saveTitle": false,
 
   "size": "600x400",
   "saveSize": true,

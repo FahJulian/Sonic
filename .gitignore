@@ -6,3 +6,4 @@ bin/
 *.vcxproj.user
 enc_temp_folder/
 */.gimp/*
+vk_layer_settings.txt

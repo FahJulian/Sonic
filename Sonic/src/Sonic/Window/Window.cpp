@@ -1,5 +1,7 @@
+#include <optional>
 #include <gl/glew.h>
 #include <gl/wglew.h>
+#include <vulkan/vulkan.hpp>
 #include "_WIN32Include.h"
 #include "Sonic/App.h"
 #include "Sonic/Debug/Log/Log.h"
@@ -12,6 +14,38 @@
 #include "Window.h"
 
 using namespace Sonic;
+
+
+#ifdef SONIC_DEBUG
+const uint32_t VULKAN_EXTENSION_COUNT = 3;
+#else
+const uint32_t VULKAN_EXTENSION_COUNT = 2;
+#endif
+
+const char* const VULKAN_EXTENSION_NAMES[VULKAN_EXTENSION_COUNT] = {
+    "VK_KHR_surface",
+    "VK_KHR_win32_surface",
+#ifdef SONIC_DEBUG
+    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+#endif
+};
+
+
+const uint32_t VULKAN_VALIDATION_LAYER_COUNT = 1;
+const char* const VULKAN_VALIDATION_LAYER_NAMES[VULKAN_VALIDATION_LAYER_COUNT] = {
+    "VK_LAYER_KHRONOS_validation"
+};
+
+
+struct VulkanQueueFamilieIndices
+{
+    std::optional<uint32_t> graphicsFamily;
+
+    bool IsComplete()
+    {
+        return graphicsFamily.has_value();
+    }
+};
 
 
 static WindowInfo s_Info;
@@ -50,6 +84,26 @@ static HCURSOR s_CurrentCursor;
 
 static std::unordered_map<String, HCURSOR> s_Cursors;
 
+static VkInstance s_VulkanInstance;
+static VkDebugUtilsMessengerEXT s_VulkanDebugMessenger; 
+static PFN_vkDestroyDebugUtilsMessengerEXT s_VulkanDebugMessengerDestroyFunc;
+static VkPhysicalDevice s_VulkanPhysicalDevice;
+static VkDevice s_VulkanLogicalDevice;
+static VkQueue s_VulkanGraphicsQueue;
+
+
+static void initVulkan();
+static void createVulkanInstance();
+static bool checkRequiredVulkanExtensions();
+static bool checkRequiredVulkanValidationLayers();
+static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+static void initVulkanDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT* messengerInfo);
+static void initVulkanDebugMessenger();
+static bool isVulkanPhysicalDeviceSuitable(VkPhysicalDevice* physicalDevice);
+static VulkanQueueFamilieIndices findVulkanQueueFamilies(VkPhysicalDevice* physicalDevice);
+static void initVulkanPhysicalDevice();
+static void initVulkanLogicalDevice();
 
 static void initTimer();
 static void initCursors();
@@ -57,10 +111,12 @@ static void initIcons();
 static void initStyle();
 static HICON createNativeIcon(int width, int height, uint8_t* bitmap, int isCursor = FALSE, int hotspotX = 0, int hotspotY = 0);
 static BITMAPV5HEADER createBitmapHeader(int width, int height);
+
 static void setDecorated(bool decorated);
 static void adjustSize(int width, int height);
 static void setFullscreen(bool fullscreen);
 static void updateWindowSize();
+
 static Key getKey(LPARAM lParam, WPARAM wParam);
 
 
@@ -105,6 +161,8 @@ bool Window::init(const WindowInfo& info)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     setClearColor(s_ClearColor = s_Info.clearColor);
+
+    initVulkan();
 
     return true;
 }
@@ -429,6 +487,14 @@ void Window::destroy()
     wglMakeCurrent(s_DeviceContext, NULL);
     wglDeleteContext(s_OpenglContext);
 
+#ifdef SONIC_DEBUG
+    s_VulkanDebugMessengerDestroyFunc(s_VulkanInstance, s_VulkanDebugMessenger, nullptr);
+#endif
+
+    vkDestroyDevice(s_VulkanLogicalDevice, nullptr);
+
+    vkDestroyInstance(s_VulkanInstance, nullptr);
+
     if (s_Mode == WindowMode::Fullscreen)
         setFullscreen(false);
 
@@ -587,6 +653,253 @@ LRESULT CALLBACK Window::WindowProc(HWND handle, UINT msg, WPARAM wParam, LPARAM
     return DefWindowProc(handle, msg, wParam, lParam);
 }
 
+
+static void initVulkan()
+{
+    createVulkanInstance();
+}
+
+static void createVulkanInstance()
+{
+    VkApplicationInfo appInfo = {};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = s_Title.c_str();
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.pEngineName = "Sonic Engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
+    appInfo.apiVersion = VK_API_VERSION_1_0;
+    
+    VkInstanceCreateInfo instanceInfo = {};
+    instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instanceInfo.pApplicationInfo = &appInfo;
+    instanceInfo.enabledExtensionCount = VULKAN_EXTENSION_COUNT;
+    instanceInfo.ppEnabledExtensionNames = VULKAN_EXTENSION_NAMES;
+    instanceInfo.enabledLayerCount = 0;
+
+#ifdef SONIC_DEBUG
+    instanceInfo.enabledLayerCount = VULKAN_VALIDATION_LAYER_COUNT;
+    instanceInfo.ppEnabledLayerNames = VULKAN_VALIDATION_LAYER_NAMES;
+
+    VkDebugUtilsMessengerCreateInfoEXT messengerInfo = { };
+    initVulkanDebugMessengerCreateInfo(&messengerInfo);
+    instanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&messengerInfo;
+#else
+    instanceInfo.enabledLayerCount = 0;
+    instanceInfo.ppEnabledLayerNames = nullptr;
+#endif
+
+    SONIC_ASSERT(checkRequiredVulkanExtensions(), "Failed to initialize Vulkan: One or more required extensions could not be found.");
+    SONIC_DEBUG_ASSERT(checkRequiredVulkanValidationLayers(), "Failed to initialize Vulkan: One or more required validation layers could not be found");
+
+    VkResult err = vkCreateInstance(&instanceInfo, nullptr, &s_VulkanInstance);
+    SONIC_ASSERT(err == VK_SUCCESS, "Failed to create Vulkan instance (Vulkan error code: ", err, ")");
+
+#ifdef SONIC_DEBUG
+    initVulkanDebugMessenger();
+#endif
+
+    initVulkanPhysicalDevice();
+    initVulkanLogicalDevice();
+}
+
+static bool checkRequiredVulkanExtensions()
+{
+    uint32_t availableExtensionCount;
+    vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> availableExtensions = std::vector<VkExtensionProperties>(availableExtensionCount);
+    vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.data());
+
+    for (int i = 0; i < VULKAN_EXTENSION_COUNT; i++)
+    {
+        bool found = false;
+        for (auto& extension : availableExtensions)
+        {
+            if (strcmp(extension.extensionName, VULKAN_EXTENSION_NAMES[i]))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            return false;
+    }
+
+    return true;
+}
+
+static bool checkRequiredVulkanValidationLayers()
+{
+    uint32_t availableValidationLayerCount;
+    vkEnumerateInstanceLayerProperties(&availableValidationLayerCount, nullptr);
+
+    std::vector<VkLayerProperties> availableValidationLayers = std::vector<VkLayerProperties>(availableValidationLayerCount);
+    vkEnumerateInstanceLayerProperties(&availableValidationLayerCount, availableValidationLayers.data());
+
+    for (int i = 0; i < VULKAN_VALIDATION_LAYER_COUNT; i++)
+    {
+        bool found = false;
+        for (auto& validationLayer : availableValidationLayers)
+        {
+            if (strcmp(validationLayer.layerName, VULKAN_VALIDATION_LAYER_NAMES[i]))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            return false;
+    }
+
+    return true;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+
+    const char* messageTypeName;
+    if (messageType == VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+        messageTypeName = "[PERFORMANCE] ";
+    else if (messageType == VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+        messageTypeName = "[VALIDATION] ";
+    else
+        messageTypeName = "[GENERAL] ";
+
+    switch (messageSeverity)
+    {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: [[fallthrough]];
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        SONIC_LOG_DEBUG("Vulkan validation layer: ", messageTypeName, pCallbackData->pMessage);
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+        SONIC_LOG_WARN("Vulkan validation layer: ", messageTypeName, pCallbackData->pMessage);
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+        SONIC_LOG_ERROR("Vulkan validation layer: ", messageTypeName, pCallbackData->pMessage);
+        break;
+    }
+
+    return VK_FALSE;
+}
+
+static void initVulkanDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT* messengerInfo)
+{
+    messengerInfo->sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    messengerInfo->messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    messengerInfo->messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    messengerInfo->pfnUserCallback = vulkanDebugCallback;
+}
+static void initVulkanDebugMessenger()
+{
+    VkDebugUtilsMessengerCreateInfoEXT messengerInfo = { };
+    initVulkanDebugMessengerCreateInfo(&messengerInfo);
+
+    auto vulkanDebugMessengerCreateFunc = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(s_VulkanInstance, "vkCreateDebugUtilsMessengerEXT");
+    s_VulkanDebugMessengerDestroyFunc = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(s_VulkanInstance, "vkDestroyDebugUtilsMessengerEXT");
+    SONIC_DEBUG_ASSERT(vulkanDebugMessengerCreateFunc != nullptr, "Failed to initialize Vulkan debug messenger: Extension is not present.");
+    SONIC_DEBUG_ASSERT(s_VulkanDebugMessengerDestroyFunc != nullptr, "Failed to initialize Vulkan debug messenger: Extension is not present.");
+
+    vulkanDebugMessengerCreateFunc(s_VulkanInstance, &messengerInfo, nullptr, &s_VulkanDebugMessenger);
+}
+
+static bool isVulkanPhysicalDeviceSuitable(VkPhysicalDevice* physicalDevice)
+{
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(*physicalDevice, &properties);
+
+    VkPhysicalDeviceFeatures features;
+    vkGetPhysicalDeviceFeatures(*physicalDevice, &features);
+
+    VulkanQueueFamilieIndices queueFamilies = findVulkanQueueFamilies(physicalDevice);
+
+    return queueFamilies.IsComplete();
+}
+
+static VulkanQueueFamilieIndices findVulkanQueueFamilies(VkPhysicalDevice* physicalDevice) 
+{
+    VulkanQueueFamilieIndices queueFamilies;
+
+    uint32_t availableQueueFamilyCount;
+    vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &availableQueueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> availableQueueFamilies = std::vector<VkQueueFamilyProperties>(availableQueueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &availableQueueFamilyCount, availableQueueFamilies.data());
+
+    for (size_t i = 0, size = availableQueueFamilies.size(); i < size; i++)
+    {
+        auto& queueFamily = availableQueueFamilies.at(i);
+
+        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            queueFamilies.graphicsFamily = (uint32_t)i;
+
+        if (queueFamilies.IsComplete())
+            break;
+    }
+
+    return queueFamilies;
+}
+
+static void initVulkanPhysicalDevice()
+{
+    uint32_t availablePhysicalDeviceCount;
+    vkEnumeratePhysicalDevices(s_VulkanInstance, &availablePhysicalDeviceCount, nullptr);
+
+    std::vector<VkPhysicalDevice> availablePhysicalDevices = std::vector<VkPhysicalDevice>(availablePhysicalDeviceCount);
+    vkEnumeratePhysicalDevices(s_VulkanInstance, &availablePhysicalDeviceCount, availablePhysicalDevices.data());
+
+    s_VulkanPhysicalDevice = VK_NULL_HANDLE;
+    for (auto& physicalDevice : availablePhysicalDevices)
+    {
+        if (isVulkanPhysicalDeviceSuitable(&physicalDevice))
+        {
+            s_VulkanPhysicalDevice = physicalDevice;
+            break;
+        }
+    }
+
+    SONIC_ASSERT(s_VulkanPhysicalDevice != VK_NULL_HANDLE, "Failed to initialize Vulkan: No compatible GPU found");
+}
+
+static void initVulkanLogicalDevice()
+{
+    VulkanQueueFamilieIndices queueFamilies = findVulkanQueueFamilies(&s_VulkanPhysicalDevice);
+
+    VkDeviceQueueCreateInfo queueInfo = { };
+    queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueInfo.queueFamilyIndex = queueFamilies.graphicsFamily.value();
+    queueInfo.queueCount = 1;
+
+    float queuePriority = 1.0f;
+    queueInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures features = { };
+
+    VkDeviceCreateInfo deviceInfo = { };
+    deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    deviceInfo.queueCreateInfoCount = 1;
+    deviceInfo.pQueueCreateInfos = &queueInfo;
+    deviceInfo.pEnabledFeatures = &features;
+
+#ifdef SONIC_DEBUG
+    deviceInfo.enabledLayerCount = VULKAN_VALIDATION_LAYER_COUNT;
+    deviceInfo.ppEnabledLayerNames = VULKAN_VALIDATION_LAYER_NAMES;
+#else
+    deviceInfo.enabledLayerCount = 0;
+    deviceInfo.ppEnabledLayerNames = 0;
+#endif
+
+    VkResult err = vkCreateDevice(s_VulkanPhysicalDevice, &deviceInfo, nullptr, &s_VulkanLogicalDevice);
+    SONIC_ASSERT(err == VK_SUCCESS, "Failed to initialized Vulkan logical device");
+
+    vkGetDeviceQueue(s_VulkanLogicalDevice, queueFamilies.graphicsFamily.value(), 0, &s_VulkanGraphicsQueue);
+}
 
 static void initTimer()
 {

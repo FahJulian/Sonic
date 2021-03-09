@@ -29,14 +29,18 @@ namespace Sonic {
 
 }
 
+#define SONIC_ASSERT(b, ...) Sonic::Log::debugAssert(b, __VA_ARGS__)
+
 #ifdef SONIC_DEBUG
 #define SONIC_LOG_DEBUG(...) Sonic::Log::debug(__VA_ARGS__)
-#define SONIC_LOG_DEBUG_ASSERT(b, ...) Sonic::Log::debugAssert(b, __VA_ARGS__)
+#define SONIC_DEBUG_ASSERT(b, ...) Sonic::Log::debugAssert(b, __VA_ARGS__)
 #define SONIC_LOG_ERROR(...) SONIC_LOG_DEBUG(__VA_ARGS__)
-#define SONIC_LOG_WARN(...) SONIC_LOG_DEBUG(__VA_ARGS__)    
+#define SONIC_LOG_WARN(...) SONIC_LOG_DEBUG(__VA_ARGS__) 
+#define SONIC_LOG_INFO(...) SONIC_LOG_DEBUG(__VA_ARGS__)
 #else
 #define SONIC_LOG_DEBUG(...) 
-#define SONIC_LOG_DEBUG_ASSERT(b, ...)
+#define SONIC_DEBUG_ASSERT(b, ...)
 #define SONIC_LOG_ERROR(...)
 #define SONIC_LOG_WARN(...)   
+#define SONIC_LOG_INFO(...)
 #endif

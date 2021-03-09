@@ -4,6 +4,8 @@
 #include "LoadingScene.h"
 #include "Settings.h"
 
+// OPENGL PERFORMANCE: 370FPS on maximized window
+
 Sonic::String Sonic::init()
 {
 	SceneManager::registerScene(new StartScene(), "startScene");

@@ -58,7 +58,7 @@ namespace Sonic {
 		{
 			size_t index = IndexOf(e, &m_Active);
 
-			SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant get Component from ComponentPool: Pool does not contain Entity");
+			SONIC_DEBUG_ASSERT(index != NOT_FOUND, "Cant get Component from ComponentPool: Pool does not contain Entity");
 
 			return reinterpret_cast<Component*>(m_Active.data) + index;
 		}

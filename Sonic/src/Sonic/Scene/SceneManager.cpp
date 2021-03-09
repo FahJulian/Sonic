@@ -40,7 +40,7 @@ void SceneManager::setScene(const String& name)
 
 void SceneManager::setScene(size_t index)
 {
-	SONIC_LOG_DEBUG_ASSERT(index < s_Scenes.size(), "Cant set Scene: Bad index.");
+	SONIC_DEBUG_ASSERT(index < s_Scenes.size(), "Cant set Scene: Bad index.");
 
 	setScene(s_Scenes.at(index));
 }
@@ -91,7 +91,7 @@ void SceneManager::loadScene(const String& name)
 
 void SceneManager::loadScene(size_t index)
 {
-	SONIC_LOG_DEBUG_ASSERT(index < s_Scenes.size(), "Cant set Scene: Bad index.");
+	SONIC_DEBUG_ASSERT(index < s_Scenes.size(), "Cant set Scene: Bad index.");
 
 	loadScene(s_Scenes.at(index));
 }

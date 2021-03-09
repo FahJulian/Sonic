@@ -218,7 +218,7 @@ static CursorInfo loadCursorFromCur(Util::BinaryInputFileStream&& file)
 	file.moveCursor(bitmapOffset - ICO_CUR_HEADER_SIZE + (size_t)14);
 
 	uint16_t bitsPerPixel = file.read<uint16_t>();
-	SONIC_LOG_DEBUG_ASSERT(bitsPerPixel == 32, "Error loading cursor bitmap: Bitmap does not use 32 bits per pixel");
+	SONIC_DEBUG_ASSERT(bitsPerPixel == 32, "Error loading cursor bitmap: Bitmap does not use 32 bits per pixel");
 
 	file.moveCursor(4);
 
@@ -255,7 +255,7 @@ static IconInfo loadIconFromIco(Util::BinaryInputFileStream&& file)
 	file.moveCursor(bitmapOffset - ICO_CUR_HEADER_SIZE + (size_t)14);
 
 	uint16_t bitsPerPixel = file.read<uint16_t>();
-	SONIC_LOG_DEBUG_ASSERT(bitsPerPixel == 32, "Error loading cursor bitmap: Bitmap does not use 32 bits per pixel");
+	SONIC_DEBUG_ASSERT(bitsPerPixel == 32, "Error loading cursor bitmap: Bitmap does not use 32 bits per pixel");
 
 	file.moveCursor(4);
 

@@ -89,7 +89,7 @@ void ComponentPool::DeactivateEntity(Entity entity)
 {
 	size_t index = IndexOf(entity, &m_Active);
 
-	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant deactivate Component: No active Component of the given Entity exists.");
+	SONIC_DEBUG_ASSERT(index != NOT_FOUND, "Cant deactivate Component: No active Component of the given Entity exists.");
 
 	MoveEntity(&m_Active, &m_Inactive, index);
 
@@ -103,7 +103,7 @@ void ComponentPool::ReactivateEntity(Entity entity)
 {
 	size_t index = IndexOf(entity, &m_Inactive);
 
-	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant reactivate Component: No inactive Component of the given Entity exists.");
+	SONIC_DEBUG_ASSERT(index != NOT_FOUND, "Cant reactivate Component: No inactive Component of the given Entity exists.");
 
 	MoveEntity(&m_Inactive, &m_Active, index);
 
@@ -122,7 +122,7 @@ void ComponentPool::RemoveEntity(Entity entity)
 {
 	size_t index = IndexOf(entity, &m_Active);
 
-	SONIC_LOG_DEBUG_ASSERT(index != NOT_FOUND, "Cant remove Entity from ComponentPool: Pool does not contain Entity");
+	SONIC_DEBUG_ASSERT(index != NOT_FOUND, "Cant remove Entity from ComponentPool: Pool does not contain Entity");
 
 	m_ComponentDestructor(m_Active.data + index * m_ComponentSize);
 
