@@ -7,3 +7,4 @@ bin/
 enc_temp_folder/
 */.gimp/*
 vk_layer_settings.txt
+compile.bat

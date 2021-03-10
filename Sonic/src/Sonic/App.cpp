@@ -59,42 +59,44 @@ void App::run()
     {
         if (totalDelta >= s_SecondsPerUpdate)
         {
-            SceneManager::s_CurrentScene->Update(static_cast<float>(totalDelta));
-            SceneManager::s_CurrentScene->RebufferRenderers();
+            //SceneManager::s_CurrentScene->Update(static_cast<float>(totalDelta));
+            //SceneManager::s_CurrentScene->RebufferRenderers();
             Window::pollEvents();
 
             totalDelta = 0;
 
-            if (SceneManager::isSceneChangeScheduled())
-            {
-                SceneManager::executeSceneChange();
-                continue;
-            }
+            //if (SceneManager::isSceneChangeScheduled())
+            //{
+            //    SceneManager::executeSceneChange();
+            //    continue;
+            //}
         }
 
-        glClear(GL_COLOR_BUFFER_BIT);
-        SceneManager::getCurrentScene()->Render();
-        Window::swapBuffers();
+        //glClear(GL_COLOR_BUFFER_BIT);
+        //SceneManager::getCurrentScene()->Render();
+
+        Window::testVulkanDrawing();
+        //Window::swapBuffers();
         //glFlush();
 
         const double endTime = Window::getTime();
         const double delta = endTime - startTime;
-           
-#ifdef SONIC_DEBUG
-        frames++;
-        fpsTimer += delta;
-        if (fpsTimer >= 1.0f)
-        {
-            fpsTimer -= 1.0f;
-            String oldTitle = String(Window::getTitle());
-            String framesStr = std::to_string(frames);
-            String sub = oldTitle.substr(0, oldTitle.length() - lastFpsLength);
-            Window::setTitle(oldTitle.substr(0, oldTitle.length() - lastFpsLength) + " (" + framesStr + ")");
-            lastFpsLength = static_cast<int>(framesStr.length()) + 3;
-            frames = 0;
-        }
-#endif
-
+//           
+//#ifdef SONIC_DEBUG
+//        frames++;
+//        fpsTimer += delta;
+//        if (fpsTimer >= 1.0f)
+//        {
+//            fpsTimer -= 1.0f;
+//            String oldTitle = String(Window::getTitle());
+//            String framesStr = std::to_string(frames);
+//            String sub = oldTitle.substr(0, oldTitle.length() - lastFpsLength);
+//            Window::setTitle(oldTitle.substr(0, oldTitle.length() - lastFpsLength) + " (" + framesStr + ")");
+//            lastFpsLength = static_cast<int>(framesStr.length()) + 3;
+//            frames = 0;
+//        }
+//#endif
+//
         totalDelta += endTime - startTime;
         startTime = endTime;
     }

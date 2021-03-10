@@ -42,6 +42,8 @@ namespace Sonic {
 
 		static bool createContext();
 	public:
+		static void testVulkanDrawing();
+
 		static bool init(const WindowInfo& info);
 		static bool init(const String& infoFilePath, bool overrideBinary = false);
 
