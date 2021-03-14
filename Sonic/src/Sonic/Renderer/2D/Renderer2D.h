@@ -1,6 +1,6 @@
 #pragma once
-#include <glm/glm.hpp>
-#include <GL/glew.h>
+#include "Sonic/Util/Math/Vec2.h"
+#include "Sonic/Util/Math/Vec3.h"
 #include "Sonic/Graphics/Texture.h"
 #include "Sonic/Graphics/Sprite.h"
 #include "Sonic/Graphics/Color.h"
@@ -22,7 +22,7 @@ namespace Sonic {
         static void destroy();
 
     private:
-        static void drawRect(int index, const glm::vec3& position, const glm::vec2& scale, float rotation, const Sprite& sprite, const Color& color);
+        static void drawRect(int index, const Vec3& position, const Vec2& scale, float rotation, const Sprite& sprite, const Color& color);
         static void drawEntity(Scene* scene, Entity e, Renderer2DComponent* r, int index);
     };
 

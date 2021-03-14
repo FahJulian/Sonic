@@ -1,4 +1,5 @@
 #pragma once
+#include "Sonic/Window/Input/MouseButtons.h"
 
 namespace Sonic {
 
@@ -17,6 +18,15 @@ namespace Sonic {
 	struct UISliderEvent
 	{
 		float percentage;
+	};
+
+	struct UIEntityClickedEvent
+	{
+		float x;
+		float y;
+		float screenX;
+		float screenY;
+		MouseButton button;
 	};
 
 }

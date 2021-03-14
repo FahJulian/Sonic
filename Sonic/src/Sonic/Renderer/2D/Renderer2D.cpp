@@ -1,6 +1,6 @@
 #include <math.h>
 #include <vector>
-#include <glm/gtc/matrix_transform.hpp>
+#include <GL/glew.h>
 #include "Sonic/Debug/Profiler/Profiler.h"
 #include "Sonic/Base.h"
 #include "Sonic/Graphics/Buffer/VertexArray.h"
@@ -89,7 +89,7 @@ namespace Sonic {
         delete[] indices;
     }
 
-    void Renderer2D::drawRect(int index, const glm::vec3& position, const glm::vec2& scale, float rotation, const Sprite& sprite, const Color& color)
+    void Renderer2D::drawRect(int index, const Vec3& position, const Vec2& scale, float rotation, const Sprite& sprite, const Color& color)
     {
         float textureSlot = sprite.IsNull() ? -1 : textureSlotOf(sprite.texture);
 
@@ -114,7 +114,7 @@ namespace Sonic {
         }
         else
         {
-            glm::vec2 center = { 0.5f * scale.x, 0.5f * scale.y };
+            Vec2 center = { 0.5f * scale.x, 0.5f * scale.y };
             float hypo = std::sqrt(center.x * center.x + center.y * center.y);
 
             float sin = std::sin(rotation * PI / 180) * hypo;

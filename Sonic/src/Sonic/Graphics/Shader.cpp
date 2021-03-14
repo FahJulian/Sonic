@@ -1,7 +1,6 @@
 #include <fstream>
 #include <sstream>
 #include <GL/glew.h>
-#include <glm/gtc/type_ptr.hpp>
 #include "Sonic/Debug/Log/Log.h"
 #include "Shader.h"
 
@@ -126,19 +125,19 @@ void Shader::UniformFloat(const String& name, float value)
     glUniform1f(location, value);
 }
 
-void Shader::UniformFloat2(const String& name, const glm::vec2& value)
+void Shader::UniformFloat2(const String& name, const Vec2& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform2f(location, value.x, value.y);
 }
 
-void Shader::UniformFloat3(const String& name, const glm::vec3& value)
+void Shader::UniformFloat3(const String& name, const Vec3& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform3f(location, value.x, value.y, value.z);
 }
 
-void Shader::UniformFloat4(const String& name, const glm::vec4& value)
+void Shader::UniformFloat4(const String& name, const Vec4& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
     glUniform4f(location, value.x, value.y, value.z, value.w);
@@ -150,8 +149,8 @@ void Shader::UniformFloat4(const String& name, const Color& value)
     glUniform4f(location, value.r, value.g, value.b, value.a);
 }
 
-void Shader::UniformMat4(const String& name, const glm::mat4& value)
+void Shader::UniformMat4(const String& name, const Mat4& value)
 {
     int location = glGetUniformLocation(*m_OpenGL_ID, name.c_str());
-    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+    glUniformMatrix4fv(location, 1, GL_FALSE, value.data);
 }

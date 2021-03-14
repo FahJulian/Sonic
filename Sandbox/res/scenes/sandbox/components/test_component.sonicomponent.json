@@ -1,0 +1,8 @@
+// Type: UIRendererComponent
+
+{
+  "properties": {
+    "color": "0xffaaffaa",
+    "edgeRadius": 3
+  }
+}

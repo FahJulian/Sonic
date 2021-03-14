@@ -1,17 +1,17 @@
 #pragma once
 #include "Sonic/Base.h"
-#include "Sonic/Event/EventDispatcher.h"
 #include "Sonic/Event/Events.h"
+#include "Sonic/Util/Callable.h"
 
 namespace Sonic {
 
 	struct UIClickListenerComponent
 	{
 		bool clicked = false;
-		Ref<EventListener<MouseButtonReleasedEvent>> listener;
+		Ref<Callable<void(const UIEntityClickedEvent&)>> listener;
 
-		UIClickListenerComponent(EventListener<MouseButtonReleasedEvent> listener)
-			: listener(createRef<EventListener<MouseButtonReleasedEvent>>(listener))
+		UIClickListenerComponent(Ref<Callable<void(const UIEntityClickedEvent&)>>)
+			: listener(listener)
 		{
 		}
 	};

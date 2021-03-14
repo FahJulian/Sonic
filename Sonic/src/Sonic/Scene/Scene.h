@@ -26,6 +26,8 @@ namespace Sonic {
 		void Load();
 		void Init();
 
+		void Save();
+
 		void Update(float deltaTime);
 
 		void Destroy();
@@ -50,6 +52,7 @@ namespace Sonic {
 	protected:
 		virtual void OnLoad() = 0;
 		virtual void OnInit() {}
+		virtual void OnSave() {}
 
 		virtual void OnUpdate(float deltaTime) {}
 
@@ -66,6 +69,7 @@ namespace Sonic {
 
 		friend class App;
 		friend class SceneManager;
+		friend class SceneSerializer;
 		template<typename, typename> friend class GroupView;
 	};
 

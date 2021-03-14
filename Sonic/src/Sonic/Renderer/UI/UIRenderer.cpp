@@ -1,3 +1,4 @@
+#include <gl/glew.h>
 #include "Sonic/Graphics/Buffer/VertexArray.h"
 #include "Sonic/Graphics/Buffer/VertexBuffer.h"
 #include "Sonic/Graphics/Texture.h"

@@ -1,4 +1,5 @@
 #include <stb/stb_image.h>
+#include <GL/glew.h>
 #include "Texture.h"
 
 namespace Sonic {

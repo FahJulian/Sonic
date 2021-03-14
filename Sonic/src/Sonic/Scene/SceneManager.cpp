@@ -107,6 +107,8 @@ void SceneManager::loadScene(ManagedScene& scene)
 
 void SceneManager::init()
 {
+	SONIC_ASSERT(s_Scenes.size() > 0, "Cannot initialize game without at least one scene");
+
 	if (s_CurrentScene.scene == nullptr)
 		s_CurrentScene = s_Scenes.at(0);
 
@@ -118,9 +120,10 @@ void SceneManager::init()
 
 void SceneManager::destroy()
 {
+	s_CurrentScene->Destroy();
+
 	for (ManagedScene& scene : s_Scenes)
 	{
-		scene->Destroy();
 		delete scene.scene;
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
-#include <glm/glm.hpp>
+#include "Sonic/Util/Math/Vec3.h"
+#include "Sonic/Util/Math/Mat4.h"
 
 namespace Sonic {
 
@@ -8,19 +9,19 @@ namespace Sonic {
     public:
         Camera2D(float left, float right, float bottom, float top);
 
-        const glm::mat4& GetView() const { return m_ViewMatrix; }
-        const glm::mat4& GetProjection() const { return m_ProjectionMatrix; }
+        const Mat4& GetView() const { return m_ViewMatrix; }
+        const Mat4& GetProjection() const { return m_ProjectionMatrix; }
 
         void SetPosition(float x, float y, float z);
-        void SetPosition(const glm::vec3& position);
+        void SetPosition(const Vec3& position);
         void SetRotation(float rotation);
     private:
         void UpdateViewMatrix();
     private:
-        glm::vec3 m_Position;
+        Vec3 m_Position;
         float m_Rotation;
-        glm::mat4 m_ViewMatrix;
-        glm::mat4 m_ProjectionMatrix;
+        Mat4 m_ViewMatrix;
+        Mat4 m_ProjectionMatrix;
     };
 
 }

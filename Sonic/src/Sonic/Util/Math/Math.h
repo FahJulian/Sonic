@@ -17,6 +17,11 @@ namespace Sonic {
 			return value < minValue ? minValue : value > maxValue ? maxValue : value;
 		}
 
+		inline float toRadians(float angle)
+		{
+			return angle * 0.017453292519943295f;
+		}
+
 	}
 
 }

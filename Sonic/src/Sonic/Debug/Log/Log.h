@@ -13,7 +13,7 @@ namespace Sonic {
             if (!b)
             {
                 Log::debug(std::forward<Arg>(arg), std::forward<Args>(args)...);
-                assert(false);
+                exit(-1);
             }
         }
 
@@ -28,6 +28,8 @@ namespace Sonic {
     };
 
 }
+
+#define SONIC_ASSERT(b, ...) Sonic::Log::debugAssert(b, __VA_ARGS__)
 
 #ifdef SONIC_DEBUG
 #define SONIC_LOG_DEBUG(...) Sonic::Log::debug(__VA_ARGS__)

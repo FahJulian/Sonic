@@ -1,0 +1,47 @@
+{
+  "settings": {
+
+  },
+  "scripts": [
+    "scripts/TestScript.hpp",
+    "scripts/TestScript2.hpp"
+  ],
+
+  "entities": {
+    "test_id": "entities/test_entity",
+
+    "second_id": {
+      "uicomponent": {
+        "parent": 0,
+        "xPattern": {
+          "mode": "Absolute",
+          "relativeValue": 100.65
+        },
+        "yPattern": {
+          "mode": "Absolute",
+          "relativeValue": 100.65
+        },
+        "widthPattern": {
+          "mode": "Absolute",
+          "relativeValue": 100.65
+        },
+        "heightPattern": {
+          "mode": "Absolute",
+          "relativeValue": 100.65
+        }
+      },
+      "UIRendererComponent": "components/test_component",
+      "ScriptComponent": {
+        "script": "scripts/TestScript.hpp",
+        "currentX": 5.5
+      },
+      "UIClickListenerComponent": {
+        "listener": {
+          "entity": "second_id",
+          "component": "TestScript",
+          "method": "OnClick"
+        }
+      }
+    }
+  }
+}

@@ -98,7 +98,7 @@ void SceneUIHandler::OnMouseButtonReleased(const MouseButtonReleasedEvent& e)
 					Math::isInRange(e.x, c->x, c->x + c->width) &&
 					Math::isInRange(e.y, c->y, c->y + c->height))
 				{
-					(*cl->listener)(e);
+					(*cl->listener)(UIEntityClickedEvent{ e.x - c->x, e.y - c->y, e.x, e.y, e.button });
 					cl->clicked = false;
 				}
 			});

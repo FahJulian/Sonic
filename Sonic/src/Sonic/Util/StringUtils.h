@@ -27,4 +27,9 @@ namespace Sonic::Util
 		return string.substr(string.size() - ending.size()) == ending;
 	}
 
+	inline String getFileNamePrefix(const String& filePath)
+	{
+		String it = filePath.substr(filePath.find_last_of('/') + 1);
+		return it.substr(0, it.find_first_of('.'));
+	}
 }

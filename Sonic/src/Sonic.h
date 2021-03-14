@@ -31,8 +31,11 @@
 #include "Sonic/Renderer/2D/Camera2D.h"
 #include "Sonic/Renderer/UI/UIRendererProperties.h"
 
-#include "Sonic/Util/Math/Math.h"
+#include "Sonic/Util/Result.h"
+#include "Sonic/Util/Callable.h"
+#include "Sonic/Util/Optional.h"
 #include "Sonic/Util/StringUtils.h"
+#include "Sonic/Util/Math/Math.h"
 #include "Sonic/Util/IO/BinaryFileUtils.h"
 
 #include "Sonic/Window/Input/Keys.h"

@@ -1,4 +1,4 @@
-#include <GL/glew.h>
+#include <gl/glew.h>
 #include <string>
 #include "Sonic/Base.h"
 #include "Scene/Scene.h"

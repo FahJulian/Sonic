@@ -10,7 +10,7 @@ Entity UI::createButton(Scene* scene, UISize x, UISize y, UISize width, UISize h
 	Entity button = scene->AddEntity();
 	scene->AddComponent<UIComponent>(button, x, y, width, height, parent);
 	scene->AddComponent<UIRendererComponent>(button, properties);
-	scene->AddComponent<UIClickListenerComponent>(button, listener);
+	//scene->AddComponent<UIClickListenerComponent>(button, listener);
 
 	if (parent != 0)
 		scene->AddToGroup(parent, button);

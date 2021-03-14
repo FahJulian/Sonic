@@ -2,9 +2,9 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 #include "Sonic/Base.h"
+
+struct FT_FaceRec_;
 
 namespace Sonic {
 
@@ -36,7 +36,7 @@ namespace Sonic {
 
 		bool operator==(const Font& other) const { return m_TextureID == other.m_TextureID; }
 
-		FT_Face m_Face;
+		FT_FaceRec_* m_Face;
 		Ref<unsigned int> m_TextureID;
 		Ref<std::unordered_map<unsigned char, Character>> m_Characters;
 		Ref<std::unordered_map<unsigned short, int>> m_KnownKerning;

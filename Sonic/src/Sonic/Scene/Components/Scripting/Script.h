@@ -32,6 +32,8 @@ namespace Sonic {
 
 		friend class Scene;
 		friend struct ScriptComponent;
+		friend class SceneSerializer;
+		template<typename, typename, typename...> friend class Method;
 	};
 
 }

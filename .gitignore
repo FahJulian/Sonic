@@ -1,5 +1,6 @@
 .vs/
 *.sln
+*.bat
 bin/
 *.vcxproj
 *.vcxproj.filters

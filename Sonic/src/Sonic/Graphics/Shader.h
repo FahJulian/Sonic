@@ -1,7 +1,10 @@
 #pragma once
 #include <string>
-#include <glm/glm.hpp>
 #include "Sonic/Base.h"
+#include "Sonic/Util/Math/Mat4.h"
+#include "Sonic/Util/Math/Vec2.h"
+#include "Sonic/Util/Math/Vec3.h"
+#include "Sonic/Util/Math/Vec4.h"
 #include "Color.h"
 
 namespace Sonic {
@@ -66,7 +69,7 @@ namespace Sonic {
         * @param name The name of the uniform variable
         * @param value The float2 vector value to upload to the uniform
         */
-        void UniformFloat2(const String& name, const glm::vec2& value);
+        void UniformFloat2(const String& name, const Vec2& value);
 
         /**
         * Uploads a float3 vector to the specified uniform variable
@@ -74,7 +77,7 @@ namespace Sonic {
         * @param name The name of the uniform variable
         * @param value The float3 vector value to upload to the uniform
         */
-        void UniformFloat3(const String& name, const glm::vec3& value);
+        void UniformFloat3(const String& name, const Vec3& value);
 
         /**
         * Uploads a float4 vector to the specified uniform variable
@@ -82,7 +85,7 @@ namespace Sonic {
         * @param name The name of the uniform variable
         * @param value The float4 vector value to upload to the uniform
         */
-        void UniformFloat4(const String& name, const glm::vec4& value);
+        void UniformFloat4(const String& name, const Vec4& value);
 
         /**
         * Uploads an Color to the specified uniform variable
@@ -98,7 +101,7 @@ namespace Sonic {
         * @param name The name of the uniform variable
         * @param value The mat4 matrix value to upload to the uniform
         */
-        void UniformMat4(const String& name, const glm::mat4& value);
+        void UniformMat4(const String& name, const Mat4& value);
     private:
         Ref<unsigned int> m_OpenGL_ID;
     };

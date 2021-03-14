@@ -1,6 +1,8 @@
 #include <unordered_map>
 #include <vector>
 #include <gl/glew.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 #include "Sonic/Debug/Log/Log.h"
 #include "Font.h"
 

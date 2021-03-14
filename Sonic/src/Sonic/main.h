@@ -2,6 +2,7 @@
 #include "Sonic/Base.h"
 #include "Sonic/App.h"
 #include "Sonic/Scene/SceneManager.h"
+#include "Sonic/Scene/Serialization/SerializedScene.h"
 
 /*
 * This header file should be included by the main file of the
@@ -13,6 +14,8 @@
 namespace Sonic
 {
     String init();
+
+    const String& resourceDir();
 }
 
 int main()
