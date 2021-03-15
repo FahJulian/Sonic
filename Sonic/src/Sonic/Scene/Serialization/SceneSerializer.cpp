@@ -1,11 +1,10 @@
 #include <json/json.hpp>
+#include "Sonic/App.h"
 #include "Sonic/Util/StringUtils.h"
 #define SONIC_CLIENT_SERIALIZATION_IMPORT
+//#define SONIC_CLIENT_SERIALIZATION_RELEASE
 #include "ClientSerialization.h"
-
 #include "SceneSerializer.h"
-
-#include "C:/dev/Sonic/Sandbox/res/scenes/sandbox/scripts/TestScript2.hpp"
 
 using namespace Sonic;
 
@@ -14,7 +13,15 @@ template<typename Signature>
 static Result<Ref<Callable<Signature>>, CallableDeserializationError>
 deserializeMethod(Script* script, const SerializedCallable& method)
 {
-	return deserializeClientMethod<Signature>(script, method);
+	if (Result<uintptr_t, CallableDeserializationError> result = deserializeClientMethod(script, method, getSignature<Signature>());
+		result.HasError())
+	{
+		return result.GetError();
+	}
+	else
+	{
+		return Ref<Callable<Signature>>(reinterpret_cast<Callable<Signature>*>(result.GetResult()));
+	}
 }
 
 Optional<SerializedCallable> serializeCallable(const BaseCallable& callable)
@@ -28,13 +35,15 @@ Optional<SerializedCallable> serializeCallable(const BaseCallable& callable)
 
 void SceneSerializer::deserialize(Scene* scene, const String& relativeFilePath)
 {
-	createClientScript("Test");
-
-	Script* script = new TestScript2();
+	Script* script = createClientScript("TestScript2");
 	auto c = deserializeMethod<void(int)>(script, { "TestScript2", "TestFunc" });
 	auto c2 = deserializeMethod<void(const UIEntityClickedEvent&)>(script, { "TestScript2", "OnClicked" });
 	if (!c.HasError())
 		(*c.GetResult())(3);
+
+	script->Init(scene, 6);
+
+	BaseCallable callable = (BaseCallable)*c.GetResult();
 
 	Callable<void()>* func = new Function<void()>(App::stop);
 
@@ -61,12 +70,19 @@ void SceneSerializer::deserialize(Scene* scene, const String& relativeFilePath)
 		scriptClasses.push_back(Util::getFileNamePrefix(scriptFiles.back()));
 	}
 
-	String code = "#include \"Sonic/Scene/Serialization/ClientSerialization.h\"\n";
+	String code;
+	
+#ifdef SONIC_CLIENT_SERIALIZATION_RELEASE
+	code.append("#define SONIC_CLIENT_SERIALIZATION_RELEASE");
+#endif
+
+	code.append("#include \"Sonic/Scene/Serialization/ClientSerialization.h\"\n");
 
 	for (auto& scriptFile : scriptFiles)
 		code.append("#include \"" + resourceDir() + relativeFilePath + "/" + scriptFile + "\"\n");
 
 	code.append("\nusing namespace Sonic;\n\n\n");
+
 	code.append("Script* Sonic::createClientScript(const String& scriptClass)\n");
 	code.append("{\n");
 
@@ -97,9 +113,8 @@ void SceneSerializer::deserialize(Scene* scene, const String& relativeFilePath)
 	code.append("    return { }; \n");
 	code.append("}\n\n");
 
-	code.append("template<typename Signature>\n");
-	code.append("Result<Ref<Callable<Signature>>, CallableDeserializationError>\n");
-	code.append("    Sonic::deserializeClientMethod(Script* script, const SerializedCallable& method)\n");
+	code.append("Result<uintptr_t, CallableDeserializationError>\n");
+	code.append("    Sonic::deserializeClientMethod(Script* script, const SerializedCallable& method, const CallableSignature& signature)\n");
 	code.append("{\n");
 
 	for (auto& [scriptClass, methods] : scriptMethods)
@@ -110,7 +125,7 @@ void SceneSerializer::deserialize(Scene* scene, const String& relativeFilePath)
 		for (auto& method : methods)
 		{
 			code.append("        if (method.callable == \"" + method + "\")\n");
-			code.append("            return getMethod<Signature>((" + scriptClass + "*)script, &" + scriptClass + "::" + method + ");\n");
+			code.append("            return assureSignatureAndCreateMethod(script, &" + scriptClass + "::" + method + ", signature);\n");
 		}
 
 		code.append("    }\n");

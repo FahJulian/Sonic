@@ -10,6 +10,7 @@ namespace Sonic {
 	enum class CallableDeserializationError : uint8_t
 	{
 		InvalidSignature,
+		InvalidScriptClass,
 		NotFound
 	};
 
@@ -48,7 +49,7 @@ namespace Sonic {
 
 	template<typename Signature, typename ScriptClass, typename ResultType, typename... Args>
 	Result<Ref<Callable<Signature>>, CallableDeserializationError>
-		getMethod(ScriptClass* object, ResultType(ScriptClass::* method)(Args...))
+		assureSignature(ScriptClass* object, ResultType(ScriptClass::* method)(Args...))
 	{
 		if (typeid(Signature) != typeid(ResultType(Args...)))
 			return CallableDeserializationError::InvalidSignature;

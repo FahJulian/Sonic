@@ -103,10 +103,7 @@ namespace Sonic {
 		Method(Class* object, ReturnType(Class::* function)(Args...))
 			: object(object), function(function)
 		{
-			if (std::is_base_of<Script, Class>::value)
-			{
-				entity = ((Script*)object)->m_Entity;
-			}
+			isScript = std::is_base_of<Script, Class>::value;
 		}
 
 		ReturnType operator()(Args... args) const override
@@ -116,13 +113,20 @@ namespace Sonic {
 
 		operator const BaseCallable() const override
 		{
+			Entity entity = isScript ? ((Script*)object)->m_Entity : 0;
 			return BaseCallable((uintptr_t)object, *((uintptr_t*)&function), entity);
 		}
 
 	private:
 		Class* object;
 		ReturnType(Class::* function)(Args...);
-		Entity entity;
+		bool isScript;
 	};
+
+	template<typename ReturnType, typename Class, typename... Args>
+	static inline Method<Class, ReturnType(Args...)>* createMethod(Class* object, ReturnType(Class::* method)(Args...))
+	{
+		return new Method<Class, ReturnType(Args...)>(object, method);
+	}
 
 }

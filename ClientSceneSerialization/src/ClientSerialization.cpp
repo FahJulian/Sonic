@@ -1,3 +1,4 @@
+//#define SONIC_CLIENT_SERIALIZATION_RELEASE
 #include "Sonic/Scene/Serialization/ClientSerialization.h"
 #include "C:/dev/Sonic/Sandbox/res/scenes/sandbox/scripts/TestScript.hpp"
 #include "C:/dev/Sonic/Sandbox/res/scenes/sandbox/scripts/TestScript2.hpp"
@@ -25,16 +26,15 @@ Optional<SerializedCallable> Sonic::serializeClientMethod(const BaseCallable& me
     return { };
 }
 
-template<typename Signature>
-Result<Ref<Callable<Signature>>, CallableDeserializationError>
-    Sonic::deserializeClientMethod(Script* script, const SerializedCallable& method)
+Result<uintptr_t, CallableDeserializationError>
+    Sonic::deserializeClientMethod(Script* script, const SerializedCallable& method, const CallableSignature& signature)
 {
     if (method.scriptClass == "TestScript2")
     {
         if (method.callable == "TestFunc")
-            return getMethod<Signature>((TestScript2*)script, &TestScript2::TestFunc);
+            return assureSignatureAndCreateMethod(script, &TestScript2::TestFunc, signature);
         if (method.callable == "OnClicked")
-            return getMethod<Signature>((TestScript2*)script, &TestScript2::OnClicked);
+            return assureSignatureAndCreateMethod(script, &TestScript2::OnClicked, signature);
     }
 
     return CallableDeserializationError::NotFound;
