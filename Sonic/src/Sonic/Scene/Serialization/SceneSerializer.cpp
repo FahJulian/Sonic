@@ -1,4 +1,5 @@
 #include <json/json.hpp>
+#include <sstream>
 #include "Sonic/App.h"
 #include "Sonic/Util/StringUtils.h"
 #define SONIC_CLIENT_SERIALIZATION_IMPORT
@@ -9,9 +10,86 @@
 using namespace Sonic;
 
 
+static std::vector<String> findMethodsInScript(const String& scriptFile, const String& scriptClass)
+{
+	std::vector<String> methods;
+
+	InputFileStream file = InputFileStream(scriptFile);
+	std::stringstream code;
+	code << file.rdbuf();
+
+	bool clear = false;
+	bool inScriptClass = false;
+	bool isPublic = false;
+	bool inConstructor = false;
+	std::vector<char> lastIdentifier;
+
+	char c = ' ';
+	int level = 0;
+	while (code.read(&c, 1))
+	{
+		if (c == '{')
+		{
+			if (level == 0)
+				inScriptClass = lastIdentifier.back() != ')';	// No function == in script class for now
+
+			level++;
+		}
+		else if (c == '}')
+		{
+			if (level == 1)
+				inScriptClass = false;
+			else if (level == 2)
+				inConstructor = false;
+
+			level--;
+		}
+
+		if (inScriptClass && level == 1 && c == '(')
+		{
+			String methodName = { lastIdentifier.data(), lastIdentifier.size() };
+			lastIdentifier.clear();
+
+			if (methodName == scriptClass)	// Constructor
+				inConstructor = true;
+			else if (!inConstructor && isPublic)
+				methods.push_back(methodName);
+		}
+
+		if (c == ' ' || c == '\n' || c == '\t' || c == '<' || c == '>')
+		{
+			if (level == 0 && String{ lastIdentifier.data(), lastIdentifier.size() } == "struct")
+				isPublic = true;
+
+			clear = true;
+		}
+		else if (level == 1 && c == ':')
+		{
+			String identifier = { lastIdentifier.data(), lastIdentifier.size() };
+
+			if (identifier == "public")
+				isPublic = true;
+			else if (identifier == "private" || identifier == "protected")
+				isPublic = false;
+		}
+		else
+		{
+			if (clear)
+			{
+				lastIdentifier.clear();
+				clear = false;
+			}
+
+			lastIdentifier.push_back(c);
+		}
+	}
+
+	return methods;
+}
+
 template<typename Signature>
 static Result<Ref<Callable<Signature>>, CallableDeserializationError>
-deserializeMethod(Script* script, const SerializedCallable& method)
+	deserializeCallable(Script* script, const SerializedCallable& method)
 {
 	if (Result<uintptr_t, CallableDeserializationError> result = deserializeClientMethod(script, method, getSignature<Signature>());
 		result.HasError())
@@ -35,28 +113,9 @@ Optional<SerializedCallable> serializeCallable(const BaseCallable& callable)
 
 void SceneSerializer::deserialize(Scene* scene, const String& relativeFilePath)
 {
-	Script* script = createClientScript("TestScript2");
-	auto c = deserializeMethod<void(int)>(script, { "TestScript2", "TestFunc" });
-	auto c2 = deserializeMethod<void(const UIEntityClickedEvent&)>(script, { "TestScript2", "OnClicked" });
-	if (!c.HasError())
-		(*c.GetResult())(3);
-
-	script->Init(scene, 6);
-
-	BaseCallable callable = (BaseCallable)*c.GetResult();
-
-	Callable<void()>* func = new Function<void()>(App::stop);
-
-	auto s = serializeCallable(*c.GetResult());
-	auto s2 = serializeCallable(*c2.GetResult());
-	auto s3 = serializeCallable(*func);
-
 	std::vector<String> scriptFiles;
 	std::vector<String> scriptClasses;
-	std::vector<String> scriptConstructorCode;
 	std::unordered_map<String, std::vector<String>> scriptMethods;
-
-	scriptMethods.emplace("TestScript2", std::vector<String>({ "TestFunc", "OnClicked" }));
 
 	String sceneName = relativeFilePath.substr(relativeFilePath.find_last_of('/') + 1);
 	InputFileStream file = InputFileStream(resourceDir() + relativeFilePath + "/" + sceneName + ".sonicscene.json");
@@ -66,91 +125,86 @@ void SceneSerializer::deserialize(Scene* scene, const String& relativeFilePath)
 
 	for (auto& scriptFile : json["scripts"])
 	{
-		scriptFiles.push_back(scriptFile.get<String>());
-		scriptClasses.push_back(Util::getFileNamePrefix(scriptFiles.back()));
+		String filePath = resourceDir() + relativeFilePath + "/" + scriptFile.get<String>();
+		String className = Util::getFileNamePrefix(filePath);
+
+		scriptFiles.push_back(filePath);
+		scriptClasses.push_back(className);
+		scriptMethods.emplace(className, findMethodsInScript(filePath, className));
 	}
 
-	String code;
-	
+	{
+		String code;
+
 #ifdef SONIC_CLIENT_SERIALIZATION_RELEASE
-	code.append("#define SONIC_CLIENT_SERIALIZATION_RELEASE");
+		code.append("#define SONIC_CLIENT_SERIALIZATION_RELEASE");
 #endif
 
-	code.append("#include \"Sonic/Scene/Serialization/ClientSerialization.h\"\n");
+		code.append("#include \"Sonic/Scene/Serialization/ClientSerialization.h\"\n");
 
-	for (auto& scriptFile : scriptFiles)
-		code.append("#include \"" + resourceDir() + relativeFilePath + "/" + scriptFile + "\"\n");
+		for (auto& scriptFile : scriptFiles)
+			code.append("#include \"" + scriptFile + "\"\n");
 
-	code.append("\nusing namespace Sonic;\n\n\n");
+		code.append("\nusing namespace Sonic;\n\n\n");
 
-	code.append("Script* Sonic::createClientScript(const String& scriptClass)\n");
-	code.append("{\n");
+		code.append("Script* Sonic::createClientScript(const String& scriptClass)\n");
+		code.append("{\n");
 
-	for (auto& scriptClass : scriptClasses)
-	{
-		code.append("    if (scriptClass == \"" + scriptClass + "\")\n");
-		code.append("        return new " + scriptClass + "();\n");
-	}
-
-	code.append("\n    ");
-	code.append("return nullptr;\n");
-
-	code.append("}\n\n");
-
-	code.append("Optional<SerializedCallable> Sonic::serializeClientMethod(const BaseCallable& method)\n");
-	code.append("{\n");
-
-	for (auto& [scriptClass, methods] : scriptMethods)
-	{
-		for (auto& method : methods)
+		for (auto& scriptClass : scriptClasses)
 		{
-			code.append("    if (method.IsMethodOrFunction(&" + scriptClass + "::" + method + "))\n");
-			code.append("        return { \"" + scriptClass + "\", \"" + method + "\" };\n");
-		}
-	}
-
-	code.append("\n");
-	code.append("    return { }; \n");
-	code.append("}\n\n");
-
-	code.append("Result<uintptr_t, CallableDeserializationError>\n");
-	code.append("    Sonic::deserializeClientMethod(Script* script, const SerializedCallable& method, const CallableSignature& signature)\n");
-	code.append("{\n");
-
-	for (auto& [scriptClass, methods] : scriptMethods)
-	{
-		code.append("    if (method.scriptClass == \"" + scriptClass + "\")\n");
-		code.append("    {\n");
-
-		for (auto& method : methods)
-		{
-			code.append("        if (method.callable == \"" + method + "\")\n");
-			code.append("            return assureSignatureAndCreateMethod(script, &" + scriptClass + "::" + method + ", signature);\n");
+			code.append("    if (scriptClass == \"" + scriptClass + "\")\n");
+			code.append("        return new " + scriptClass + "();\n");
 		}
 
-		code.append("    }\n");
+		code.append("\n    ");
+		code.append("return nullptr;\n");
+
+		code.append("}\n\n");
+
+		code.append("Optional<SerializedCallable> Sonic::serializeClientMethod(const BaseCallable& method)\n");
+		code.append("{\n");
+
+		for (auto& [scriptClass, methods] : scriptMethods)
+		{
+			for (auto& method : methods)
+			{
+				code.append("    if (method.IsMethodOrFunction(&" + scriptClass + "::" + method + "))\n");
+				code.append("        return { \"" + scriptClass + "\", \"" + method + "\" };\n");
+			}
+		}
+
+		code.append("\n");
+		code.append("    return { }; \n");
+		code.append("}\n\n");
+
+		code.append("Result<uintptr_t, CallableDeserializationError>\n");
+		code.append("    Sonic::deserializeClientMethod(Script* script, const SerializedCallable& method, const CallableSignature& signature)\n");
+		code.append("{\n");
+
+		for (auto& [scriptClass, methods] : scriptMethods)
+		{
+			code.append("    if (method.scriptClass == \"" + scriptClass + "\")\n");
+			code.append("    {\n");
+
+			for (auto& method : methods)
+			{
+				code.append("        if (method.callable == \"" + method + "\")\n");
+				code.append("            return assureSignatureAndCreateMethod(script, &" + scriptClass + "::" + method + ", signature);\n");
+			}
+
+			code.append("    }\n");
+		}
+
+		code.append("\n    return CallableDeserializationError::NotFound;\n");
+		code.append("}\n");
+
+		OutputFileStream codeFile = OutputFileStream("C:/dev/Sonic/ClientSceneSerialization/src/ClientSerialization.cpp");
+		codeFile.write(code.c_str(), code.size());
+		codeFile.close();
+
 	}
-
-	code.append("\n    return CallableDeserializationError::NotFound;\n");
-	code.append("}\n");
-
-	OutputFileStream codeFile = OutputFileStream("C:/dev/Sonic/ClientSceneSerialization/src/GeneratedClientSerialization.cpp");
-	codeFile.write(code.c_str(), code.size());
-	codeFile.close();
 
 	// Compile
-
-	std::vector<Script*> scripts;
-	for (auto& scriptClass : scriptClasses)
-	{
-		SONIC_LOG_DEBUG("1");
-
-		Script* script = createClientScript(scriptClass);
-		script->OnInit();
-		scripts.push_back(script);
-
-		SONIC_LOG_DEBUG("2");
-	}
 }
 
 void SceneSerializer::serialize(Scene* scene, const String& relativeFilePath)

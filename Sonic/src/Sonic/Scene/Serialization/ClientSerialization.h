@@ -32,7 +32,7 @@ namespace Sonic {
 			return CallableDeserializationError::InvalidSignature;
 
 
-		return (uintptr_t)new Method<ScriptClass, ReturnType(Args)...>(script, method);
+		return (uintptr_t)new Method<ScriptClass, ReturnType(Args...)>(script, method);
 	}
 	
 	SONIC_CLIENT_SERIALIZATION Script* createClientScript(const String& scriptClass);
