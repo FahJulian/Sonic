@@ -1,6 +1,8 @@
 #pragma once
-#include "Sonic/Scene/Serialization/SceneSerializer.h"
+#include "Sonic/Util/Result.h"
+#include "Sonic/Util/Optional.h"
 #include "Sonic/Scene/Serialization/CallableSignature.h"
+#include "Sonic/Scene/Serialization/SerializedCallable.h"
 
 
 #ifdef SONIC_CLIENT_SERIALIZATION_RELEASE
@@ -18,27 +20,14 @@
 #endif
 
 
-namespace Sonic {
-
-	template<typename ReturnType, typename ScriptClass, typename... Args>
-	Result<uintptr_t, CallableDeserializationError>
-		assureSignatureAndCreateMethod(Script* baseScript, ReturnType(ScriptClass::* method)(Args...), const CallableSignature& signature)
-	{
-		ScriptClass* script = dynamic_cast<ScriptClass*>(baseScript);
-		if (script == nullptr)
-			return CallableDeserializationError::InvalidScriptClass;
-
-		if (signature != method)
-			return CallableDeserializationError::InvalidSignature;
-
-
-		return (uintptr_t)new Method<ScriptClass, ReturnType(Args...)>(script, method);
-	}
+namespace Sonic::Serialization {
 	
-	SONIC_CLIENT_SERIALIZATION Script* createClientScript(const String& scriptClass);
+	SONIC_CLIENT_SERIALIZATION Optional<Script*> createClientScript(const String& scriptClass,
+		const std::unordered_map<String, String>& data);
 
 	SONIC_CLIENT_SERIALIZATION Optional<SerializedCallable> serializeClientMethod(const BaseCallable& method);
 
 	SONIC_CLIENT_SERIALIZATION Result<uintptr_t, CallableDeserializationError>
 		deserializeClientMethod(Script* script, const SerializedCallable& method, const CallableSignature& signature);
+
 }

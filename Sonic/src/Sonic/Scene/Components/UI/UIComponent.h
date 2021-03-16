@@ -10,38 +10,43 @@ namespace Sonic {
 	{
 		using Mode = UISize::Mode;
 
-		Entity parent;
+		Entity parent = 0;
 
 		union
 		{
-			float x;
+			float x = 0.0f;
 			UISize xPattern;
 		};
 
 		union
 		{
-			float y;
+			float y = 0.0f;
 			UISize yPattern;
 		};
 
 		union
 		{
-			float width;
+			float width = 0.0f;
 			UISize widthPattern;
 		};
 
 		union
 		{
-			float height;
+			float height = 0.0f;
 			UISize heightPattern;
 		};
 
-		float zIndex;
+		float zIndex = 0.0f;
 
 		Ref<bool> uiRendererDirty = Ref<bool>(nullptr);
 		Ref<bool> fontRendererDirty = Ref<bool>(nullptr);
 
 		Ref<std::vector<Entity>> childs = createRef<std::vector<Entity>>();
+
+		UIComponent()
+			: parent(0), xPattern(), yPattern(), widthPattern(), heightPattern(), zIndex(0.0f)
+		{
+		}
 
 		UIComponent(float x, float y, float width, float height, float zIndex = 0.0f)
 			: parent(0), xPattern(Mode::Absolute, x), yPattern(Mode::Absolute, y), widthPattern(Mode::Absolute, width),

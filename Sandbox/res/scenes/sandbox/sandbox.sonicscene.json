@@ -11,7 +11,7 @@
     "test_id": "entities/test_entity",
 
     "second_id": {
-      "uicomponent": {
+      "UIComponent": {
         "parent": 0,
         "xPattern": {
           "mode": "Absolute",
@@ -30,15 +30,24 @@
           "relativeValue": 100.65
         }
       },
-      "UIRendererComponent": "components/test_component",
-      "ScriptComponent": {
-        "script": "scripts/TestScript.hpp",
-        "currentX": 5.5
+      "UIRendererComponent": {
+        "properties": {
+          "color": "0xffaaffaa",
+          "borderColor": {
+            "r": 0.5,
+            "a": 1.0,
+            "g": 0.3,
+            "b": 0.1
+          },
+          "borderWeight": 2,
+          "edgeRadius": 3
+        }
       },
+      "ScriptComponent<TestScript>": { },
       "UIClickListenerComponent": {
         "listener": {
           "entity": "second_id",
-          "component": "TestScript",
+          "script": "TestScript",
           "method": "OnClick"
         }
       }

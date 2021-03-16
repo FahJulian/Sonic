@@ -12,10 +12,12 @@ namespace Sonic {
 			RelativeToWindow,
 		};
 	
-		float absoluteValue;
+		float absoluteValue = 0.0f;
 
-		Mode mode;
-		float relativeValue;
+		Mode mode = Mode::Absolute;
+		float relativeValue = 0.0f;
+
+		UISize() = default;
 
 		UISize(float value)
 			: absoluteValue(value), mode(Mode::Absolute), relativeValue(value)

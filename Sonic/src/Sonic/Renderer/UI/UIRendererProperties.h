@@ -6,7 +6,6 @@ namespace Sonic {
 
 	struct UIRendererProperties
 	{
-	private:
 		Sprite sprite;
 		Color color;
 
@@ -14,7 +13,6 @@ namespace Sonic {
 		int borderWeight = 0;
 		int edgeRadius = 0;
 
-	public:
 		UIRendererProperties()
 			: sprite(Sprite()), color(Colors::Transparent)
 		{

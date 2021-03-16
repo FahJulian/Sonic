@@ -18,7 +18,7 @@ public:
 		: m_Entity(entity)
 	{
 	}
-
+	
 	void OnInit() override
 	{
 		SONIC_LOG_DEBUG("TestScript initialized");
@@ -36,4 +36,5 @@ public:
 	}
 
 	Entity m_Entity;
+	[[ transient ]] int i = 0;
 };

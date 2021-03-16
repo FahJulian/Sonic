@@ -14,7 +14,7 @@
 using namespace Sonic;
 
 
-struct Vertex
+struct UIVertex
 {
 	float x, y, zIndex;
 	float r, g, b, a;
@@ -37,7 +37,7 @@ static Shader s_Shader = Shader::Null();
 static VertexBuffer s_VBO = VertexBuffer::Null();
 static VertexArray s_VAO = VertexArray::Null();
 
-static Vertex s_Vertices[MAX_ELEMENTS * 4];
+static UIVertex s_Vertices[MAX_ELEMENTS * 4];
 static std::vector<Texture> s_Textures;
 
 static bool s_CompleteRebuffer = false;
@@ -89,7 +89,7 @@ void UIRenderer::init()
 		indices[6 * i + 5] = 4 * i + 2;
 	}
 
-	s_VBO = Sonic::VertexBuffer(4 * MAX_ELEMENTS * sizeof(Vertex), { 3, 4, 2, 1, 2, 2, 4, 1, 1 });
+	s_VBO = Sonic::VertexBuffer(4 * MAX_ELEMENTS * sizeof(UIVertex), { 3, 4, 2, 1, 2, 2, 4, 1, 1 });
 	s_VAO = Sonic::VertexArray(indices, MAX_ELEMENTS * 6, { s_VBO });
 
 	delete[] indices;
@@ -104,7 +104,7 @@ void UIRenderer::drawElement(int index, float x, float y, float width, float hei
 
 	float textureSlot = properties->sprite.IsNull() ? -1.0f : textureSlotOf(properties->sprite.texture);
 
-	Vertex* vertex = s_Vertices + 4 * static_cast<size_t>(index);
+	UIVertex* vertex = s_Vertices + 4 * static_cast<size_t>(index);
 	for (int i = 0; i < 4; i++)
 	{
 		vertex->x = x + (i % 2) * width;
@@ -209,7 +209,7 @@ void UIRenderer::rebuffer(Scene* scene)
 	if (rebuffer)
 	{
 		s_VBO.Bind();
-		s_VBO.SetData(s_Vertices, 4 * s_ElementCount * sizeof(Vertex));
+		s_VBO.SetData(s_Vertices, 4 * s_ElementCount * sizeof(UIVertex));
 		s_VBO.Unbind();
 
 		s_CompleteRebuffer = false;

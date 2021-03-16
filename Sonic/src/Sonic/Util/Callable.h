@@ -3,7 +3,7 @@
 #include "Sonic/Scene/ECS/Entity.h"
 #include "Sonic/Scene/Components/Scripting/Script.h"
 
-template<typename> inline constexpr bool _false = false;
+template<typename> static inline constexpr bool _false = false;
 
 namespace Sonic {
 	
@@ -45,7 +45,7 @@ namespace Sonic {
 	template<typename ReturnType, typename... Args>
 	class Callable
 	{
-		static_assert(_false<ReturnType>, "Callable has to be used with function types.");
+		static_assert(_false<ReturnType>, "Callables have to be used with function types.");
 	};
 
 

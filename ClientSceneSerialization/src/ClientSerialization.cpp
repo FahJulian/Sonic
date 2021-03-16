@@ -2,20 +2,20 @@
 #include "C:/dev/Sonic/Sandbox/res/scenes/sandbox/scripts/TestScript.hpp"
 #include "C:/dev/Sonic/Sandbox/res/scenes/sandbox/scripts/TestScript2.hpp"
 
-using namespace Sonic;
+using namespace Sonic::Serialization;
 
 
-Script* Sonic::createClientScript(const String& scriptClass)
+Optional<Script*> Serialization::createClientScript(const String& scriptClass, const std::unordered_map<String, String>& data)
 {
     if (scriptClass == "TestScript")
         return new TestScript();
     if (scriptClass == "TestScript2")
         return new TestScript2();
 
-    return nullptr;
+    return { };
 }
 
-Optional<SerializedCallable> Sonic::serializeClientMethod(const BaseCallable& method)
+Optional<SerializedCallable> Serialization::serializeClientMethod(const BaseCallable& method)
 {
     if (method.IsMethodOrFunction(&TestScript::OnInit))
         return { "TestScript", "OnInit" };
@@ -34,7 +34,7 @@ Optional<SerializedCallable> Sonic::serializeClientMethod(const BaseCallable& me
 }
 
 Result<uintptr_t, CallableDeserializationError>
-    Sonic::deserializeClientMethod(Script* script, const SerializedCallable& method, const CallableSignature& signature)
+    Serialization::deserializeClientMethod(Script* script, const SerializedCallable& method, const CallableSignature& signature)
 {
     if (method.scriptClass == "TestScript")
     {

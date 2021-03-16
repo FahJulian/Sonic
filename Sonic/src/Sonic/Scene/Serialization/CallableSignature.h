@@ -2,7 +2,7 @@
 #include "Sonic/Base.h"
 #include "Sonic/Util/Callable.h"
 
-namespace Sonic
+namespace Sonic::Serialization
 {
 	class CallableSignature
 	{
@@ -32,7 +32,7 @@ namespace Sonic
 		}
 
 		bool operator==(const CallableSignature& other) const;
-		bool operator!=(const CallableSignature& other) const;
+		bool operator!=(const CallableSignature& other) const { return !(*this == other); }
 
 	private:
 		template<typename Arg>
