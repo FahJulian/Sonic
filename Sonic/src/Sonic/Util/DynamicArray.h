@@ -12,7 +12,7 @@ namespace Sonic {
 	class DynamicArray
 	{
 	private:
-		static constexpr double CAPACITY_MULTIPLIER = 1.25;
+		static constexpr double CAPACITY_MULTIPLIER = 1.15;
 
 	public:
 		constexpr DynamicArray()
@@ -43,43 +43,6 @@ namespace Sonic {
 			freeMemory(mData);
 		}
 
-		T* begin()
-		{
-			return mData;
-		}
-
-		T* end()
-		{
-			return mData + mSize;
-		}
-
-		const T* cbegin() const
-		{
-			return mData;
-		}
-
-		const T* cend() const
-		{
-			return mData + mSize;
-		}
-
-		template<typename F>
-		size_t indexOf(const F& value) const
-		{
-			for (size_t i = 0; i < mSize; i++)
-			{
-				if (mCursor == mSize)
-					mCursor = 0;
-
-				if (mData[mCursor] == value)
-					return mCursor;
-
-				mCursor++;
-			}
-
-			return mSize;
-		}
-
 		template<typename... Args>
 		void add(Args&&... args)
 		{
@@ -89,6 +52,12 @@ namespace Sonic {
 			new(mData + mSize) T(std::forward<Args>(args)...);
 
 			mSize++;
+		}
+
+		template<typename... Args>
+		void operator+=(Args&&... args)
+		{
+			add(std::forward<Args>(args)...);
 		}
 
 		template<typename... Args>
@@ -121,6 +90,23 @@ namespace Sonic {
 			mSize++;
 		}
 
+		template<typename F>
+		size_t indexOf(const F& value) const
+		{
+			for (size_t i = 0; i < mSize; i++)
+			{
+				if (mCursor == mSize)
+					mCursor = 0;
+
+				if (mData[mCursor] == value)
+					return mCursor;
+
+				mCursor++;
+			}
+
+			return mSize;
+		}
+
 		bool contains(const T& value) const
 		{
 			return indexOf(value) != mSize;
@@ -134,26 +120,6 @@ namespace Sonic {
 			std::move(mData + index + 1, mData + mSize, mData + index);
 
 			mSize--;
-		}
-
-		T* getData()
-		{
-			return mData;
-		}
-
-		const T* getData() const
-		{
-			return mData;
-		}
-
-		size_t getSize() const
-		{
-			return mSize;
-		}
-
-		size_t getCapacity() const
-		{
-			return mCapacity;
 		}
 
 		void setSize(size_t size)
@@ -194,6 +160,46 @@ namespace Sonic {
 			mSize = 0;
 		}
 
+		T* begin()
+		{
+			return mData;
+		}
+
+		T* end()
+		{
+			return mData + mSize;
+		}
+
+		const T* cbegin() const
+		{
+			return mData;
+		}
+
+		const T* cend() const
+		{
+			return mData + mSize;
+		}
+
+		T* getData()
+		{
+			return mData;
+		}
+
+		const T* getData() const
+		{
+			return mData;
+		}
+
+		size_t getSize() const
+		{
+			return mSize;
+		}
+
+		size_t getCapacity() const
+		{
+			return mCapacity;
+		}
+
 		T& get(size_t index)
 		{
 			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
@@ -222,26 +228,20 @@ namespace Sonic {
 			return mData[index];
 		}
 
-		template<typename... Args>
-		void operator+=(Args&&... args)
-		{
-			add(std::forward<Args>(args)...);
-		}
-
 	private:
-		static T* allocateMemory(size_t capacity)
+		inline static T* allocateMemory(size_t capacity)
 		{
 			return reinterpret_cast<T*>(operator new(capacity * sizeof(T)));
 		}
 
-		static void freeMemory(T* data)
+		inline static void freeMemory(T* data)
 		{
 			operator delete((void*)data);
 		}
 
 		inline size_t calculateNewCapacity()
 		{
-			return static_cast<size_t>(static_cast<double>(mCapacity) * CAPACITY_MULTIPLIER);
+			return static_cast<size_t>(static_cast<double>(mCapacity) * CAPACITY_MULTIPLIER + 0.5);
 		}
 
 		size_t mSize;

@@ -1,4 +1,3 @@
-//#include <Sonic/main.h>
 #include <iostream>
 #include <Sonic/Util/DynamicArray.h>
 #include <vector>
@@ -78,24 +77,20 @@ int main()
 
 	data[0] = 0;
 	data[1] = 1;
-	//data[2] = 2;
-	//data[3] = 3;
-	//data[4] = 4;
+
+	data.add(4);
 
 	data.insert(0, 8);
-
-	//data.add(9);
-	//data.add(10);
-	//data.add(9);
-	//data.add(584390);
-
-	//data[0].~Test();
 
 	if (data.contains(1))
 		data.remove(data.indexOf(1));
 
+	data += 9;
+	data += 9;
+	data += 7;
+	data += 9;
+
 	delete pdata;
 
-	std::cout << std::endl << std::endl << n << std::endl;
+	std::cout << std::endl << n << std::endl;
 }
-
