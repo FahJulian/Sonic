@@ -5,7 +5,22 @@ using namespace Sonic;
 
 void onEvent(const KeyPressedEvent& e)
 {
+	SONIC_LOG_DEBUG("Key pressed");
 
+	switch (e.key)
+	{
+	case Keys::F11:
+		if (Window::getWindowMode() == WindowMode::Windowed)
+		{
+			Window::setWindowMode(WindowMode::WindowedBorderless);
+		}
+		else
+		{
+			Window::setWindowMode(WindowMode::Windowed);
+		}
+		break;
+		break;
+	}
 }
 
 
@@ -32,9 +47,9 @@ public:
 
 	void OnUpdate(float deltaTime) override
 	{
-		SONIC_LOG_DEBUG("TestScript updated");
+		SONIC_LOG_DEBUG(App::resourceDir());
 	}
 
-	Entity m_Entity;
+	Entity m_Entity = 0;
 	[[ transient ]] int i = 0;
 };

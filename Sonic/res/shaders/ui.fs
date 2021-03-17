@@ -86,6 +86,7 @@ void main()
 
 	if (f_BorderWeight != 0)
 	{
+
 		if (innerPos.x < f_BorderWeight || f_RectScale.x - innerPos.x <= f_BorderWeight || 
 			innerPos.y < f_BorderWeight || f_RectScale.y - innerPos.y <= f_BorderWeight)
 		{

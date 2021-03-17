@@ -1,17 +1,101 @@
-#include <Sonic/main.h>
+//#include <Sonic/main.h>
+#include <iostream>
+#include <Sonic/Util/DynamicArray.h>
+#include <vector>
+
+#include "Sonic/Debug/Log.h"
 
 using namespace Sonic;
 
+int n = 0;
 
-String Sonic::init()
+struct Test
 {
-	SceneManager::registerScene(new SerializedScene("scenes/sandbox"), "sandbox");
+	Test()
+		: i(-1)
+	{
+		n++;
+		std::cout << "Created empty" << std::endl;
+	}
 
-	return "windows/sandbox";
+	Test(int i)
+		: i(i)
+	{
+		n++;
+		std::cout << "Created: " << i << std::endl;
+	}
+
+	Test(const Test& t)
+		: i(t.i)
+	{
+		n++;
+		std::cout << "Copied " << i << std::endl;
+	}
+
+	Test(const Test&& t) noexcept
+		: i(t.i)
+	{
+		n++;
+		std::cout << "Moved " << i << std::endl;
+	}
+
+	Test& operator=(const Test& t)
+	{
+		i = t.i;
+		std::cout << "Copied operator= " << i << std::endl;
+		return *this;
+	}
+
+	Test& operator=(Test&& t) noexcept
+	{
+		i = t.i;
+		std::cout << "Moved operator= " << i << std::endl;
+		return *this;
+	}
+
+	bool operator==(const Test& other) const { return other.i == i; }
+
+	~Test()
+	{
+		std::cout << "Destroyed: " << this->i << std::endl;
+		i = 0;
+		n--;
+	}
+
+	int i;
+};
+
+int main()
+{
+	Log::init("C:/dev/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
+
+	DynamicArray<Test>* pdata = new DynamicArray<Test>(4);
+	auto& data = *pdata;
+
+	data.setCapacity(0);
+
+	data.setSize(4);
+
+	data[0] = 0;
+	data[1] = 1;
+	//data[2] = 2;
+	//data[3] = 3;
+	//data[4] = 4;
+
+	data.insert(0, 8);
+
+	//data.add(9);
+	//data.add(10);
+	//data.add(9);
+	//data.add(584390);
+
+	//data[0].~Test();
+
+	if (data.contains(1))
+		data.remove(data.indexOf(1));
+
+	delete pdata;
+
+	std::cout << std::endl << std::endl << n << std::endl;
 }
 
-const String& Sonic::resourceDir()
-{
-	static String dir = "C:/dev/Sonic/Sandbox/res/";
-	return dir;
-}
