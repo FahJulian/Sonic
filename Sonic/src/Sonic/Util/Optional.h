@@ -19,4 +19,4 @@ namespace Sonic {
 		ValueType value;
 	};
 
-}
+} // namespace Sonic

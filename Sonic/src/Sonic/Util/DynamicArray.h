@@ -12,11 +12,11 @@ namespace Sonic {
 	class DynamicArray
 	{
 	private:
-		static constexpr double CAPACITY_MULTIPLIER = 1.15;
+		static constexpr double CAPACITY_MULTIPLIER_FACTOR = 1.15;
 
 	public:
 		constexpr DynamicArray()
-			: DynamicArray(1)
+			: mSize(0), mCapacity(0), mData(nullptr)
 		{
 		}
 
@@ -25,14 +25,67 @@ namespace Sonic {
 		{
 		}
 
-		DynamicArray(std::initializer_list<T> values)
-			: DynamicArray(values.size())
+		DynamicArray(const std::initializer_list<T>& values)
+			: mSize(values.size()), mCapacity(values.size()), mData(allocateMemory(mCapacity))
 		{
+			for (size_t i = 0, size = values.size(); i < size; i++)
+				new(mData + i) T(std::move(*(values.begin() + i)));
 		}
 
 		DynamicArray(const DynamicArray& other)
-			: DynamicArray(other.mCapacity)
+			: mSize(0), mCapacity(0), mData(nullptr)
 		{
+			*this = other;
+		}
+
+		DynamicArray(DynamicArray&& other) noexcept
+			: mSize(0), mCapacity(0), mData(nullptr)
+		{
+			*this = std::move(other);
+		}
+
+		DynamicArray& operator=(const DynamicArray& other)
+		{
+			if (this != &other)
+			{
+				for (auto& value : *this)
+					value.~T();
+
+				freeMemory(mData);
+
+				mCapacity = other.mCapacity;
+				mSize = other.mSize;
+				mCursor = other.mCursor;
+				mData = allocateMemory(mCapacity);
+
+				for (size_t i = 0; i < other.mSize; i++)
+					new(mData + i) T(other.get(i));
+			}
+
+			return *this;
+		}
+
+		DynamicArray& operator=(DynamicArray&& other) noexcept
+		{
+			if (this != &other)
+			{
+				for (auto& value : *this)
+					value.~T();
+
+				freeMemory(mData);
+
+				mCapacity = other.mCapacity;
+				mSize = other.mSize;
+				mCursor = other.mCursor;
+				mData = other.mData;
+
+				other.mCapacity = 0;
+				other.mSize = 0;
+				other.mData = nullptr;
+				other.mCursor = 0;
+			}
+
+			return *this;
 		}
 
 		~DynamicArray()
@@ -54,10 +107,25 @@ namespace Sonic {
 			mSize++;
 		}
 
+		void add(const T& value)
+		{
+			if (mSize == mCapacity)
+				setCapacity(calculateNewCapacity());
+
+			new(mData + mSize) T(value);
+
+			mSize++;
+		}
+
 		template<typename... Args>
 		void operator+=(Args&&... args)
 		{
 			add(std::forward<Args>(args)...);
+		}
+
+		void operator+=(const T& value)
+		{
+			add(value);
 		}
 
 		template<typename... Args>
@@ -107,7 +175,8 @@ namespace Sonic {
 			return mSize;
 		}
 
-		bool contains(const T& value) const
+		template<typename F>
+		bool contains(const F& value) const
 		{
 			return indexOf(value) != mSize;
 		}
@@ -124,11 +193,19 @@ namespace Sonic {
 
 		void setSize(size_t size)
 		{
-			if (size > mCapacity)
-				setCapacity(size);
-
 			if (size > mSize)
-				new(mData + mSize) T[size - mSize];
+			{
+				if (size > mCapacity)
+					setCapacity(size);
+
+				if (size > mSize)
+					new(mData + mSize) T[size - mSize];
+			}
+			else
+			{
+				for (size_t i = size; i < mSize; i++)
+					mData[i].~T();
+			}
 
 			mSize = size;
 		}
@@ -150,6 +227,11 @@ namespace Sonic {
 
 			freeMemory(mData);
 			mData = newData;
+		}
+
+		void shrink()
+		{
+			setCapacity(mSize);
 		}
 
 		void clear()
@@ -229,25 +311,26 @@ namespace Sonic {
 		}
 
 	private:
-		inline static T* allocateMemory(size_t capacity)
+		static T* allocateMemory(size_t capacity)
 		{
 			return reinterpret_cast<T*>(operator new(capacity * sizeof(T)));
 		}
 
-		inline static void freeMemory(T* data)
+		static void freeMemory(T* data)
 		{
 			operator delete((void*)data);
 		}
 
-		inline size_t calculateNewCapacity()
+		size_t calculateNewCapacity()
 		{
-			return static_cast<size_t>(static_cast<double>(mCapacity) * CAPACITY_MULTIPLIER + 0.5);
+			return static_cast<size_t>(static_cast<double>(mCapacity) * CAPACITY_MULTIPLIER_FACTOR + 1.0);
 		}
 
 		size_t mSize;
 		size_t mCapacity;
-		mutable size_t mCursor = 0;
 		T* mData;
+
+		mutable size_t mCursor = 0;
 	};
 
-}
+} // namespace Sonic

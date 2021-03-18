@@ -1,5 +1,6 @@
 #include <iostream>
 #include <Sonic/Util/DynamicArray.h>
+#include <Sonic/Util/Map.h>
 #include <vector>
 
 #include "Sonic/Debug/Log.h"
@@ -31,7 +32,7 @@ struct Test
 		std::cout << "Copied " << i << std::endl;
 	}
 
-	Test(const Test&& t) noexcept
+	Test(Test&& t) noexcept
 		: i(t.i)
 	{
 		n++;
@@ -64,19 +65,73 @@ struct Test
 	int i;
 };
 
+namespace sn
+{
+	struct Test1
+	{
+
+	};
+
+	void test();
+}
+
+namespace Sonic
+{
+	void test();
+
+	struct Test1
+	{
+
+	};
+}
+
 int main()
 {
 	Log::init("C:/dev/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
 
-	DynamicArray<Test>* pdata = new DynamicArray<Test>(4);
-	auto& data = *pdata;
+	DynamicArray<Test> data = DynamicArray<Test>(4);
 
 	data.setCapacity(0);
 
 	data.setSize(4);
 
 	data[0] = 0;
+	data[0] = 0;
+	data[0] = 0;
+	data[0] = 0;
 	data[1] = 1;
+
+	Log::log(Log::INFO, "Constructing data2");
+
+	DynamicArray<Test> data2 = DynamicArray<Test>();
+	data2.add(1);
+	data2.add(2);
+	data2.add(3);
+
+	Log::log(Log::INFO, "Copying...");
+
+	data2 = data;
+
+	Log::log(Log::INFO, "Done.");
+
+	data2.add(8);
+
+	Log::log(Log::INFO, "Constructing data3");
+
+	DynamicArray<Test> data3 = DynamicArray<Test>();
+	data3.add(1);
+	data3.add(2);
+	data3.add(3);
+
+	Log::log(Log::INFO, "Moving...");
+
+	data3 = std::move(data);
+
+	Log::log(Log::INFO, "Done");
+
+	data3.add(8);
+
+	data.setSize(1);
 
 	data.add(4);
 
@@ -90,7 +145,38 @@ int main()
 	data += 7;
 	data += 9;
 
-	delete pdata;
-
 	std::cout << std::endl << n << std::endl;
+
+	Map<int, float> map;
+	Map<int, float> map2 = {
+		Map<int, float>::Pair{ 3, 4.0f },
+		Map<int, float>::Pair{ 2, 1.0f }
+	};
+
+	map = Map<int, float>();
+	map = Map<int, float>(100);
+	map = map2;
+	map = std::move(map);
+
+	map.insert({ 3, 4 });
+	map.insert(3, 4);
+	map.insert(2, 5);
+	map.insert({ 2, 5 });
+
+	bool b0 = map.containsKey(3);
+	bool b1 = map.containsKey(100);
+	bool b2 = map.containsValue(5);
+	bool b3 = map.containsValue(100);
+
+	map.remove(3);
+
+	map.setSize(50);
+	map.setCapacity(100);
+	map.shrink();
+
+	for (auto& [key, value] : map)
+		Log::log(Log::TRACE, "(", key, ", ", value, ")");
+
+	map.get(2) = 4;
+	map[2] = 3;
 }
