@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Sonic {
+namespace sonic {
 	
 	template<typename ValueType>
 	class Optional
@@ -19,4 +19,4 @@ namespace Sonic {
 		ValueType value;
 	};
 
-} // namespace Sonic
+} // namespace sonic

@@ -5,7 +5,9 @@
 
 #include "Sonic/Debug/Log.h"
 
-using namespace Sonic;
+#include <string>
+
+using namespace sonic;
 
 int n = 0;
 
@@ -75,6 +77,16 @@ namespace sn
 	void test();
 }
 
+namespace sonic
+{
+	struct Test1
+	{
+
+	};
+
+	void test();
+}
+
 namespace Sonic
 {
 	void test();
@@ -87,7 +99,7 @@ namespace Sonic
 
 int main()
 {
-	Log::init("C:/dev/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
+	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
 
 	DynamicArray<Test> data = DynamicArray<Test>(4);
 
@@ -179,4 +191,10 @@ int main()
 
 	map.get(2) = 4;
 	map[2] = 3;
+
+	Log::writeToFile();
+
+	Log::log(Log::TRACE, "TEST");
+
+	Log::writeToFile();
 }

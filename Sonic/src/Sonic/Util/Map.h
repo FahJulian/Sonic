@@ -2,7 +2,7 @@
 
 #include "DynamicArray.h"
 
-namespace Sonic {
+namespace sonic {
 
 	template<typename K, typename V>
 	class Map
@@ -94,6 +94,8 @@ namespace Sonic {
 		{
 		}
 
+		~Map() = default;
+
 		Map& operator=(const Map& other)
 		{
 			mData = other.mData;
@@ -108,7 +110,17 @@ namespace Sonic {
 			return *this;
 		}
 
-		~Map() = default;
+		template<typename T>
+		V& operator[](const T& key)
+		{
+			return mData.get(mData.indexOf(key)).value;
+		}
+
+		template<typename T>
+		const V& operator[](const T& key) const
+		{
+			return mData.get(mData.indexOf(key)).value;
+		}
 
 		template<typename T, typename F>
 		void insert(const T& key, const F& value)
@@ -223,20 +235,8 @@ namespace Sonic {
 			return mData.get(mData.indexOf(key)).value;
 		}
 
-		template<typename T>
-		V& operator[](const T& key)
-		{
-			return mData.get(mData.indexOf(key)).value;
-		}
-
-		template<typename T>
-		const V& operator[](const T& key) const
-		{
-			return mData.get(mData.indexOf(key)).value;
-		}
-
 	private:
 		DynamicArray<Pair> mData;
 	};
 
-} // namespace Sonic
+} // namespace sonic

@@ -6,13 +6,15 @@
 
 #include "Sonic/Util/String.h"
 
-namespace Sonic 
+namespace sonic 
 {
 	class Log
 	{
 	private:
 		struct Level
 		{
+			operator uint8_t() const { return severity; }
+
 			const uint8_t severity;
 			const char* const color;
 			const char* const name;
@@ -21,14 +23,17 @@ namespace Sonic
 		static constexpr const char* const ANSI_RESET = "\033[0m";
 
 	public:
-		static constexpr const Level FATAL = { 5, "\x1B[1m\x1B[41m", "[FATAL] " }; // 1
-		static constexpr const Level ERROR = { 4, "\x1B[1m\x1B[31m", "[ERROR] " };
-		static constexpr const Level WARN = { 3, "\x1B[1m\x1B[33m", "[WARN]  " };
-		static constexpr const Level INFO = { 2, "\x1B[1m\x1B[36m", "[INFO]  " };
-		static constexpr const Level DEBUG = { 1, "\x1B[1m\x1B[35m", "[DEBUG] " };
-		static constexpr const Level TRACE = { 0, "\x1B[1m\x1B[37m", "[TRACE] " };
+		static constexpr const Level& FATAL = { 5, "\x1B[1m\x1B[41m", "[FATAL] " }; 
+		static constexpr const Level& ERROR = { 4, "\x1B[1m\x1B[31m", "[ERROR] " };
+		static constexpr const Level& WARN = { 3, "\x1B[1m\x1B[33m", "[WARN]  " };
+		static constexpr const Level& INFO = { 2, "\x1B[1m\x1B[36m", "[INFO]  " };
+		static constexpr const Level& DEBUG = { 1, "\x1B[1m\x1B[35m", "[DEBUG] " };
+		static constexpr const Level& TRACE = { 0, "\x1B[1m\x1B[37m", "[TRACE] " };
 
-		static void init(const String& filePath, std::ostream* ostream, const Level& consoleLevel, const Level& fileLevel);
+		static constexpr uint8_t DISABLED = 0xff;
+		static constexpr uint8_t ALL = 0;
+
+		static void init(const String& filePath, std::ostream* ostream, uint8_t consoleLevel, uint8_t fileLevel);
 
 		template<typename Arg, typename... Args>
 		static void log(const Level& level, const Arg& arg, const Args&... args)
@@ -44,9 +49,11 @@ namespace Sonic
 				pushMessage(sInstance.mFileStream, level, arg, (args)...);
 		}
 
+		static void writeToFile();
+
 	private:
 		Log()
-			: mFilePath(nullptr), mConsoleLevel(0xff), mFileLevel(0xff), mConsoleStream(nullptr), mFileStream()
+			: mFilePath(), mConsoleLevel(Log::DISABLED), mFileLevel(Log::DISABLED), mConsoleStream(nullptr), mFileStream()
 		{
 		}
 
@@ -68,5 +75,5 @@ namespace Sonic
 		static Log sInstance;
 	};
 
-} // namespace Sonic
+} // namespace sonic
 

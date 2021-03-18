@@ -6,7 +6,7 @@
 
 #include "Sonic/Base.h"
 
-namespace Sonic {
+namespace sonic {
 
 	template<typename T>
 	class DynamicArray
@@ -42,6 +42,14 @@ namespace Sonic {
 			: mSize(0), mCapacity(0), mData(nullptr)
 		{
 			*this = std::move(other);
+		}
+
+		~DynamicArray()
+		{
+			for (auto& value : *this)
+				value.~T();
+
+			freeMemory(mData);
 		}
 
 		DynamicArray& operator=(const DynamicArray& other)
@@ -88,12 +96,29 @@ namespace Sonic {
 			return *this;
 		}
 
-		~DynamicArray()
+		template<typename... Args>
+		void operator+=(Args&&... args)
 		{
-			for (auto& value : *this)
-				value.~T();
+			add(std::forward<Args>(args)...);
+		}
 
-			freeMemory(mData);
+		void operator+=(const T& value)
+		{
+			add(value);
+		}
+
+		T& operator[](size_t index)
+		{
+			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
+
+			return mData[index];
+		}
+
+		const T& operator[](size_t index) const
+		{
+			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
+
+			return mData[index];
 		}
 
 		template<typename... Args>
@@ -115,17 +140,6 @@ namespace Sonic {
 			new(mData + mSize) T(value);
 
 			mSize++;
-		}
-
-		template<typename... Args>
-		void operator+=(Args&&... args)
-		{
-			add(std::forward<Args>(args)...);
-		}
-
-		void operator+=(const T& value)
-		{
-			add(value);
 		}
 
 		template<typename... Args>
@@ -296,20 +310,6 @@ namespace Sonic {
 			return mData[index];
 		}
 
-		T& operator[](size_t index)
-		{
-			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
-
-			return mData[index];
-		}
-
-		const T& operator[](size_t index) const
-		{
-			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
-
-			return mData[index];
-		}
-
 	private:
 		static T* allocateMemory(size_t capacity)
 		{
@@ -333,4 +333,4 @@ namespace Sonic {
 		mutable size_t mCursor = 0;
 	};
 
-} // namespace Sonic
+} // namespace sonic
