@@ -30,7 +30,7 @@ namespace sonic
 
 		String& operator=(String&& other) noexcept;
 
-		operator const char*() const
+		operator const char* () const
 		{
 			return mData;
 		}
@@ -63,6 +63,15 @@ namespace sonic
 			return equals(other);
 		}
 
+		bool operator!=(const String& other)
+		{
+			return !equals(other);
+		}
+		bool operator!=(const char* other)
+		{
+			return !equals(other);
+		}
+
 		void append(const String& string);
 		void append(const char* string);
 
@@ -75,9 +84,11 @@ namespace sonic
 		bool equalsIgnoreCase(const String& other) const;
 		bool equalsIgnoreCase(const char* other) const;
 
+		bool contains(char c);
 		bool contains(const String& other) const;
 		bool contains(const char* other) const;
 
+		bool containsIgnoreCase(char c);
 		bool containsIgnoreCase(const String& string) const;
 		bool containsIgnoreCase(const char* string) const;
 
@@ -111,14 +122,14 @@ namespace sonic
 		DynamicArray<String> split(const char* string) const;
 		DynamicArray<String> split(const String& string) const;
 
-		String& subString(size_t beginIndex) const;
-		String& subString(size_t beginIndex, size_t endIndex) const;
+		String subString(size_t beginIndex) const;
+		String subString(size_t beginIndex, size_t endIndex) const;
 
-		String& trim() const;
+		String trim() const;
 
-		String& toLowerCase() const;
+		String toLowerCase() const;
 
-		String& toUpperCase() const;
+		String toUpperCase() const;
 
 		char* begin()
 		{
@@ -160,25 +171,19 @@ namespace sonic
 		}
 
 		static String valueOf(bool b);
-		static String valueOf(char c);
-		static String valueOf(unsigned char c);
-		static String valueOf(short s);
-		static String valueOf(unsigned short s);
-		static String valueOf(int i);
-		static String valueOf(unsigned int i);
-		static String valueOf(long l);
-		static String valueOf(unsigned long l);
-		static String valueOf(long long l);
-		static String valueOf(unsigned long long l);
+		static String valueOf(char c, int base = 10);
+		static String valueOf(unsigned char c, int base = 10);
+		static String valueOf(short s, int base = 10);
+		static String valueOf(unsigned short s, int base = 10);
+		static String valueOf(int i, int base = 10);
+		static String valueOf(unsigned int i, int base = 10);
+		static String valueOf(long l, int base = 10);
+		static String valueOf(unsigned long l, int base = 10);
+		static String valueOf(long long l, int base = 10);
+		static String valueOf(unsigned long long l, int base = 10);
 		static String valueOf(float f, bool scientific = false);
 		static String valueOf(double f, bool scientific = false);
 		static String valueOf(long double d, bool scientific = false);
-
-		template<typename T>
-		static String valueOf(T* t)
-		{
-			return valueOf(static_cast<uintptr_t>(t));
-		}
 
 	private:
 		size_t mSize;

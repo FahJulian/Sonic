@@ -5,7 +5,7 @@ namespace sonic
 {
 	Log Log::sInstance = Log();
 
-	void Log::init(const char* filePath, std::ostream* ostream, uint8_t consoleLevel, uint8_t fileLevel)
+	void Log::init(String filePath, std::ostream* ostream, uint8_t consoleLevel, uint8_t fileLevel)
 	{
 		sInstance.mFilePath = filePath;
 		sInstance.mFileLevel = fileLevel;

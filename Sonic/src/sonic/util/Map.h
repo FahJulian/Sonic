@@ -195,12 +195,12 @@ namespace sonic {
 
 		const Pair* begin() const
 		{
-			return mData.cbegin();
+			return mData.begin();
 		}
 
 		const Pair* end() const
 		{
-			return mData.cend();
+			return mData.end();
 		}
 
 		Pair* getData()

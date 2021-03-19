@@ -116,14 +116,14 @@ namespace sonic {
 
 		T& operator[](size_t index)
 		{
-			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
+			SN_ASSERT(index < mSize, "Index out of range");
 
 			return mData[index];
 		}
 
 		const T& operator[](size_t index) const
 		{
-			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
+			SN_ASSERT(index < mSize, "Index out of range");
 
 			return mData[index];
 		}
@@ -159,20 +159,31 @@ namespace sonic {
 				mCapacity = calculateNewCapacity();
 
 				T* newData = allocateMemory(mCapacity);
-				std::move(mData, mData + index, newData);
+				for (size_t i = 0; i < index; i++)
+				{
+					new(newData + i) T(std::move(mData[i]));
+					mData[i].~T();
+				}
 
 				new(newData + index) T(std::forward<Args>(args)...);
 
-				std::move(mData + index, mData + mSize, newData + index + 1);
+				for (size_t i = index; i < mSize; i++)
+				{
+					new(newData + i + 1) T(std::move(mData[i]));
+					mData[i].~T();
+				}
 
 				freeMemory(mData);
 				mData = newData;
 			}
 			else
 			{
-				if (index != mSize)
-					std::move_backward(mData + index, mData + mSize, mData + mSize + 1);
+				new (mData + mSize) T(std::move(mData[mSize - 1]));
 
+				for (size_t i = mSize - 2; i >= index; i--)
+					mData[i + 1] = std::move(mData[i]);
+
+				mData[index].~T();
 				new(mData + index) T(std::forward<Args>(args)...);
 			}
 
@@ -204,10 +215,12 @@ namespace sonic {
 
 		void remove(size_t index)
 		{
-			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
+			SN_ASSERT(index < mSize, "Index out of range");
 
-			mData[index].~T();
-			std::move(mData + index + 1, mData + mSize, mData + index);
+			for (size_t i = index; i < mSize - 1; i++)
+				mData[i] = std::move(mData[i + 1]);
+
+			mData[mSize - 1].~T();
 
 			mSize--;
 		}
@@ -220,7 +233,10 @@ namespace sonic {
 					setCapacity(size);
 
 				if (size > mSize)
-					new(mData + mSize) T[size - mSize];
+				{
+					for (size_t i = mSize; i < size; i++)
+						new(mData + i) T();
+				}
 			}
 			else
 			{
@@ -244,7 +260,11 @@ namespace sonic {
 			mCapacity = capacity;
 
 			T* newData = allocateMemory(mCapacity);
-			std::move(begin(), end(), newData);
+			for (size_t i = 0; i < mSize; i++)
+			{
+				new(newData + i) T(std::move(mData[i]));
+				mData[i].~T();
+			}
 
 			freeMemory(mData);
 			mData = newData;
@@ -273,12 +293,12 @@ namespace sonic {
 			return mData + mSize;
 		}
 
-		const T* cbegin() const
+		const T* begin() const
 		{
 			return mData;
 		}
 
-		const T* cend() const
+		const T* end() const
 		{
 			return mData + mSize;
 		}
@@ -305,14 +325,14 @@ namespace sonic {
 
 		T& get(size_t index)
 		{
-			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
+			SN_ASSERT(index < mSize, "Index out of range");
 
 			return mData[index];
 		}
 
 		const T& get(size_t index) const
 		{
-			SN_ASSERT(index < mSize, "Index ", index, " is out of range");
+			SN_ASSERT(index < mSize, "Index out of range");
 
 			return mData[index];
 		}
@@ -325,7 +345,7 @@ namespace sonic {
 
 		static void freeMemory(T* data)
 		{
-			operator delete((void*)data);
+			operator delete(data);
 		}
 
 		size_t calculateNewCapacity()

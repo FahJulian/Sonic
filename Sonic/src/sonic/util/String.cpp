@@ -4,28 +4,43 @@
 #include <charconv>
 
 #include "sonic/Base.h"
+#include "sonic/util/StaticArray.h"
 
 namespace sonic
 {
 	namespace
 	{
+		static StaticArray<char, 8 * sizeof(long long)> STRING_CAST_BUFFER;
+
 		template<typename T>
-		static String floatToString(T value, bool scientific)
+		static String _floatToString(T value, bool scientific)
 		{
-			String string;
+			auto result = std::to_chars(STRING_CAST_BUFFER.begin(), STRING_CAST_BUFFER.end(), 
+				value, scientific ? std::chars_format::scientific : std::chars_format::fixed, 2);
 
-			if (scientific)
-			{
-				string.setSize(8);
-				std::to_chars(string.begin(), string.end(), value, std::chars_format::scientific, 2);
-			}
-			else
-			{
-				string.setSize(static_cast<size_t>(std::log10(value)) + 4);
-				std::to_chars(string.begin(), string.end(), value, std::chars_format::fixed, 2);
-			}
+			return String(STRING_CAST_BUFFER.begin(), result.ptr - STRING_CAST_BUFFER.begin());
+		}
 
-			return string;
+		template<typename T>
+		static String _integerToString(T value, int base)
+		{
+			auto result = std::to_chars(STRING_CAST_BUFFER.begin(), STRING_CAST_BUFFER.end(), value, base);
+			return String(STRING_CAST_BUFFER.begin(), result.ptr - STRING_CAST_BUFFER.begin());
+		}
+
+		static char _toLowerCase(char c)
+		{
+			return (c >= 'A' && c <= 'Z') ? c - 'A' + 'a' : c;
+		}
+
+		static char _toUpperCase(char c)
+		{
+			return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c;
+		}
+
+		static bool _isWhitespace(char c)
+		{
+			return c <= ' ';
 		}
 
 	} // namespace
@@ -172,9 +187,249 @@ namespace sonic
 		mData = newData;
 	}
 
+	bool String::equals(const String& other) const
+	{
+		return std::strcmp(mData, other) == 0;
+	}
+
+	bool String::equals(const char* other) const
+	{
+		return std::strcmp(mData, other) == 0;
+	}
+
+	bool String::equalsIgnoreCase(const String& other) const
+	{
+		if (mSize != other.mSize)
+			return false;
+
+		for (size_t i = 0; i < mSize; i++)
+		{
+			if (_toLowerCase(mData[i]) != _toLowerCase(other.mData[i]))
+				return false;
+		}
+
+		return true;
+	}
+
+	bool String::equalsIgnoreCase(const char* other) const
+	{
+		if (mSize != strlen(other))
+			return false;
+
+		for (size_t i = 0; i < mSize; i++)
+		{
+			if (_toLowerCase(mData[i]) != _toLowerCase(other[i]))
+				return false;
+		}
+
+		return true;
+	}
+
+	bool String::contains(char c)
+	{
+		return false;
+	}
+
+	bool String::contains(const String& other) const
+	{
+		return false;
+	}
+
+	bool String::contains(const char* other) const
+	{
+		return false;
+	}
+
+	bool String::containsIgnoreCase(char c)
+	{
+		return false;
+	}
+
+	bool String::containsIgnoreCase(const String& string) const
+	{
+		return false;
+	}
+
+	bool String::containsIgnoreCase(const char* string) const
+	{
+		return false;
+	}
+
+	bool String::endsWith(const String& string) const
+	{
+		return false;
+	}
+
+	bool String::endsWith(const char* string) const
+	{
+	return false;
+	}
+
+	bool String::startsWith(const String& string) const
+	{
+		return false;
+	}
+
+	bool String::startsWith(const char* string) const
+	{
+		return false;
+	}
+
+	bool String::replaceAll(char oldChar, char newChar)
+	{
+		return false;
+	}
+
+	bool String::replaceAll(const char* oldString, const char* newString)
+	{
+		return false;
+	}
+
+	bool String::replaceAll(const String& oldString, const String& newString)
+	{
+		return false;
+	}
+
+	bool String::replaceFirst(char firstChar, char newChar)
+	{
+		return false;
+	}
+
+	bool String::replaceFirst(const char* oldString, const char* newString)
+	{
+		return false;
+	}
+
+	bool String::replaceFirst(const String& oldString, const String& newString)
+	{
+		return false;
+	}
+
+	bool String::replaceLast(char firstChar, char newChar)
+	{
+		return false;
+	}
+
+	bool String::replaceLast(const char* oldString, const char* newString)
+	{
+		return false;
+	}
+
+	bool String::replaceLast(const String& oldString, const String& newString)
+	{
+		return false;
+	}
+
+	size_t String::findFirst(char c) const
+	{
+		return 0;
+	}
+
+	size_t String::findFirst(const char* string) const
+	{
+		return 0;
+	}
+
+	size_t String::findFirst(const String& string) const
+	{
+		return 0;
+	}
+
+	size_t String::findLast(char c) const
+	{
+		return 0;
+	}
+
+	size_t String::findLast(const char* string) const
+	{
+		return 0;
+	}
+
+	size_t String::findLast(const String& string) const
+	{
+		return 0;
+	}
+
+	DynamicArray<String> String::split(char c) const
+	{
+		return { };
+	}
+
+	DynamicArray<String> String::split(const char* string) const
+	{
+		return { };
+	}
+
+	DynamicArray<String> String::split(const String& string) const
+	{
+		return { };
+	}
+
+	String String::subString(size_t beginIndex) const
+	{
+		SN_ASSERT(beginIndex <= mSize, "beginIndex must be less than size");
+
+		return String(mData + beginIndex, mSize - beginIndex);
+	}
+
+	String String::subString(size_t beginIndex, size_t endIndex) const
+	{
+		SN_ASSERT(beginIndex <= mSize, "beginIndex must be less than size");
+		SN_ASSERT(endIndex <= mSize, "endIndex must be less than size");
+		SN_ASSERT(endIndex >= beginIndex, "endIndex must be >= beginIndex");
+
+		return String(mData + beginIndex, endIndex - beginIndex);
+	}
+
+	String String::trim() const
+	{
+		size_t firstNotWhiteSpace = 0;
+		size_t LastNotWhiteSpace = 0;
+
+		for (size_t i = 0; i < mSize; i++)
+		{
+			if (!_isWhitespace(mData[i]))
+			{
+				firstNotWhiteSpace = i;
+				break;
+			}
+		}
+
+		for (size_t i = mSize - 1; i >= 0; i--)
+		{
+			if (!_isWhitespace(mData[i]))
+			{
+				LastNotWhiteSpace = i;
+				break;
+			}
+		}
+
+		return subString(firstNotWhiteSpace, LastNotWhiteSpace + 1);
+	}
+
+	String String::toLowerCase() const
+	{
+		String string = String(mSize);
+
+		for (size_t i = 0; i < mSize; i++)
+			string[i] = _toLowerCase(mData[i]);
+
+		return string;
+	}
+
+	String String::toUpperCase() const
+	{
+		String string = String(mSize);
+
+		for (size_t i = 0; i < mSize; i++)
+			string[i] = _toUpperCase(mData[i]);
+
+		return string;
+	}
+
 	char& String::get(size_t index)
 	{
-		SN_ASSERT(index < mSize, "Index ", index, " is out of range.");
+		SN_ASSERT(index < mSize, "Index out of range");
 
 		return mData[index];
 	}
@@ -184,69 +439,69 @@ namespace sonic
 		return value ? String("true", 4) : String("false", 5);
 	}
 
-	String String::valueOf(char value)
+	String String::valueOf(char value, int base)
 	{
-		return String(&value, 1);
+		return _integerToString<char>(value, base);
 	}
 
-	String String::valueOf(unsigned char value)
+	String String::valueOf(unsigned char value, int base)
 	{
-		return String(reinterpret_cast<char*>(&value), 1);
+		return _integerToString<unsigned char>(value, base);
 	}
 
-	String String::valueOf(short value)
+	String String::valueOf(short value, int base)
 	{
-		return String();
+		return _integerToString<short>(value, base);
 	}
 
-	String String::valueOf(unsigned short value)
+	String String::valueOf(unsigned short value, int base)
 	{
-		return String();
+		return _integerToString<unsigned short>(value, base);
 	}
 
-	String String::valueOf(int value)
+	String String::valueOf(int value, int base)
 	{
-		return String();
+		return _integerToString<int>(value, base);
 	}
 
-	String String::valueOf(unsigned int value)
+	String String::valueOf(unsigned int value, int base)
 	{
-		return String();
+		return _integerToString<unsigned int>(value, base);
 	}
 
-	String String::valueOf(long value)
+	String String::valueOf(long value, int base)
 	{
-		return String();
+		return _integerToString<long>(value, base);
 	}
 
-	String String::valueOf(unsigned long value)
+	String String::valueOf(unsigned long value, int base)
 	{
-		return String();
+		return _integerToString<unsigned long>(value, base);
 	}
 
-	String String::valueOf(long long value)
+	String String::valueOf(long long value, int base)
 	{
-		return String();
+		return _integerToString<long long>(value, base);
 	}
 
-	String String::valueOf(unsigned long long value)
+	String String::valueOf(unsigned long long value, int base)
 	{
-		return String();
+		return _integerToString<unsigned long long>(value, base);
 	}
 
 	String String::valueOf(float value, bool scientific)
 	{
-		return floatToString<float>(value, scientific);
+		return _floatToString<float>(value, scientific);
 	}
 
 	String String::valueOf(double value, bool scientific)
 	{
-		return floatToString<double>(value, scientific);
+		return _floatToString<double>(value, scientific);
 	}
 
 	String String::valueOf(long double value, bool scientific)
 	{
-		return floatToString<long double>(value, scientific);
+		return _floatToString<long double>(value, scientific);
 	}
 
 	std::ostream& operator<<(std::ostream& stream, const String& string)
