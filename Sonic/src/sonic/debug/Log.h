@@ -4,8 +4,6 @@
 #include <fstream>
 #include <iostream>
 
-#include "Sonic/Util/String.h"
-
 namespace sonic 
 {
 	class Log
@@ -33,7 +31,7 @@ namespace sonic
 		static constexpr uint8_t DISABLED = 0xff;
 		static constexpr uint8_t ALL = 0;
 
-		static void init(const String& filePath, std::ostream* ostream, uint8_t consoleLevel, uint8_t fileLevel);
+		static void init(const char* filePath, std::ostream* ostream, uint8_t consoleLevel, uint8_t fileLevel);
 
 		template<typename Arg, typename... Args>
 		static void log(const Level& level, const Arg& arg, const Args&... args)
@@ -66,7 +64,7 @@ namespace sonic
 			stream << std::endl;
 		}
 
-		String mFilePath;
+		const char* mFilePath;
 		uint8_t mConsoleLevel;
 		uint8_t mFileLevel;
 		std::ostream* mConsoleStream;

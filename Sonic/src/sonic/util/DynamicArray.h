@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <initializer_list>
 
-#include "Sonic/Base.h"
+#include "sonic/Base.h"
 
 namespace sonic {
 
@@ -23,6 +23,13 @@ namespace sonic {
 		DynamicArray(size_t capacity)
 			: mSize(0), mCapacity(capacity), mData(allocateMemory(capacity))
 		{
+		}
+
+		DynamicArray(T* data, size_t elementCount)
+			: mSize(elementCount), mCapacity(elementCount), mData(allocateMemory(mCapacity))
+		{
+			for (size_t i = 0; i < elementCount; i++)
+				new(mData + i) T(std::move(data[i]));
 		}
 
 		DynamicArray(const std::initializer_list<T>& values)

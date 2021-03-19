@@ -3,7 +3,8 @@
 #include <Sonic/Util/Map.h>
 #include <vector>
 
-#include "Sonic/Debug/Log.h"
+#include "sonic/util/String.h"
+#include "sonic/debug/Log.h"
 
 #include <string>
 
@@ -197,4 +198,8 @@ int main()
 	Log::log(Log::TRACE, "TEST");
 
 	Log::writeToFile();
+
+	Log::log(Log::TRACE, String::valueOf(354348.9989f, true));
+	Log::log(Log::TRACE, String::valueOf(85394.435, true));
+	Log::log(Log::TRACE, String::valueOf(static_cast<long double>(85394.435), true));
 }

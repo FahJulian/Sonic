@@ -89,7 +89,7 @@ namespace sonic {
 		{
 		}
 
-		Map(Map&& other)
+		Map(Map&& other) noexcept
 			: mData(std::move(other.mData))
 		{
 		}
@@ -103,7 +103,7 @@ namespace sonic {
 			return *this;
 		}
 
-		Map& operator=(Map&& other)
+		Map& operator=(Map&& other) noexcept
 		{
 			mData = std::move(other.mData);
 
