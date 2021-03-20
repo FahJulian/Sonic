@@ -5,10 +5,13 @@
 
 #include "sonic/debug/Log.h"
 #include "sonic/util/String.h"
-#include "sonic/util/Callable.h"
+#include "sonic/util/Function.h"
 
 #include <functional>
 #include <string>
+#include <type_traits>
+#include <ctime>
+#include <chrono>
 
 using namespace sonic;
 
@@ -20,7 +23,7 @@ struct Test
 		: i(-1), a(nullptr)
 	{
 		n++;
-		std::cout << "Created empty" << std::endl;
+		//std::cout << "Created empty" << std::endl;
 	}
 
 	Test(int i)
@@ -72,10 +75,16 @@ struct Test
 		return { };
 	}
 
+	Test memberFunction2(int a, double b)
+	{
+		Log::log(Log::INFO, this, " calling function: ", a, ", ", b);
+		return { };
+	}
+
 	~Test()
 	{
 		delete[] a;
-		std::cout << "Destroyed: " << this->i << std::endl;
+		//std::cout << "Destroyed: " << this->i << std::endl;
 		i = 0;
 		n--;
 	}
@@ -86,26 +95,52 @@ struct Test
 
 Test test(int a, double b)
 {
-	Log::log(Log::INFO, a, ", ", b);
+	//Log::log(Log::INFO, a, ", ", b);
+
+	Test t1 = { };
+	if (t1.a == nullptr)
+		t1.i = 3;
+
+	if (t1.i == 5)
+		std::cout << "TEST" << std::endl;
+
+	return { };
+}
+
+Test test2(int a, double b)
+{
 	return { };
 }
 
 int main()
 {
+	typedef std::chrono::high_resolution_clock Time;
+	typedef std::chrono::milliseconds ms;
+	typedef std::chrono::duration<float> fsec;
+
 	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
 
-	sonic::Callable<Test(int, double)> a = test;
-	if (a)
-		a(3, 5.0);
+	Function<Test(int, double)> f1 = test;
+	auto start1 = Time::now();
 
-	Test t = { };
-	sonic::Callable<Test(int, double)> b = { &t, &Test::memberFunction };
-	if (b)
-		b(3, 4.0);
+	for (int i = 0; i < 1000000; i++)
+		f1(3, 4.0);
 
-	sonic::Callable<Test(int, double)> c = nullptr;
-	if (c)
-		c(3, 4.0);
+	auto end1 = Time::now();
 
-	Log::writeToFile();
+	std::function<Test(int, double)> f = test;
+	auto start = Time::now();
+
+	for (int i = 0; i < 1000000; i++)
+		f(3, 4.0);
+
+	auto end = Time::now();
+
+	auto d = end - start;
+	auto d1 = end1 - start1;
+
+	std::cout << "std::function duration: " << d.count() << std::endl;
+	std::cout << "sonic::Function duration: " << d1.count() << std::endl;
+
+	std::cout << "std::function took " << static_cast<double>(d.count()) / static_cast<double>(d1.count()) << " times as long as sonic::Function" << std::endl;
 }

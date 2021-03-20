@@ -49,8 +49,6 @@ namespace sonic
 				pushMessage(sInstance.mFileStream, level, arg, (args)...);
 		}
 
-		static void writeToFile();
-
 	private:
 		Log()
 			: mFilePath(), mConsoleLevel(Log::DISABLED), mFileLevel(Log::DISABLED), mConsoleStream(nullptr), mFileStream()

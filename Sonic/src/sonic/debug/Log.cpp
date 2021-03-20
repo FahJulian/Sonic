@@ -1,6 +1,5 @@
 #include "Log.h"
 
-
 namespace sonic 
 {
 	Log Log::sInstance = Log();
@@ -10,17 +9,8 @@ namespace sonic
 		sInstance.mFilePath = filePath;
 		sInstance.mFileLevel = fileLevel;
 		sInstance.mConsoleLevel = consoleLevel;
-		sInstance.mFileStream = std::ofstream(filePath);
+		sInstance.mFileStream = std::ofstream(filePath, std::ios::out);
 		sInstance.mConsoleStream = ostream;
-	}
-
-	void Log::writeToFile()
-	{
-		sInstance.mFileStream.close();
-		if (!sInstance.mFileStream.good())
-			*sInstance.mConsoleStream << WARN.color << "Could not write log to file " << sInstance.mFilePath << ANSI_RESET << std::endl;
-
-		sInstance.mFileStream = std::ofstream(sInstance.mFilePath);
 	}
 
 } // namespace sonic
