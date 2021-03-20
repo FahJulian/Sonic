@@ -85,8 +85,5 @@ int main()
 {
 	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
 
-	for (auto& s : String("........This..is..a.very..lo.ng..sentence.   ..").split(".."))
-		Log::log(Log::TRACE, s);
-
 	Log::writeToFile();
 }

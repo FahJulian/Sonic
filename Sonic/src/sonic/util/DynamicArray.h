@@ -180,8 +180,8 @@ namespace sonic {
 			{
 				new (mData + mSize) T(std::move(mData[mSize - 1]));
 
-				for (size_t i = mSize - 2; i >= index; i--)
-					mData[i + 1] = std::move(mData[i]);
+				for (size_t i = mSize - 1; i > index; i--)
+					mData[i] = std::move(mData[i - 1]);
 
 				mData[index].~T();
 				new(mData + index) T(std::forward<Args>(args)...);

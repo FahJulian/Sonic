@@ -10,10 +10,10 @@ namespace sonic
 {
 	namespace
 	{
-		static StaticArray<char, 8 * sizeof(long long)> STRING_CAST_BUFFER;
+		StaticArray<char, 8 * sizeof(long long)> STRING_CAST_BUFFER;
 
 		template<typename T>
-		static String _floatToString(T value, bool scientific)
+		String _floatToString(T value, bool scientific)
 		{
 			auto result = std::to_chars(STRING_CAST_BUFFER.begin(), STRING_CAST_BUFFER.end(), 
 				value, scientific ? std::chars_format::scientific : std::chars_format::fixed, 2);
@@ -22,23 +22,34 @@ namespace sonic
 		}
 
 		template<typename T>
-		static String _integerToString(T value, int base)
+		String _integerToString(T value, int base)
 		{
 			auto result = std::to_chars(STRING_CAST_BUFFER.begin(), STRING_CAST_BUFFER.end(), value, base);
 			return String(STRING_CAST_BUFFER.begin(), result.ptr - STRING_CAST_BUFFER.begin());
 		}
 
-		static char _toLowerCase(char c)
+		char _toLowerCase(char c)
 		{
 			return (c >= 'A' && c <= 'Z') ? c - 'A' + 'a' : c;
 		}
 
-		static char _toUpperCase(char c)
+		char _toUpperCase(char c)
 		{
 			return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c;
 		}
 
-		static bool _isWhitespace(char c)
+		bool _equalsIgnoreCase(const char* c1, const char* c2, size_t len)
+		{
+			for (size_t i = 0; i < len; i++)
+			{
+				if (_toLowerCase(c1[i]) != _toLowerCase(c2[i]))
+					return false;
+			}
+
+			return true;
+		}
+
+		bool _isWhitespace(char c)
 		{
 			return c <= ' ';
 		}
@@ -225,144 +236,740 @@ namespace sonic
 		return true;
 	}
 
-	bool String::contains(char c)
+	bool String::startsWith(char c) const
 	{
-		return false;
-	}
+		if (isEmpty())
+			return false;
 
-	bool String::contains(const String& other) const
-	{
-		return false;
-	}
-
-	bool String::contains(const char* other) const
-	{
-		return false;
-	}
-
-	bool String::containsIgnoreCase(char c)
-	{
-		return false;
-	}
-
-	bool String::containsIgnoreCase(const String& string) const
-	{
-		return false;
-	}
-
-	bool String::containsIgnoreCase(const char* string) const
-	{
-		return false;
-	}
-
-	bool String::endsWith(const String& string) const
-	{
-		return false;
-	}
-
-	bool String::endsWith(const char* string) const
-	{
-	return false;
-	}
-
-	bool String::startsWith(const String& string) const
-	{
-		return false;
+		return mData[0] == c;
 	}
 
 	bool String::startsWith(const char* string) const
 	{
-		return false;
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return false;
+
+		return std::strncmp(mData, string, len) == 0;
+	}
+
+	bool String::startsWith(const String& string) const
+	{
+		if (string.mSize > mSize)
+			return false;
+
+		return std::strncmp(mData, string, string.mSize) == 0;
+	}
+
+	bool String::startsWithIgnoreCase(char c) const
+	{
+		if (isEmpty())
+			return false;
+
+		return _toLowerCase(mData[0]) == _toLowerCase(c);
+	}
+
+	bool String::startsWithIgnoreCase(const char* string) const
+	{
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return false;
+
+		return _equalsIgnoreCase(mData, string, len);
+	}
+
+	bool String::startsWithIgnoreCase(const String& string) const
+	{
+		if (string.mSize > mSize)
+			return false;
+
+		return _equalsIgnoreCase(mData, string, string.mSize);
+	}
+
+	bool String::endsWith(char c) const
+	{
+		if (isEmpty())
+			return false;
+
+		return mData[mSize - 1] == c;
+	}
+
+	bool String::endsWith(const char* string) const
+	{
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return false;
+
+		return std::strncmp(mData + mSize - len, string, len) == 0;
+	}
+
+	bool String::endsWith(const String& string) const
+	{
+		if (string.mSize > mSize)
+			return false;
+
+		return std::strncmp(mData + mSize - string.mSize, string, string.mSize) == 0;
+	}
+
+	bool String::endsWithIgnoreCase(char c) const
+	{
+		if (isEmpty())
+			return false;
+
+		return _toLowerCase(mData[mSize - 1]) == _toLowerCase(c);
+	}
+
+	bool String::endsWithIgnoreCase(const char* string) const
+	{
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return false;
+
+		return _equalsIgnoreCase(mData + mSize - len, string, len);
+	}
+
+	bool String::endsWithIgnoreCase(const String& string) const
+	{
+		if (string.mSize > mSize)
+			return false;
+
+		return _equalsIgnoreCase(mData + mSize - string.mSize, string, string.mSize);
+	}
+
+	bool String::contains(char c) const
+	{
+		return findFirst(c) != mSize;
+	}
+
+	bool String::contains(const String& string) const
+	{
+		return findFirst(string) != mSize;
+	}
+
+	bool String::contains(const char* string) const
+	{
+		return findFirst(string) != mSize;
+	}
+
+	bool String::containsIgnoreCase(char c) const
+	{
+		return findFirstIgnoreCase(c) != mSize;
+	}
+
+	bool String::containsIgnoreCase(const String& string) const
+	{
+		return findFirstIgnoreCase(string) != mSize;
+	}
+
+	bool String::containsIgnoreCase(const char* string) const
+	{
+		return findFirstIgnoreCase(string) != mSize;
 	}
 
 	bool String::replaceAll(char oldChar, char newChar)
 	{
-		return false;
+		bool atLeastOneReplacement = false;
+
+		size_t index = 0;
+		while ((index = replaceFirst(oldChar, newChar, index)) != mSize)
+			atLeastOneReplacement = true;
+
+		return atLeastOneReplacement;
 	}
 
 	bool String::replaceAll(const char* oldString, const char* newString)
 	{
-		return false;
+		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceAll can only replace segments of equal size");
+		bool atLeastOneReplacement = false;
+
+		size_t index = 0;
+		while ((index = replaceFirst(oldString, newString, index)) != mSize)
+			atLeastOneReplacement = true;
+
+		return atLeastOneReplacement;
 	}
 
 	bool String::replaceAll(const String& oldString, const String& newString)
 	{
-		return false;
+		SN_ASSERT(oldString.mSize == newString.mSize, "replaceAll can only replace segments of equal size");
+		bool atLeastOneReplacement = false;
+
+		size_t index = 0;
+		while ((index = replaceFirst(oldString, newString, index)) != mSize)
+			atLeastOneReplacement = true;
+
+		return atLeastOneReplacement;
 	}
 
-	bool String::replaceFirst(char firstChar, char newChar)
+	bool String::replaceAllIgnoreCase(char oldChar, char newChar)
 	{
-		return false;
+		bool atLeastOneReplacement = false;
+
+		size_t index = 0;
+		while ((index = replaceFirstIgnoreCase(oldChar, newChar, index)) != mSize)
+			atLeastOneReplacement = true;
+
+		return atLeastOneReplacement;
 	}
 
-	bool String::replaceFirst(const char* oldString, const char* newString)
+	bool String::replaceAllIgnoreCase(const char* oldString, const char* newString)
 	{
-		return false;
+		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceAllIgnoreCase can only replace segments of equal size");
+		bool atLeastOneReplacement = false;
+
+		size_t index = 0;
+		while ((index = replaceFirstIgnoreCase(oldString, newString, index)) != mSize)
+			atLeastOneReplacement = true;
+
+		return atLeastOneReplacement;
 	}
 
-	bool String::replaceFirst(const String& oldString, const String& newString)
+	bool String::replaceAllIgnoreCase(const String& oldString, const String& newString)
 	{
-		return false;
+		SN_ASSERT(oldString.mSize == newString.mSize, "replaceAllIgnoreCase can only replace segments of equal size");
+		bool atLeastOneReplacement = false;
+
+		size_t index = 0;
+		while ((index = replaceFirstIgnoreCase(oldString, newString, index)) != mSize)
+			atLeastOneReplacement = true;
+
+		return atLeastOneReplacement;
 	}
 
-	bool String::replaceLast(char firstChar, char newChar)
+	size_t String::replaceFirst(char oldChar, char newChar, size_t startIndex)
 	{
-		return false;
+		size_t index = findFirst(oldChar, startIndex);
+
+		if (index != mSize)
+			mData[index] = newChar;
+
+		return index;
 	}
 
-	bool String::replaceLast(const char* oldString, const char* newString)
+	size_t String::replaceFirst(const char* oldString, const char* newString, size_t startIndex)
 	{
-		return false;
+		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceFirst can only replace segments of equal size");
+
+		size_t index = findFirst(oldString, startIndex);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, strlen(newString));
+
+		return index;
 	}
 
-	bool String::replaceLast(const String& oldString, const String& newString)
+	size_t String::replaceFirst(const String& oldString, const String& newString, size_t startIndex)
 	{
-		return false;
+		SN_ASSERT(oldString.mSize == newString.mSize, "replaceFirst can only replace segments of equal size");
+
+		size_t index = findFirst(oldString, startIndex);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, newString.mSize);
+
+		return index;
 	}
 
-	size_t String::findFirst(char c) const
+	size_t String::replaceFirstIgnoreCase(char oldChar, char newChar, size_t startIndex)
 	{
-		return 0;
+		size_t index = findFirstIgnoreCase(oldChar, startIndex);
+
+		if (index != mSize)
+			mData[index] = newChar;
+
+		return index;
 	}
 
-	size_t String::findFirst(const char* string) const
+	size_t String::replaceFirstIgnoreCase(const char* oldString, const char* newString, size_t startIndex)
 	{
-		return 0;
+		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceFirstIgnoreCase can only replace segments of equal size");
+
+		size_t index = findFirstIgnoreCase(oldString, startIndex);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, strlen(newString));
+
+		return index;
 	}
 
-	size_t String::findFirst(const String& string) const
+	size_t String::replaceFirstIgnoreCase(const String& oldString, const String& newString, size_t startIndex)
 	{
-		return 0;
+		SN_ASSERT(oldString.mSize == newString.mSize, "replaceFirstIgnoreCase can only replace segments of equal size");
+
+		size_t index = findFirstIgnoreCase(oldString, startIndex);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, newString.mSize);
+
+		return index;
+	}
+
+	size_t String::replaceLast(char oldChar, char newChar)
+	{
+		size_t index = findLast(oldChar);
+
+		if (index != mSize)
+			mData[index] = newChar;
+
+		return index;
+	}
+
+	size_t String::replaceLast(const char* oldString, const char* newString)
+	{
+		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceLast can only replace segments of equal size");
+
+		size_t index = findLast(oldString);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, strlen(newString));
+
+		return index;
+	}
+
+	size_t String::replaceLast(const String& oldString, const String& newString)
+	{
+		SN_ASSERT(oldString.mSize == newString.mSize, "replaceLast can only replace segments of equal size");
+
+		size_t index = findLast(oldString);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, newString.mSize);
+
+		return index;
+	}
+
+	size_t String::replaceLastIgnoreCase(char oldChar, char newChar)
+	{
+		size_t index = findLastIgnoreCase(oldChar);
+
+		if (index != mSize)
+			mData[index] = newChar;
+
+		return index;
+	}
+
+	size_t String::replaceLastIgnoreCase(const char* oldString, const char* newString)
+	{
+		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceLastIgnoreCase can only replace segments of equal size");
+
+		size_t index = findLastIgnoreCase(oldString);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, strlen(newString));
+
+		return index;
+	}
+
+	size_t String::replaceLastIgnoreCase(const String& oldString, const String& newString)
+	{
+		SN_ASSERT(oldString.mSize == newString.mSize, "replaceLastIgnoreCase can only replace segments of equal size");
+
+		size_t index = findLastIgnoreCase(oldString);
+
+		if (index != mSize)
+			std::memcpy(mData + index, newString, newString.mSize);
+
+		return index;
+	}
+
+	size_t String::findFirst(char c, size_t startIndex) const
+	{
+		if (isEmpty())
+			return mSize;
+
+		for (size_t i = startIndex; i < mSize; i++)
+		{
+			if (mData[i] == c)
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirst(const char* string, size_t startIndex) const
+	{
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return mSize;
+
+		for (size_t i = startIndex; i <= mSize - len; i++)
+		{
+			if (strncmp(mData + i, string, len) == 0)
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirst(const String& string, size_t startIndex) const
+	{
+		if (string.mSize > mSize)
+			return mSize;
+
+		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
+		{
+			if (strncmp(mData + i, string, string.mSize) == 0)
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstIgnoreCase(char c, size_t startIndex) const
+	{
+		if (isEmpty())
+			return mSize;
+
+		c = _toLowerCase(c);
+
+		for (size_t i = startIndex; i < mSize; i++)
+		{
+			if (_toLowerCase(mData[i]) == c)
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstIgnoreCase(const char* string, size_t startIndex) const
+	{
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return mSize;
+
+		for (size_t i = startIndex; i <= mSize - len; i++)
+		{
+			if (_equalsIgnoreCase(mData + i, string, len))
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstIgnoreCase(const String& string, size_t startIndex) const
+	{
+		if (string.mSize > mSize)
+			return mSize;
+
+		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
+		{
+			if (_equalsIgnoreCase(mData + i, string, string.mSize))
+				return i;
+		}
+
+		return mSize;
 	}
 
 	size_t String::findLast(char c) const
 	{
-		return 0;
+		if (isEmpty())
+			return mSize;
+
+		for (size_t i = mSize; i > 0; i--)
+		{
+			if (mData[i - 1] == c)
+				return i - 1;
+		}
+
+		return mSize;
 	}
 
 	size_t String::findLast(const char* string) const
 	{
-		return 0;
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return mSize;
+
+		for (size_t i = mSize - len + 1; i > 0; i--)
+		{
+			if (strncmp(mData + i - 1, string, len) == 0)
+				return i - 1;
+		}
+
+		return mSize;
 	}
 
 	size_t String::findLast(const String& string) const
 	{
-		return 0;
+		if (string.mSize > mSize)
+			return mSize;
+
+		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
+		{
+			if (strncmp(mData + i - 1, string, string.mSize) == 0)
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastIgnoreCase(char c) const
+	{
+		if (isEmpty())
+			return mSize;
+
+		c = _toLowerCase(c);
+
+		for (size_t i = mSize; i > 0; i--)
+		{
+			if (_toLowerCase(mData[i - 1]) == c)
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastIgnoreCase(const char* string) const
+	{
+		size_t len = strlen(string);
+
+		if (len > mSize)
+			return mSize;
+
+		for (size_t i = mSize - len + 1; i > 0; i--)
+		{
+			if (_equalsIgnoreCase(mData + i - 1, string, len))
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastIgnoreCase(const String& string) const
+	{
+		if (string.mSize > mSize)
+			return mSize;
+
+		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
+		{
+			if (_equalsIgnoreCase(mData + i - 1, string, string.mSize))
+				return i - 1;
+		}
+
+		return mSize;
 	}
 
 	DynamicArray<String> String::split(char c) const
 	{
-		return { };
+		if (isEmpty())
+			return { };
+
+		DynamicArray<String> parts;
+
+		const char* nextPartStart = mData;
+		for (const char* i = mData; i < mData + mSize; i++)
+		{
+			if (*i == c)
+			{
+				if (size_t length = i - nextPartStart;
+					length > 0)
+				{
+					parts.add(nextPartStart, length);
+				}
+
+				nextPartStart = i + 1;
+			}
+		}
+
+		if (size_t length = mData + mSize - nextPartStart;
+			length > 0)
+		{
+			parts.add(nextPartStart, length);
+		}
+
+		return parts;
 	}
 
 	DynamicArray<String> String::split(const char* string) const
 	{
-		return { };
+		size_t len = strlen(string);
+
+		if (len >= mSize)
+			return { };
+
+		DynamicArray<String> parts;
+
+		const char* i = mData;
+		const char* nextPartStart = mData;
+		while (i <= mData + mSize - len)
+		{
+			if (std::strncmp(string, i, len) == 0)
+			{
+				if (size_t length = i - nextPartStart;
+					length > 0)
+				{
+					parts.add(nextPartStart, length);
+				}
+
+				nextPartStart = i + len;
+				i += len;
+			}
+			else
+			{
+				i++;
+			}
+		}
+
+		if (size_t length = mData + mSize - nextPartStart;
+			length > 0)
+		{
+			parts.add(nextPartStart, length);
+		}
+
+		return parts;
 	}
 
 	DynamicArray<String> String::split(const String& string) const
 	{
-		return { };
+		if (string.mSize >= mSize)
+			return { };
+
+		DynamicArray<String> parts;
+
+		const char* i = mData;
+		const char* nextPartStart = mData;
+		while (i <= mData + mSize - string.mSize)
+		{
+			if (std::strncmp(string, i, string.mSize) == 0)
+			{
+				if (size_t length = i - nextPartStart;
+					length > 0)
+				{
+					parts.add(nextPartStart, length);
+				}
+
+				nextPartStart = i + string.mSize;
+				i += string.mSize;
+			}
+			else
+			{
+				i++;
+			}
+		}
+
+		if (size_t length = mData + mSize - nextPartStart;
+			length > 0)
+		{
+			parts.add(nextPartStart, length);
+		}
+
+		return parts;
+	}
+
+	DynamicArray<String> String::splitIgnoreCase(char c) const
+	{
+		if (isEmpty())
+			return { };
+
+		DynamicArray<String> parts;
+
+		c = _toLowerCase(c);
+
+		const char* nextPartStart = mData;
+		for (const char* i = mData; i < mData + mSize; i++)
+		{
+			if (_toLowerCase(*i) == c)
+			{
+				if (size_t length = i - nextPartStart;
+					length > 0)
+				{
+					parts.add(nextPartStart, length);
+				}
+
+				nextPartStart = i + 1;
+			}
+		}
+
+		if (size_t length = mData + mSize - nextPartStart;
+			length > 0)
+		{
+			parts.add(nextPartStart, length);
+		}
+
+		return parts;
+	}
+
+	DynamicArray<String> String::splitIgnoreCase(const char* string) const
+	{
+		size_t len = strlen(string);
+
+		if (len >= mSize)
+			return { };
+
+		DynamicArray<String> parts;
+
+		const char* i = mData;
+		const char* nextPartStart = mData;
+		while (i <= mData + mSize - len)
+		{
+			if (_equalsIgnoreCase(string, i, len))
+			{
+				if (size_t length = i - nextPartStart;
+					length > 0)
+				{
+					parts.add(nextPartStart, length);
+				}
+
+				nextPartStart = i + len;
+				i += len;
+			}
+			else
+			{
+				i++;
+			}
+		}
+
+		if (size_t length = mData + mSize - nextPartStart;
+			length > 0)
+		{
+			parts.add(nextPartStart, length);
+		}
+
+		return parts;
+	}
+
+	DynamicArray<String> String::splitIgnoreCase(const String& string) const
+	{
+		if (string.mSize >= mSize)
+			return { };
+
+		DynamicArray<String> parts;
+
+		const char* i = mData;
+		const char* nextPartStart = mData;
+		while (i <= mData + mSize - string.mSize)
+		{
+			if (_equalsIgnoreCase(string, i, string.mSize))
+			{
+				if (size_t length = i - nextPartStart;
+					length > 0)
+				{
+					parts.add(nextPartStart, length);
+				}
+
+				nextPartStart = i + string.mSize;
+				i += string.mSize;
+			}
+			else
+			{
+				i++;
+			}
+		}
+
+		if (size_t length = mData + mSize - nextPartStart;
+			length > 0)
+		{
+			parts.add(nextPartStart, length);
+		}
+
+		return parts;
 	}
 
 	String String::subString(size_t beginIndex) const
@@ -395,11 +1002,11 @@ namespace sonic
 			}
 		}
 
-		for (size_t i = mSize - 1; i >= 0; i--)
+		for (size_t i = mSize; i > 0; i--)
 		{
-			if (!_isWhitespace(mData[i]))
+			if (!_isWhitespace(mData[i - 1]))
 			{
-				LastNotWhiteSpace = i;
+				LastNotWhiteSpace = i - 1;
 				break;
 			}
 		}
@@ -428,6 +1035,13 @@ namespace sonic
 	}
 
 	char& String::get(size_t index)
+	{
+		SN_ASSERT(index < mSize, "Index out of range");
+
+		return mData[index];
+	}
+
+	const char& String::get(size_t index) const
 	{
 		SN_ASSERT(index < mSize, "Index out of range");
 
