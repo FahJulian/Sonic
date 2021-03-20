@@ -1,146 +1,94 @@
-#include <iostream>
-#include <Sonic/Util/DynamicArray.h>
-#include <Sonic/Util/Map.h>
-#include <vector>
-
+#include <Sonic/util/DynamicArray.h>
+#include <Sonic/util/Map.h>
 #include "sonic/debug/Log.h"
 #include "sonic/util/String.h"
 #include "sonic/util/Function.h"
 
 #include <functional>
-#include <string>
-#include <type_traits>
-#include <ctime>
-#include <chrono>
 
 using namespace sonic;
 
-int n = 0;
-
 struct Test
 {
-	Test()
-		: i(-1), a(nullptr)
-	{
-		n++;
-		//std::cout << "Created empty" << std::endl;
-	}
+	Test() { Log::log(Log::INFO, "Created ", this); }
+	Test(const Test& t) { Log::log(Log::INFO, "Copied ", &t, " into new object ", this); }
+	Test(Test&& t) noexcept { Log::log(Log::INFO, "Moved ", &t, " into new object ", this); }
+	Test& operator=(const Test& t) { Log::log(Log::INFO, "Copied ", &t, " into ", this); }
+	Test& operator=(Test&& t) noexcept { Log::log(Log::INFO, "Moved ", &t, " into ", this); return *this; }
+	Test memberFunction(Test t) { return { }; }
+	~Test() { Log::log(Log::INFO, "Destroyed ", this); }
 
-	Test(int i)
-		: i(i), a(new char[2])
-	{
-		n++;
-		std::cout << "Created: " << i << std::endl;
-	}
-
-	Test(const Test& t)
-		: i(t.i), a(new char[2])
-	{
-		n++;
-		std::cout << "Copied " << i << std::endl;
-	}
-
-	Test(Test&& t) noexcept
-		: i(t.i), a(t.a)
-	{
-		n++;
-		t.a = nullptr;
-		std::cout << "Moved " << i << std::endl;
-	}
-
-	Test& operator=(const Test& t)
-	{
-		i = t.i;
-		delete[] a;
-		a = new char[2];
-		std::cout << "Copied operator= " << i << std::endl;
-		return *this;
-	}
-
-	Test& operator=(Test&& t) noexcept
-	{
-		delete[] a;
-		a = t.a;
-		t.a = nullptr;
-		i = t.i;
-		std::cout << "Moved operator= " << i << std::endl;
-		return *this;
-	}
-
-	bool operator==(const Test& other) const { return other.i == i; }
-
-	Test memberFunction(int a, double b)
-	{
-		Log::log(Log::INFO, this, " calling function: ", a, ", ", b);
-		return { };
-	}
-
-	Test memberFunction2(int a, double b)
-	{
-		Log::log(Log::INFO, this, " calling function: ", a, ", ", b);
-		return { };
-	}
-
-	~Test()
-	{
-		delete[] a;
-		//std::cout << "Destroyed: " << this->i << std::endl;
-		i = 0;
-		n--;
-	}
-
-	int i;
-	char* a;
+	void test0(Test&& t) { }
+	void test1(Test t) {}
+	void test2(Test* t) {}
+	void test3(Test& t) {}
+	void test4(const Test& t) {}
+	void test5(int a, Test&& t) { }
+	void test6(int&& a, Test t) {}
+	void test7(int a, Test* t) {}
+	void test8(int a, Test& t) {}
+	void test9(int a, const Test& t) {}
 };
 
-Test test(int a, double b)
-{
-	//Log::log(Log::INFO, a, ", ", b);
-
-	Test t1 = { };
-	if (t1.a == nullptr)
-		t1.i = 3;
-
-	if (t1.i == 5)
-		std::cout << "TEST" << std::endl;
-
-	return { };
-}
-
-Test test2(int a, double b)
-{
-	return { };
-}
+Test test0(Test&& t) { return { }; }
+Test test1(Test t) {return { }; }
+Test test2(Test* t) {return { }; }
+Test test3(Test& t) {return { }; }
+Test test4(const Test& t) {return { }; }
+Test test5(int a, Test&& t) { return { }; }
+Test test6(int&& a, Test t) {return { }; }
+Test test7(int a, Test* t) {return { }; }
+Test test8(int a, Test& t) {return { }; }
+Test test9(int a, const Test& t) {return { }; }
 
 int main()
 {
-	typedef std::chrono::high_resolution_clock Time;
-	typedef std::chrono::milliseconds ms;
-	typedef std::chrono::duration<float> fsec;
+	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", &std::cout, Log::ALL, Log::ALL);
 
-	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
+	Test t;
+	int i = 0;
 
-	Function<Test(int, double)> f1 = test;
-	auto start1 = Time::now();
+	Function<Test(Test&&)> func0 = test0;
+	Function<Test(Test)> func1 = test1;
+	Function<Test(Test*)> func2 = test2;
+	Function<Test(Test&)> func3 = test3;
+	Function<Test(const Test&)> func4 = test4;
+	Function<Test(int, Test&&)> func5 = test5;
+	Function<Test(int&&, Test)> func6 = test6;
+	Function<Test(int, Test*)> func7 = test7;
+	Function<Test(int, Test&)> func8 = test8;
+	Function<Test(int, const Test&)> func9 = test9;
 
-	for (int i = 0; i < 1000000; i++)
-		f1(3, 4.0);
+	Function<void(Test&&)> memberfunc0 = { &t, &Test::test0 };
+	Function<void(Test)> memberfunc1 = { &t, &Test::test1 };
+	Function<void(Test*)> memberfunc2 = { &t, &Test::test2 };
+	Function<void(Test&)> memberfunc3 = { &t, &Test::test3 };
+	Function<void(const Test&)> memberfunc4 = { &t, &Test::test4 };
+	Function<void(int, Test&&)> memberfunc5 = { &t, &Test::test5 };
+	Function<void(int&&, Test)> memberfunc6 = { &t, &Test::test6 };
+	Function<void(int, Test*)> memberfunc7 = { &t, &Test::test7 };
+	Function<void(int, Test&)> memberfunc8 = { &t, &Test::test8 };
+	Function<void(int, const Test&)> memberfunc9 = { &t, &Test::test9 };
 
-	auto end1 = Time::now();
+	t = func0(std::move(t));
+	t = func1(t);
+	t = func2(&t);
+	t = func3(t);
+	t = func4(t);
+	t = func5(i, std::move(t));
+	t = func6(std::move(i), t);
+	t = func7(i, &t);
+	t = func8(i, t);
+	t = func9(i, t);
 
-	std::function<Test(int, double)> f = test;
-	auto start = Time::now();
-
-	for (int i = 0; i < 1000000; i++)
-		f(3, 4.0);
-
-	auto end = Time::now();
-
-	auto d = end - start;
-	auto d1 = end1 - start1;
-
-	std::cout << "std::function duration: " << d.count() << std::endl;
-	std::cout << "sonic::Function duration: " << d1.count() << std::endl;
-
-	std::cout << "std::function took " << static_cast<double>(d.count()) / static_cast<double>(d1.count()) << " times as long as sonic::Function" << std::endl;
+  	memberfunc0(std::move(t));
+	memberfunc1(t);
+	memberfunc2(&t);
+	memberfunc3(t);
+	memberfunc4(t);
+	memberfunc5(i, std::move(t));
+	memberfunc6(std::move(i), t);
+	memberfunc7(i, &t);
+	memberfunc8(i, t);
+	memberfunc9(i, t);
 }

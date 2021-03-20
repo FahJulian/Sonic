@@ -21,7 +21,7 @@ namespace sonic
 
 		using NonMemberFunction = R(*)(Args...);
 
-		using FunctionCaller = R(*)(uintptr_t, uintptr_t, Args...);
+		using FunctionCaller = R(*)(uintptr_t, uintptr_t, Args&&...);
 
 	public:
 		constexpr Function()
@@ -44,7 +44,7 @@ namespace sonic
 
 		R operator()(Args... args) const
 		{
-			return mFunctionCaller(mTypePunnedObject, mTypePunnedFunction, (args)...);
+			return mFunctionCaller(mTypePunnedObject, mTypePunnedFunction, std::forward<Args>(args)...);
 		}
 
 		operator bool() const
@@ -80,25 +80,25 @@ namespace sonic
 		}
 
 		template<typename T>
-		bool isMemberFunctionOfObject(T* object)
+		bool isMemberFunctionOfObject(T* object) const
 		{
 			return object != nullptr && mTypePunnedObject == reinterpret_cast<uintptr_t>(object);
 		}
 
 	private:
-		static R callFunction(uintptr_t typePunnedObject, uintptr_t typePunnedFunction, Args... args)
+		static R callFunction(uintptr_t typePunnedObject, uintptr_t typePunnedFunction, Args&&... args)
 		{
 			NonMemberFunction function = *reinterpret_cast<NonMemberFunction*>(&typePunnedFunction);
-			return function((args)...);
+			return function(std::forward<Args>(args)...);
 		}
 
 		template<typename T>
-		static R callMemberFunction(uintptr_t typePunnedObject, uintptr_t typePunnedFunction, Args... args)
+		static R callMemberFunction(uintptr_t typePunnedObject, uintptr_t typePunnedFunction, Args&&... args)
 		{
 			T* object = reinterpret_cast<T*>(typePunnedObject);
 			MemberFunction<T> memberFunction = *reinterpret_cast<MemberFunction<T>*>(&typePunnedFunction);
 
-			return (object->*memberFunction)((args)...);
+			return (object->*memberFunction)(std::forward<Args>(args)...);
 		}
 
 		uintptr_t mTypePunnedObject;
