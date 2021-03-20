@@ -3,9 +3,11 @@
 #include <Sonic/Util/Map.h>
 #include <vector>
 
-#include "sonic/util/String.h"
 #include "sonic/debug/Log.h"
+#include "sonic/util/String.h"
+#include "sonic/util/Callable.h"
 
+#include <functional>
 #include <string>
 
 using namespace sonic;
@@ -64,6 +66,12 @@ struct Test
 
 	bool operator==(const Test& other) const { return other.i == i; }
 
+	Test memberFunction(int a, double b)
+	{
+		Log::log(Log::INFO, this, " calling function: ", a, ", ", b);
+		return { };
+	}
+
 	~Test()
 	{
 		delete[] a;
@@ -78,12 +86,26 @@ struct Test
 
 Test test(int a, double b)
 {
+	Log::log(Log::INFO, a, ", ", b);
 	return { };
 }
 
 int main()
 {
 	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", &std::cout, Log::TRACE, Log::TRACE);
+
+	sonic::Callable<Test(int, double)> a = test;
+	if (a)
+		a(3, 5.0);
+
+	Test t = { };
+	sonic::Callable<Test(int, double)> b = { &t, &Test::memberFunction };
+	if (b)
+		b(3, 4.0);
+
+	sonic::Callable<Test(int, double)> c = nullptr;
+	if (c)
+		c(3, 4.0);
 
 	Log::writeToFile();
 }

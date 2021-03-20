@@ -1,6 +1,7 @@
 #pragma once
 
-namespace sonic {
+namespace sonic 
+{
 	
 	template<typename ValueType>
 	class Optional
