@@ -8,3 +8,7 @@ bin/
 enc_temp_folder/
 */.gimp/*
 *.log
+/Sandbox/test.py
+/Sandbox/test.sonic
+/Sandbox/TestComponent.hpp
+/Sandbox/TestSystem.hpp

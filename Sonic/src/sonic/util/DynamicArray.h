@@ -225,6 +225,13 @@ namespace sonic {
 			mSize--;
 		}
 
+		template<typename F>
+		void forEach(F function)
+		{
+			for (size_t i = 0; i < mSize; i++)
+				function(mData[i]);
+		}
+
 		void setSize(size_t size)
 		{
 			if (size > mSize)

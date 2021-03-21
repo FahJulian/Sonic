@@ -163,6 +163,12 @@ namespace sonic {
 			mData.remove(mData.indexOf(key));
 		}
 
+		template<typename F>
+		void forEach(F function)
+		{
+			mData.forEach(function);
+		}
+
 		void setSize(size_t size)
 		{
 			mData.setSize(size);

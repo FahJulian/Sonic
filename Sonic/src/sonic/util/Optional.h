@@ -2,7 +2,6 @@
 
 namespace sonic 
 {
-	
 	template<typename ValueType>
 	class Optional
 	{
