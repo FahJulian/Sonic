@@ -1,6 +1,7 @@
 #include "String.h"
 
 #include <cmath>
+#include <istream>
 #include <charconv>
 
 #include "sonic/Base.h"
@@ -578,9 +579,6 @@ namespace sonic
 
 	size_t String::findFirst(char c, size_t startIndex) const
 	{
-		if (isEmpty())
-			return mSize;
-
 		for (size_t i = startIndex; i < mSize; i++)
 		{
 			if (mData[i] == c)
@@ -594,9 +592,6 @@ namespace sonic
 	{
 		size_t len = strlen(string);
 
-		if (len > mSize)
-			return mSize;
-
 		for (size_t i = startIndex; i <= mSize - len; i++)
 		{
 			if (strncmp(mData + i, string, len) == 0)
@@ -608,9 +603,6 @@ namespace sonic
 
 	size_t String::findFirst(const String& string, size_t startIndex) const
 	{
-		if (string.mSize > mSize)
-			return mSize;
-
 		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
 		{
 			if (strncmp(mData + i, string, string.mSize) == 0)
@@ -622,9 +614,6 @@ namespace sonic
 
 	size_t String::findFirstIgnoreCase(char c, size_t startIndex) const
 	{
-		if (isEmpty())
-			return mSize;
-
 		c = _toLowerCase(c);
 
 		for (size_t i = startIndex; i < mSize; i++)
@@ -640,9 +629,6 @@ namespace sonic
 	{
 		size_t len = strlen(string);
 
-		if (len > mSize)
-			return mSize;
-
 		for (size_t i = startIndex; i <= mSize - len; i++)
 		{
 			if (_equalsIgnoreCase(mData + i, string, len))
@@ -654,9 +640,6 @@ namespace sonic
 
 	size_t String::findFirstIgnoreCase(const String& string, size_t startIndex) const
 	{
-		if (string.mSize > mSize)
-			return mSize;
-
 		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
 		{
 			if (_equalsIgnoreCase(mData + i, string, string.mSize))
@@ -668,9 +651,6 @@ namespace sonic
 
 	size_t String::findLast(char c) const
 	{
-		if (isEmpty())
-			return mSize;
-
 		for (size_t i = mSize; i > 0; i--)
 		{
 			if (mData[i - 1] == c)
@@ -684,9 +664,6 @@ namespace sonic
 	{
 		size_t len = strlen(string);
 
-		if (len > mSize)
-			return mSize;
-
 		for (size_t i = mSize - len + 1; i > 0; i--)
 		{
 			if (strncmp(mData + i - 1, string, len) == 0)
@@ -698,9 +675,6 @@ namespace sonic
 
 	size_t String::findLast(const String& string) const
 	{
-		if (string.mSize > mSize)
-			return mSize;
-
 		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
 		{
 			if (strncmp(mData + i - 1, string, string.mSize) == 0)
@@ -712,9 +686,6 @@ namespace sonic
 
 	size_t String::findLastIgnoreCase(char c) const
 	{
-		if (isEmpty())
-			return mSize;
-
 		c = _toLowerCase(c);
 
 		for (size_t i = mSize; i > 0; i--)
@@ -730,9 +701,6 @@ namespace sonic
 	{
 		size_t len = strlen(string);
 
-		if (len > mSize)
-			return mSize;
-
 		for (size_t i = mSize - len + 1; i > 0; i--)
 		{
 			if (_equalsIgnoreCase(mData + i - 1, string, len))
@@ -744,12 +712,153 @@ namespace sonic
 
 	size_t String::findLastIgnoreCase(const String& string) const
 	{
-		if (string.mSize > mSize)
-			return mSize;
-
 		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
 		{
 			if (_equalsIgnoreCase(mData + i - 1, string, string.mSize))
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstNotOf(char c, size_t startIndex) const 
+	{
+		for (size_t i = startIndex; i < mSize; i++)
+		{
+			if (mData[i] != c)
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstNotOf(const char* string, size_t startIndex) const
+	{
+		size_t len = strlen(string);
+
+		for (size_t i = startIndex; i <= mSize - len; i++)
+		{
+			if (strncmp(mData + i, string, len) != 0)
+				return i;
+		}
+
+		return mSize;
+	}	
+
+	size_t String::findFirstNotOf(const String& string, size_t startIndex) const
+	{
+		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
+		{
+			if (strncmp(mData + i, string, string.mSize) != 0)
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstNotOfIgnoreCase(char c, size_t startIndex) const
+	{
+		c = _toLowerCase(c);
+
+		for (size_t i = startIndex; i < mSize; i++)
+		{
+			if (_toLowerCase(mData[i]) != c)
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstNotOfIgnoreCase(const char* string, size_t startIndex) const
+	{
+		size_t len = strlen(string);
+
+		for (size_t i = startIndex; i <= mSize - len; i++)
+		{
+			if (!_equalsIgnoreCase(mData + i, string, len))
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findFirstNotOfIgnoreCase(const String& string, size_t startIndex) const
+	{
+		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
+		{
+			if (!_equalsIgnoreCase(mData + i, string, string.mSize))
+				return i;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastNotOf(char c) const
+	{
+		for (size_t i = mSize; i > 0; i--)
+		{
+			if (mData[i - 1] != c)
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastNotOf(const char* string) const
+	{
+		size_t len = strlen(string);
+
+		for (size_t i = mSize - len + 1; i > 0; i--)
+		{
+			if (strncmp(mData + i - 1, string, len) != 0)
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastNotOf(const String& string) const
+	{
+		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
+		{
+			if (strncmp(mData + i - 1, string, string.mSize) != 0)
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastNotOfIgnoreCase(char c) const
+	{
+		c = _toLowerCase(c);
+
+		for (size_t i = mSize; i > 0; i--)
+		{
+			if (_toLowerCase(mData[i - 1]) != c)
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastNotOfIgnoreCase(const char* string) const
+	{
+		size_t len = strlen(string);
+
+		for (size_t i = mSize - len + 1; i > 0; i--)
+		{
+			if (!_equalsIgnoreCase(mData + i - 1, string, len))
+				return i - 1;
+		}
+
+		return mSize;
+	}
+
+	size_t String::findLastNotOfIgnoreCase(const String& string) const
+	{
+		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
+		{
+			if (!_equalsIgnoreCase(mData + i - 1, string, string.mSize))
 				return i - 1;
 		}
 
@@ -1122,6 +1231,44 @@ namespace sonic
 	{
 		stream << string.getData();
 		return stream;
+	}
+
+	bool operator<<(String& string, std::istream& file)
+	{
+		size_t posBefore = file.tellg();
+
+		file.seekg(0, file.end);
+		size_t fileSize = file.tellg();
+
+		if (fileSize == -1)
+			return false;
+
+		file.seekg(0, file.beg);
+		string.setSize(fileSize);
+		file.read(string.getData(), fileSize);
+
+		file.seekg(posBefore, file.beg);
+
+		return string;
+	}
+
+	bool operator<<(String& string, std::istream&& file)
+	{
+		size_t posBefore = file.tellg();
+
+		file.seekg(0, file.end);
+		size_t fileSize = file.tellg();
+
+		if (fileSize == -1)
+			return false;
+
+		file.seekg(0, file.beg);
+		string.setSize(fileSize);
+		file.read(string.getData(), fileSize);
+
+		file.seekg(posBefore, file.beg);
+
+		return true;
 	}
 
 } // namespace sonic

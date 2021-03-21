@@ -122,6 +122,22 @@ namespace sonic
 		size_t findLastIgnoreCase(const char* string) const;
 		size_t findLastIgnoreCase(const String& string) const;
 
+		size_t findFirstNotOf(char c, size_t startIndex = 0) const;
+		size_t findFirstNotOf(const char* string, size_t startIndex = 0) const;
+		size_t findFirstNotOf(const String& string, size_t startIndex = 0) const;
+
+		size_t findFirstNotOfIgnoreCase(char c, size_t startIndex = 0) const;
+		size_t findFirstNotOfIgnoreCase(const char* string, size_t startIndex = 0) const;
+		size_t findFirstNotOfIgnoreCase(const String& string, size_t startIndex = 0) const;
+
+		size_t findLastNotOf(char c) const;
+		size_t findLastNotOf(const char* string) const;
+		size_t findLastNotOf(const String& string) const;
+
+		size_t findLastNotOfIgnoreCase(char c) const;
+		size_t findLastNotOfIgnoreCase(const char* string) const;
+		size_t findLastNotOfIgnoreCase(const String& string) const;
+
 		DynamicArray<String> split(char c) const;
 		DynamicArray<String> split(const char* string) const;
 		DynamicArray<String> split(const String& string) const;
@@ -177,6 +193,8 @@ namespace sonic
 		char* mData;
 	};
 
+	bool operator<<(String& string, std::istream& file);
+	bool operator<<(String& string, std::istream&& file);
 	std::ostream& operator<<(std::ostream& stream, const String& string);
 
 } // namespace sonic
