@@ -1,25 +1,33 @@
 #pragma once
 
+#include "sonic/core/scene/Scene.h"
+
+#include "sonic/components/ui/UIComponent.hpp"
+#include "sonic/components/ui/UIRendererComponent.hpp"
+
 namespace sonic
 {
-	template<typename C1, typename C2>
-	struct GroupView;
-
-	struct UIComponent;
-
-	struct UIRendererComponent;
-
 	class UIRenderer
 	{
-		void init()
-		{
+	public:
+		UIRenderer() = default;
 
+		void init(Scene* scene)
+		{
+			mScene = scene;
+
+			scene->addComponent<UIComponent>(3, UIComponent());
 		}
 
 		void update(float deltaSeconds, GroupView<UIComponent, UIRendererComponent>& components)
 		{
+			for (auto& g : components)
+			{
 
+			}
 		}
+
+		Scene* mScene;
 	};
 
 } // namespace sonic

@@ -1,22 +1,78 @@
 #pragma once
 
+#include <optional>
+
 namespace sonic 
 {
-	template<typename ValueType>
+	struct Nullopt
+	{
+	};
+
+	template<typename T>
 	class Optional
 	{
-		Optional()
-			: hasValue(false), value(ValueType())
+	public:
+		constexpr Optional()
+			: mHasValue(false), _()
 		{
 		}
 
-		Optional(const ValueType& value)
-			: hasValue(true), value(value)
+		constexpr Optional(Nullopt _)
+			: mHasValue(false), _()
 		{
 		}
 
-		bool hasValue;
-		ValueType value;
+		Optional(const T& value)
+			: mHasValue(true), mValue(value)
+		{
+		}
+
+		~Optional()
+		{
+			if (mHasValue)
+				mValue.~T();
+		}
+
+		operator bool() const
+		{
+			return mHasValue;
+		}
+
+		T* operator->()
+		{
+			return &mValue;
+		}
+
+		const T* operator->() const
+		{
+			return &mValue;
+		}
+
+		bool hasValue() const
+		{
+			return mHasValue;
+		}
+
+		T& getValue()
+		{
+			return mValue;
+		}
+
+		const T& getValue() const
+		{
+			return mValue;
+		}
+
+	private:
+		bool mHasValue;
+
+		union
+		{
+			T mValue;
+			char _;
+		};
 	};
+
+	constexpr Nullopt NULLOPT = { };
 
 } // namespace sonic

@@ -1,14 +1,4 @@
-typedef uint32_t Entity;
 
-struct Component1
-{
-
-}
-
-struct Component2
-{
-
-}
 
 class TestSystem
 {

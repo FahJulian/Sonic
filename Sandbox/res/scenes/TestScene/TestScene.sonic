@@ -1,16 +1,15 @@
-type: scene
 version: 0.0.1
 
 System sonic.UIRenderer: sonic/systems/ui/UIRenderer
 System client.TestSystem: systems/TestSystem
 
-Component sonic.UIComponent: sonic/components/ui/UIComponent
-Component sonic.UIClickListenerComponent: sonic/components/ui/UIClickListenerComponent
-Component sonic.UIRendererComponent: sonic/components/ui/UIRendererComponent
-Component client.TestComponent: components/TestComponent
+Component sonic::UIComponent: sonic/components/ui/UIComponent
+Component sonic::UIClickListenerComponent: sonic/components/ui/UIClickListenerComponent
+Component sonic::UIRendererComponent: sonic/components/ui/UIRendererComponent
+Component sonic::client::TestComponent: components/TestComponent
 
-Behaviour sonic.DirectionBehaviour: 2d/DirectionBehaviour
-Behaviour client.TestBehaviour: behaviours/TestBehaviourScript
+Behaviour sonic::DirectionBehaviour: 2d/DirectionBehaviour
+Behaviour sonic::client::TestBehaviour: behaviours/TestBehaviourScript
 
 Spritesheet sprites2: textures/sprites2
 

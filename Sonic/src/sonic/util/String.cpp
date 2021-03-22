@@ -343,32 +343,32 @@ namespace sonic
 
 	bool String::contains(char c) const
 	{
-		return findFirst(c) != mSize;
+		return findFirstOf(c) != mSize;
 	}
 
 	bool String::contains(const String& string) const
 	{
-		return findFirst(string) != mSize;
+		return findFirstOf(string) != mSize;
 	}
 
 	bool String::contains(const char* string) const
 	{
-		return findFirst(string) != mSize;
+		return findFirstOf(string) != mSize;
 	}
 
 	bool String::containsIgnoreCase(char c) const
 	{
-		return findFirstIgnoreCase(c) != mSize;
+		return findFirstOfIgnoreCase(c) != mSize;
 	}
 
 	bool String::containsIgnoreCase(const String& string) const
 	{
-		return findFirstIgnoreCase(string) != mSize;
+		return findFirstOfIgnoreCase(string) != mSize;
 	}
 
 	bool String::containsIgnoreCase(const char* string) const
 	{
-		return findFirstIgnoreCase(string) != mSize;
+		return findFirstOfIgnoreCase(string) != mSize;
 	}
 
 	bool String::replaceAll(char oldChar, char newChar)
@@ -443,7 +443,7 @@ namespace sonic
 
 	size_t String::replaceFirst(char oldChar, char newChar, size_t startIndex)
 	{
-		size_t index = findFirst(oldChar, startIndex);
+		size_t index = findFirstOf(oldChar, startIndex);
 
 		if (index != mSize)
 			mData[index] = newChar;
@@ -455,7 +455,7 @@ namespace sonic
 	{
 		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceFirst can only replace segments of equal size");
 
-		size_t index = findFirst(oldString, startIndex);
+		size_t index = findFirstOf(oldString, startIndex);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, strlen(newString));
@@ -467,7 +467,7 @@ namespace sonic
 	{
 		SN_ASSERT(oldString.mSize == newString.mSize, "replaceFirst can only replace segments of equal size");
 
-		size_t index = findFirst(oldString, startIndex);
+		size_t index = findFirstOf(oldString, startIndex);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, newString.mSize);
@@ -477,7 +477,7 @@ namespace sonic
 
 	size_t String::replaceFirstIgnoreCase(char oldChar, char newChar, size_t startIndex)
 	{
-		size_t index = findFirstIgnoreCase(oldChar, startIndex);
+		size_t index = findFirstOfIgnoreCase(oldChar, startIndex);
 
 		if (index != mSize)
 			mData[index] = newChar;
@@ -489,7 +489,7 @@ namespace sonic
 	{
 		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceFirstIgnoreCase can only replace segments of equal size");
 
-		size_t index = findFirstIgnoreCase(oldString, startIndex);
+		size_t index = findFirstOfIgnoreCase(oldString, startIndex);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, strlen(newString));
@@ -501,7 +501,7 @@ namespace sonic
 	{
 		SN_ASSERT(oldString.mSize == newString.mSize, "replaceFirstIgnoreCase can only replace segments of equal size");
 
-		size_t index = findFirstIgnoreCase(oldString, startIndex);
+		size_t index = findFirstOfIgnoreCase(oldString, startIndex);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, newString.mSize);
@@ -511,7 +511,7 @@ namespace sonic
 
 	size_t String::replaceLast(char oldChar, char newChar)
 	{
-		size_t index = findLast(oldChar);
+		size_t index = findLastOf(oldChar);
 
 		if (index != mSize)
 			mData[index] = newChar;
@@ -523,7 +523,7 @@ namespace sonic
 	{
 		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceLast can only replace segments of equal size");
 
-		size_t index = findLast(oldString);
+		size_t index = findLastOf(oldString);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, strlen(newString));
@@ -535,7 +535,7 @@ namespace sonic
 	{
 		SN_ASSERT(oldString.mSize == newString.mSize, "replaceLast can only replace segments of equal size");
 
-		size_t index = findLast(oldString);
+		size_t index = findLastOf(oldString);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, newString.mSize);
@@ -545,7 +545,7 @@ namespace sonic
 
 	size_t String::replaceLastIgnoreCase(char oldChar, char newChar)
 	{
-		size_t index = findLastIgnoreCase(oldChar);
+		size_t index = findLastOfIgnoreCase(oldChar);
 
 		if (index != mSize)
 			mData[index] = newChar;
@@ -557,7 +557,7 @@ namespace sonic
 	{
 		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceLastIgnoreCase can only replace segments of equal size");
 
-		size_t index = findLastIgnoreCase(oldString);
+		size_t index = findLastOfIgnoreCase(oldString);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, strlen(newString));
@@ -569,7 +569,7 @@ namespace sonic
 	{
 		SN_ASSERT(oldString.mSize == newString.mSize, "replaceLastIgnoreCase can only replace segments of equal size");
 
-		size_t index = findLastIgnoreCase(oldString);
+		size_t index = findLastOfIgnoreCase(oldString);
 
 		if (index != mSize)
 			std::memcpy(mData + index, newString, newString.mSize);
@@ -577,7 +577,7 @@ namespace sonic
 		return index;
 	}
 
-	size_t String::findFirst(char c, size_t startIndex) const
+	size_t String::findFirstOf(char c, size_t startIndex) const
 	{
 		for (size_t i = startIndex; i < mSize; i++)
 		{
@@ -588,7 +588,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findFirst(const char* string, size_t startIndex) const
+	size_t String::findFirstOf(const char* string, size_t startIndex) const
 	{
 		size_t len = strlen(string);
 
@@ -601,7 +601,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findFirst(const String& string, size_t startIndex) const
+	size_t String::findFirstOf(const String& string, size_t startIndex) const
 	{
 		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
 		{
@@ -612,7 +612,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findFirstIgnoreCase(char c, size_t startIndex) const
+	size_t String::findFirstOfIgnoreCase(char c, size_t startIndex) const
 	{
 		c = _toLowerCase(c);
 
@@ -625,7 +625,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findFirstIgnoreCase(const char* string, size_t startIndex) const
+	size_t String::findFirstOfIgnoreCase(const char* string, size_t startIndex) const
 	{
 		size_t len = strlen(string);
 
@@ -638,7 +638,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findFirstIgnoreCase(const String& string, size_t startIndex) const
+	size_t String::findFirstOfIgnoreCase(const String& string, size_t startIndex) const
 	{
 		for (size_t i = startIndex; i <= mSize - string.mSize; i++)
 		{
@@ -649,7 +649,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findLast(char c) const
+	size_t String::findLastOf(char c) const
 	{
 		for (size_t i = mSize; i > 0; i--)
 		{
@@ -660,7 +660,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findLast(const char* string) const
+	size_t String::findLastOf(const char* string) const
 	{
 		size_t len = strlen(string);
 
@@ -673,7 +673,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findLast(const String& string) const
+	size_t String::findLastOf(const String& string) const
 	{
 		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
 		{
@@ -684,7 +684,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findLastIgnoreCase(char c) const
+	size_t String::findLastOfIgnoreCase(char c) const
 	{
 		c = _toLowerCase(c);
 
@@ -697,7 +697,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findLastIgnoreCase(const char* string) const
+	size_t String::findLastOfIgnoreCase(const char* string) const
 	{
 		size_t len = strlen(string);
 
@@ -710,7 +710,7 @@ namespace sonic
 		return mSize;
 	}
 
-	size_t String::findLastIgnoreCase(const String& string) const
+	size_t String::findLastOfIgnoreCase(const String& string) const
 	{
 		for (size_t i = mSize - string.mSize + 1; i > 0; i--)
 		{
@@ -1269,6 +1269,28 @@ namespace sonic
 		file.seekg(posBefore, file.beg);
 
 		return true;
+	}
+
+	String operator+(const char* string1, const String& string2)
+	{
+		size_t len = strlen(string1);
+		String string = String(len + string2.getSize());
+
+		std::memcpy(string.getData(), string1, len);
+		std::memcpy(string.getData() + len, string2.getData(), string2.getSize());
+
+		return string;
+	}
+
+	String operator+(const String& string1, const char* string2)
+	{
+		size_t len = strlen(string2);
+		String string = String(string1.getSize() + len);
+
+		std::memcpy(string.getData(), string1.getData(), string1.getSize());
+		std::memcpy(string.getData() + string1.getSize(), string2, len);
+
+		return string;
 	}
 
 } // namespace sonic

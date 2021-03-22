@@ -9,88 +9,155 @@ namespace sonic
 {
 	namespace
 	{
-		Result<SceneData, SceneFileParsingError> _parseVersion_0_0_1(String& file)
+		size_t _findValueEndIndex_0_0_1(String& file, size_t valueStartIndex)
 		{
-			SceneData data;
+			if (file[valueStartIndex] == '{')
+			{
+				size_t level = 1;
+				for (size_t i = valueStartIndex + 1; i < file.getSize(); i++)
+				{
+					if (file[i] == '{')
+						level++;
+					else if (file[i] == '}' && (--level) == 0)
+						return i;
+				}
+
+				return file.getSize();
+			}
+			else
+			{
+				return file.findFirstOf(' ', valueStartIndex + 1);
+			}
+		}
+
+		Result<SceneFileData, SceneFileParsingError> _parseVersion0_0_1(String sceneName, String version, String& file)
+		{
+			Log::log(Log::INFO, "Parsing scene file for scene ", sceneName, "...");
+
+			SceneFileData data = { };
+			data.name = sceneName;
+			data.version = version;
 
 			size_t keyStartIndex = 0;
 			size_t keyEndIndex = 0;
-			size_t valueStartIndex = 0;
-			size_t valueEndIndex = 0;
-			while ((keyEndIndex = file.findFirst(':', valueEndIndex)) != file.getSize())
+			while ((keyEndIndex = file.findFirstOf(": ", keyStartIndex + 1)) != file.getSize())
 			{
-				valueStartIndex = file.findFirstNotOf(' ', keyEndIndex + 1);
-				if (file[valueStartIndex] == '{')
-				{
-					size_t level = 1;
-					for (size_t i = valueStartIndex + 1; i < file.getSize(); i++)
-					{
-						if (file[i] == '{')
-						{
-							level++;
-						}
-						else if (file[i] == '}')
-						{
-							if (--level == 0)
-							{
-								valueEndIndex = i;
-								break;
-							}
-						}
-					}
-				}
-				else
-				{
-					valueEndIndex = file.findFirst(' ', valueStartIndex + 1);
-				}
+				size_t valueStartIndex = file.findFirstNotOf(' ', keyEndIndex + strlen(": "));
+				size_t valueEndIndex = _findValueEndIndex_0_0_1(file, valueStartIndex);
 
+				if (valueEndIndex == file.getSize())
+					return SceneFileParsingError::SYNTAX_ERROR_REACHED_EOF;
 
 				String key = file.subString(keyStartIndex, keyEndIndex);
 				String value = file.subString(valueStartIndex, valueEndIndex);
 
-				if (size_t keySeperatorIndex = key.findFirst(' ');
+				if (size_t keySeperatorIndex = key.findFirstOf(' ', 1);
 					keySeperatorIndex != key.getSize())
 				{
 					String type = key.subString(0, keySeperatorIndex);
-					if (!data.containsKey(type))
-						data.insert(type, Map<String, String>());
+					if (!data.data.containsKey(type))
+						data.data.insert(type, Map<String, String>());
 
-					data[type].insert(key.subString(key.findFirstNotOf(' '), type.getSize() + 1), value);
+					data.data[type].insert(key.subString(key.findFirstNotOf(' '), type.getSize() + 1), value);
 				}
 
 				keyStartIndex = file.findFirstNotOf(' ', valueEndIndex + 1);
 			}
 
+			Log::log(Log::INFO, "Done.");
+
 			return data;
+		}
+
+		void _generateCodeVersion0_0_1(const SceneFileData& data)
+		{
+			Log::log(Log::INFO, "Generating code for scene ", data.name, "...");
+
+			String code;
+
+			code += "#include \"sonic/core/scene/Scene.h\"\n\n";
+			code += "#include \"SceneData.hpp\"\n\n";
+
+			code += "namespace sonic::client\n{\n";
+
+			code += "    class " + data.name + " : public Scene\n    {\n";
+
+			code += "    public:\n";
+
+			code += "        TestScene()\n";
+			code += "            : Scene(\"" + data.name + "\", &mData)\n";
+			code += "        {\n        }\n\n";
+
+			code += "        void initComponentPools() override\n";
+			code += "        {\n";
+
+			// TODO: Insert all needed component pools
+
+			code += "        }\n\n";
+
+			code += "        void initSystems() override\n";
+			code += "        {\n";
+
+			// TODO: Insert all needed systems
+
+			code += "        }\n\n";
+
+			code += "        void updateComponents(float deltaTime) override\n";
+			code += "        {\n";
+
+			// TODO: Insert all component pools
+
+			code += "        }\n\n";
+
+			code += "        void updateSystems(float deltaTime) override\n";
+			code += "        {\n";
+
+			// TODO: Insert all systems
+
+			code += "        }\n\n";
+
+			code += "        SceneData mData;\n";
+
+			// TODO Insert all componentpools and systems
+
+			code += "    };\n\n";
+			code += "} // namespace sonic::client\n";
+
+			std::ofstream file = std::ofstream("C:/dev/Sonic/Client/src/GeneratedTestScene.hpp");
+			file.write(code, code.getSize());
+			file.close();
+
+			Log::log(Log::INFO, "Done.");
 		}
 
 	} // namespace
 
-	Result<SceneData, SceneFileParsingError> SceneSerializer::parse(const String& sceneFile)
+	Result<SceneFileData, SceneFileParsingError> SceneSerializer::parse(const String& filePath)
 	{
 		String file;
 
-		if (!(file << std::ifstream(sceneFile)))
+		if (!(file << std::ifstream(filePath)))
 			return SceneFileParsingError::COULD_NOT_READ_FILE;
 
 		file.replaceAll('\n', ' ');
 		file.replaceAll('\t', ' ');
 
-		size_t typeKeyIndex = file.findFirst("type:");
-		size_t typeStartIndex = file.findFirstNotOf(' ', typeKeyIndex + strlen("type:") + 1);
-		String type = file.subString(typeStartIndex, file.findFirst(' ', typeStartIndex + 1));
-
-		if (type != "scene")
-			return SceneFileParsingError::INVALID_FILE_TYPE;
-
-		size_t versionKeyIndex = file.findFirst("version:");
+		size_t versionKeyIndex = file.findFirstOf("version:");
 		size_t versionStartIndex = file.findFirstNotOf(' ', versionKeyIndex + strlen("version:") + 1);
-		String version = file.subString(versionStartIndex, file.findFirst(' ', versionStartIndex + 1));
+		String version = file.subString(versionStartIndex, file.findFirstOf(' ', versionStartIndex + 1));
+
+		String sceneName = filePath.subString(filePath.findLastOf('/') + 1, filePath.findFirstOf('.'));
 
 		if (version == "0.0.1")
-			return _parseVersion_0_0_1(file);
+			return _parseVersion0_0_1(sceneName, version, file);
 		else
 			return SceneFileParsingError::INVALID_FILE_VERSION;
+	}
+
+	void SceneSerializer::generateCode(const SceneFileData& data)
+	{
+		if (data.version == "0.0.1")
+			_generateCodeVersion0_0_1(data);
 	}
 
 } // namespace sonic

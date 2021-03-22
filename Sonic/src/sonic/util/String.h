@@ -106,21 +106,21 @@ namespace sonic
 		size_t replaceLastIgnoreCase(const char* oldString, const char* newString);
 		size_t replaceLastIgnoreCase(const String& oldString, const String& newString);
 
-		size_t findFirst(char c, size_t startIndex = 0) const;
-		size_t findFirst(const char* string, size_t startIndex = 0) const;
-		size_t findFirst(const String& string, size_t startIndex = 0) const;
+		size_t findFirstOf(char c, size_t startIndex = 0) const;
+		size_t findFirstOf(const char* string, size_t startIndex = 0) const;
+		size_t findFirstOf(const String& string, size_t startIndex = 0) const;
 
-		size_t findFirstIgnoreCase(char c, size_t startIndex = 0) const;
-		size_t findFirstIgnoreCase(const char* string, size_t startIndex = 0) const;
-		size_t findFirstIgnoreCase(const String& string, size_t startIndex = 0) const;
+		size_t findFirstOfIgnoreCase(char c, size_t startIndex = 0) const;
+		size_t findFirstOfIgnoreCase(const char* string, size_t startIndex = 0) const;
+		size_t findFirstOfIgnoreCase(const String& string, size_t startIndex = 0) const;
 
-		size_t findLast(char c) const;
-		size_t findLast(const char* string) const;
-		size_t findLast(const String& string) const;
+		size_t findLastOf(char c) const;
+		size_t findLastOf(const char* string) const;
+		size_t findLastOf(const String& string) const;
 
-		size_t findLastIgnoreCase(char c) const;
-		size_t findLastIgnoreCase(const char* string) const;
-		size_t findLastIgnoreCase(const String& string) const;
+		size_t findLastOfIgnoreCase(char c) const;
+		size_t findLastOfIgnoreCase(const char* string) const;
+		size_t findLastOfIgnoreCase(const String& string) const;
 
 		size_t findFirstNotOf(char c, size_t startIndex = 0) const;
 		size_t findFirstNotOf(const char* string, size_t startIndex = 0) const;
@@ -196,5 +196,7 @@ namespace sonic
 	bool operator<<(String& string, std::istream& file);
 	bool operator<<(String& string, std::istream&& file);
 	std::ostream& operator<<(std::ostream& stream, const String& string);
+	String operator+(const char* string1, const String& string2);
+	String operator+(const String& string1, const char* string2);
 
 } // namespace sonic

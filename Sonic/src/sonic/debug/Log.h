@@ -34,20 +34,23 @@ namespace sonic
 		static constexpr uint8_t ALL = 0;
 
 		static void init(String filePath, std::ostream* ostream, uint8_t consoleLevel, uint8_t fileLevel);
+		static void init(Log* instance);
 
 		template<typename Arg, typename... Args>
 		static void log(const Level& level, const Arg& arg, const Args&... args)
 		{
-			if (level.severity >= sInstance.mConsoleLevel)
+			if (level.severity >= sInstance->mConsoleLevel)
 			{
-				*sInstance.mConsoleStream << level.color;
-				pushMessage(*sInstance.mConsoleStream, level, arg, (args)...);
-				*sInstance.mConsoleStream << ANSI_RESET;
+				*sInstance->mConsoleStream << level.color;
+				pushMessage(*sInstance->mConsoleStream, level, arg, (args)...);
+				*sInstance->mConsoleStream << ANSI_RESET;
 			}
 
-			if (level.severity >= sInstance.mFileLevel)
-				pushMessage(sInstance.mFileStream, level, arg, (args)...);
+			if (level.severity >= sInstance->mFileLevel)
+				pushMessage(sInstance->mFileStream, level, arg, (args)...);
 		}
+
+		static Log* getInstance() { return sInstance; }
 
 	private:
 		Log()
@@ -70,7 +73,7 @@ namespace sonic
 		std::ostream* mConsoleStream;
 		std::ofstream mFileStream;
 
-		static Log sInstance;
+		static Log* sInstance;
 	};
 
 } // namespace sonic

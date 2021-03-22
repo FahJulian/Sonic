@@ -6,19 +6,26 @@
 
 namespace sonic
 {
-	using SceneData = Map<String, Map<String, String>>;
+	struct SceneFileData
+	{
+		String name;
+		String version;
+		Map<String, Map<String, String>> data;
+	};
 
 	enum class SceneFileParsingError
 	{
 		COULD_NOT_READ_FILE,
-		INVALID_FILE_TYPE,
-		INVALID_FILE_VERSION
+		INVALID_FILE_VERSION,
+		SYNTAX_ERROR_REACHED_EOF
 	};
 
 	class SceneSerializer
 	{
 	public:
-		static Result<SceneData, SceneFileParsingError> parse(const String& sceneFile);
+		static Result<SceneFileData, SceneFileParsingError> parse(const String& sceneFile);
+
+		static void generateCode(const SceneFileData& data);
 	};
 
 } // namespace sonic
