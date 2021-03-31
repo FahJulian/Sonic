@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <Sonic.h>
 
 using namespace sonic;
@@ -15,7 +17,7 @@ struct Test
 
 int main()
 {
-	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", &std::cout, Log::ALL, Log::ALL);
+	Log::init("C:/dev/Sonic/Sandbox/log/test_log.log", std::cout, Log::ALL, Log::ALL);
 
 	StaticArray<int, 3> array = {
 		3, 4, 5

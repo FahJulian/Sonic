@@ -1,24 +1,31 @@
 #pragma once
 
 #include <ostream>
+#include <limits>
 
 #include "DynamicArray.h"
+
+#if defined(max)
+	#undef max
+#endif
 
 namespace sonic
 {
 	class String
 	{
 	public:
-		constexpr String()
+		constexpr String() noexcept
 			: mSize(0), mData(nullptr)
 		{
 		}
 
+		String(char c);
+
 		String(const char* data);
 
-		String(const char* data, size_t size);
+		explicit String(const char* data, size_t size);
 
-		String(size_t size);
+		explicit String(size_t size);
 
 		String(const String& other);
 
@@ -26,35 +33,40 @@ namespace sonic
 
 		~String();
 
+		String& operator=(char c);
+		String& operator=(const char* other);
 		String& operator=(const String& other);
 
 		String& operator=(String&& other) noexcept;
 
-		operator const char* () const { return mData; }
-
-		operator char* () { return mData; }
-
 		char& operator[](size_t index) { return get(index); }
 		const char& operator[](size_t index) const { return get(index); }
 
+		void operator+=(char c) { append(c); }
 		void operator+=(const String& string) { append(string); }
 		void operator+=(const char* string) { append(string); }
 
+		bool operator==(char c) const { return equals(c); }
 		bool operator==(const String& other) const { return equals(other); }
 		bool operator==(const char* other) const { return equals(other); }
 
+		bool operator!=(char c) const { return !equals(c); }
 		bool operator!=(const String& other) const { return !equals(other); }
 		bool operator!=(const char* other) const { return !equals(other); }
 
-		void append(const String& string);
-		void append(const char* string);
+		String& append(char c);
+		String& append(const String& string);
+		String& append(const char* string);
 
-		void insert(size_t index, const String& string);
-		void insert(size_t index, const char* string);
+		String& insert(size_t index, char c);
+		String& insert(size_t index, const String& string);
+		String& insert(size_t index, const char* string);
 
+		bool equals(char c) const;
 		bool equals(const String& other) const;
 		bool equals(const char* other) const;
 
+		bool equalsIgnoreCase(char c) const;
 		bool equalsIgnoreCase(const String& other) const;
 		bool equalsIgnoreCase(const char* other) const;
 
@@ -82,29 +94,33 @@ namespace sonic
 		bool containsIgnoreCase(const String& string) const;
 		bool containsIgnoreCase(const char* string) const;
 
-		bool replaceAll(char oldChar, char newChar);
-		bool replaceAll(const char* oldString, const char* newString);
-		bool replaceAll(const String& oldString, const String& newString);
+		String& replace(size_t beginIndex, size_t endIndex, char c);
+		String& replace(size_t beginIndex, size_t endIndex, const char* string);
+		String& replace(size_t beginIndex, size_t endIndex, const String& string);
 
-		bool replaceAllIgnoreCase(char oldChar, char newChar);
-		bool replaceAllIgnoreCase(const char* oldString, const char* newString);
-		bool replaceAllIgnoreCase(const String& oldString, const String& newString);
+		String& replaceAll(char oldChar, char newChar, size_t startIndex = 0);
+		String& replaceAll(const char* oldString, const char* newString, size_t startIndex = 0);
+		String& replaceAll(const String& oldString, const String& newString, size_t startIndex = 0);
 
-		size_t replaceFirst(char oldChar, char newChar, size_t startIndex = 0);
-		size_t replaceFirst(const char* oldString, const char* newString, size_t startIndex = 0);
-		size_t replaceFirst(const String& oldString, const String& newString, size_t startIndex = 0);
+		String& replaceAllIgnoreCase(char oldChar, char newChar, size_t startIndex = 0);
+		String& replaceAllIgnoreCase(const char* oldString, const char* newString, size_t startIndex = 0);
+		String& replaceAllIgnoreCase(const String& oldString, const String& newString, size_t startIndex = 0);
 
-		size_t replaceFirstIgnoreCase(char oldChar, char newChar, size_t startIndex = 0);
-		size_t replaceFirstIgnoreCase(const char* oldString, const char* newString, size_t startIndex = 0);
-		size_t replaceFirstIgnoreCase(const String& oldString, const String& newString, size_t startIndex = 0);
+		String& replaceFirst(char oldChar, char newChar, size_t startIndex = 0);
+		String& replaceFirst(const char* oldString, const char* newString, size_t startIndex = 0);
+		String& replaceFirst(const String& oldString, const String& newString, size_t startIndex = 0);
 
-		size_t replaceLast(char oldChar, char newChar);
-		size_t replaceLast(const char* oldString, const char* newString);
-		size_t replaceLast(const String& oldString, const String& newString);
+		String& replaceFirstIgnoreCase(char oldChar, char newChar, size_t startIndex = 0);
+		String& replaceFirstIgnoreCase(const char* oldString, const char* newString, size_t startIndex = 0);
+		String& replaceFirstIgnoreCase(const String& oldString, const String& newString, size_t startIndex = 0);
 
-		size_t replaceLastIgnoreCase(char oldChar, char newChar);
-		size_t replaceLastIgnoreCase(const char* oldString, const char* newString);
-		size_t replaceLastIgnoreCase(const String& oldString, const String& newString);
+		String& replaceLast(char oldChar, char newChar, size_t endIndex = std::numeric_limits<size_t>::max());
+		String& replaceLast(const char* oldString, const char* newString, size_t endIndex = std::numeric_limits<size_t>::max());
+		String& replaceLast(const String& oldString, const String& newString, size_t endIndex = std::numeric_limits<size_t>::max());
+
+		String& replaceLastIgnoreCase(char oldChar, char newChar, size_t endIndex = std::numeric_limits<size_t>::max());
+		String& replaceLastIgnoreCase(const char* oldString, const char* newString, size_t endIndex = std::numeric_limits<size_t>::max());
+		String& replaceLastIgnoreCase(const String& oldString, const String& newString, size_t endIndex = std::numeric_limits<size_t>::max());
 
 		size_t findFirstOf(char c, size_t startIndex = 0) const;
 		size_t findFirstOf(const char* string, size_t startIndex = 0) const;
@@ -114,13 +130,13 @@ namespace sonic
 		size_t findFirstOfIgnoreCase(const char* string, size_t startIndex = 0) const;
 		size_t findFirstOfIgnoreCase(const String& string, size_t startIndex = 0) const;
 
-		size_t findLastOf(char c) const;
-		size_t findLastOf(const char* string) const;
-		size_t findLastOf(const String& string) const;
+		size_t findLastOf(char c, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastOf(const char* string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastOf(const String& string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
 
-		size_t findLastOfIgnoreCase(char c) const;
-		size_t findLastOfIgnoreCase(const char* string) const;
-		size_t findLastOfIgnoreCase(const String& string) const;
+		size_t findLastOfIgnoreCase(char c, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastOfIgnoreCase(const char* string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastOfIgnoreCase(const String& string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
 
 		size_t findFirstNotOf(char c, size_t startIndex = 0) const;
 		size_t findFirstNotOf(const char* string, size_t startIndex = 0) const;
@@ -130,13 +146,13 @@ namespace sonic
 		size_t findFirstNotOfIgnoreCase(const char* string, size_t startIndex = 0) const;
 		size_t findFirstNotOfIgnoreCase(const String& string, size_t startIndex = 0) const;
 
-		size_t findLastNotOf(char c) const;
-		size_t findLastNotOf(const char* string) const;
-		size_t findLastNotOf(const String& string) const;
+		size_t findLastNotOf(char c, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastNotOf(const char* string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastNotOf(const String& string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
 
-		size_t findLastNotOfIgnoreCase(char c) const;
-		size_t findLastNotOfIgnoreCase(const char* string) const;
-		size_t findLastNotOfIgnoreCase(const String& string) const;
+		size_t findLastNotOfIgnoreCase(char c, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastNotOfIgnoreCase(const char* string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
+		size_t findLastNotOfIgnoreCase(const String& string, size_t endIndex = std::numeric_limits<size_t>::max()) const;
 
 		DynamicArray<String> split(char c) const;
 		DynamicArray<String> split(const char* string) const;
@@ -189,6 +205,14 @@ namespace sonic
 		static String valueOf(long double d, bool scientific = false);
 
 	private:
+		size_t _replaceFirst(char oldChar, char newChar, size_t startIndex = 0);
+		size_t _replaceFirst(const char* oldString, const char* newString, size_t startIndex = 0);
+		size_t _replaceFirst(const String& oldString, const String& newString, size_t startIndex = 0);
+
+		size_t _replaceFirstIgnoreCase(char oldChar, char newChar, size_t startIndex = 0);
+		size_t _replaceFirstIgnoreCase(const char* oldString, const char* newString, size_t startIndex = 0);
+		size_t _replaceFirstIgnoreCase(const String& oldString, const String& newString, size_t startIndex = 0);
+
 		size_t mSize;
 		char* mData;
 	};
@@ -198,5 +222,8 @@ namespace sonic
 	std::ostream& operator<<(std::ostream& stream, const String& string);
 	String operator+(const char* string1, const String& string2);
 	String operator+(const String& string1, const char* string2);
+	String operator+(const String& string1, const String& string2);
+	String operator+(const String& string1, char c);
+	String operator+(char c, const String& string1);
 
 } // namespace sonic

@@ -12,6 +12,11 @@ namespace sonic {
 		{
 			Pair() = default;
 
+			Pair(const K& key, const V& value)
+				: key(key), value(value)
+			{
+			}
+
 			template<typename T, typename F>
 			Pair(const T& key, const F& value)
 				: key(key), value(value)
@@ -124,6 +129,14 @@ namespace sonic {
 
 		template<typename T, typename F>
 		void insert(const T& key, const F& value)
+		{
+			if (mData.contains(key))
+				mData.get(mData.indexOf(key)).value = value;
+			else
+				mData.add(key, value);
+		}
+
+		void insert(const K& key, const V& value)
 		{
 			if (mData.contains(key))
 				mData.get(mData.indexOf(key)).value = value;

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <optional>
-
-namespace sonic 
+namespace sonic
 {
 	struct Nullopt
 	{

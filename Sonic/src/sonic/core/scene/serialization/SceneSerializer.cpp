@@ -124,7 +124,7 @@ namespace sonic
 			code += "} // namespace sonic::client\n";
 
 			std::ofstream file = std::ofstream("C:/dev/Sonic/Client/src/GeneratedTestScene.hpp");
-			file.write(code, code.getSize());
+			file.write(code.getData(), code.getSize());
 			file.close();
 
 			Log::log(Log::INFO, "Done.");
@@ -136,7 +136,7 @@ namespace sonic
 	{
 		String file;
 
-		if (!(file << std::ifstream(filePath)))
+		if (!(file << std::ifstream(filePath.getData())))
 			return SceneFileParsingError::COULD_NOT_READ_FILE;
 
 		file.replaceAll('\n', ' ');
