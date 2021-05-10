@@ -38,6 +38,7 @@ namespace sonic
 
 		Map<String, Dll> sDlls;
 		DllReloader::Settings sSettings;
+		bool sInitialized = false;
 
 		String _generateCompilerCommand(const String& dllName, const DynamicArray<String>& sourceFiles, const DynamicArray<String>& prepocessorDefinitions)
 		{
@@ -300,16 +301,21 @@ namespace sonic
 		_putDirectoriesWithSpacesInQuotes(sSettings.linkerExePath);
 
 		if (!platform::fileExists(sSettings.tmpDir))
-		{
 			platform::createDirectoryRecursively(sSettings.tmpDir);
-		}
 
+		sInitialized = true;
 		return true;
 	}
 
-	bool DllReloader::reloadDll(String& dllPath, bool forceRecompile, std::initializer_list<String> sourceFiles,
+	bool DllReloader::reloadDll(String dllPath, bool forceRecompile, std::initializer_list<String> sourceFiles,
 		std::initializer_list<String> additionalPreprocessorDefinitions)
 	{
+		if (!sInitialized)
+		{
+			Log::warn("Can't recompile dll ", dllPath, ": DllReloader has not been initialized");
+			return false;
+		}
+
 		dllPath.replaceAll('/', '\\');
 		String dllDir = dllPath.subString(0, dllPath.findLastOf('\\') + 1);
 

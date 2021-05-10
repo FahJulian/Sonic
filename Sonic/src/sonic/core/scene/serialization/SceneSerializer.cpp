@@ -123,7 +123,7 @@ namespace sonic
 			code += "    };\n\n";
 			code += "} // namespace sonic::client\n";
 
-			std::ofstream file = std::ofstream("C:/dev/Sonic/Client/src/GeneratedTestScene.hpp");
+			std::ofstream file = std::ofstream("C:\\Users\\fahju\\AppData\\Roaming\\Sonic\\tmp\\sandbox\\sandbox.cpp");
 			file.write(code.getData(), code.getSize());
 			file.close();
 

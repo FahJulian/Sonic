@@ -15,7 +15,7 @@
 #else
 
     #if !defined(SN_RCR_NAMESPACE)
-        #define SR_RCR_NAMESPACE
+        #define SN_RCR_NAMESPACE
     #endif
 
     #if !defined(SN_RCR_DLL_PATH)
@@ -23,7 +23,7 @@
     #endif
 
     #define SN_RCR_FUNCTION(returnType, name, arguments, argumentTypes, argumensForwarded, ...) \
-        returnType name##arguments \
+        static returnType name##arguments \
         { \
             static returnType(*functionPointer)(argumentTypes) = sonic::DllReloader::registerFunctionPointer(SN_RCR_DLL_PATH, &functionPointer, \
                 sonic::DllReloader::getTypeNames<returnType>(), SN_RCR_NAMESPACE"::", #name, sonic::DllReloader::getTypeNames<__VA_ARGS__>(), sonic::DllReloader::getTypeNames<argumentTypes>(true)); \

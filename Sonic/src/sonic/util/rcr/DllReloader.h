@@ -43,7 +43,7 @@ namespace sonic
 		}
 
 		template<>
-		static sonic::String getTypeNames()
+		static String getTypeNames()
 		{
 			return { };
 		}
@@ -106,7 +106,7 @@ namespace sonic
 
 		static bool init(const Settings& settings);
 
-		static bool reloadDll(String& dllPath, bool forceRecompile, std::initializer_list<String> sourceFiles, 
+		static bool reloadDll(String dllPath, bool forceRecompile, std::initializer_list<String> sourceFiles, 
 			std::initializer_list<String> additionalPreprocessorDefinitions = {});
 
 		static void destroy();
@@ -163,10 +163,10 @@ namespace sonic
 			}
 			else
 			{
-				static String valueTypeName = typeid(T).name();
-				valueTypeName.replaceAll(" const ", " ");
-				valueTypeName.replaceAll(" volatile ", " ");
-				valueTypeName.replaceAll(" * __ptr64", "");
+				static String valueTypeName = String(typeid(T).name())
+					.replaceAll(" const ", " ")
+					.replaceAll(" volatile ", " ")
+					.replaceAll(" * __ptr64", "");
 
 				if (std::is_const<T>::value)
 				{

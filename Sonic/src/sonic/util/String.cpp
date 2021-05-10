@@ -57,11 +57,6 @@ namespace sonic
 
 	} // namespace
 
-	String::String(char c)
-		: String(&c, 1)
-	{
-	}
-
 	String::String(const char* data)
 		: mSize(std::strlen(data)), mData(new char[mSize + 1])
 	{
@@ -100,24 +95,6 @@ namespace sonic
 	String::~String()
 	{
 		delete[] mData;
-	}
-
-	String& String::operator=(char c)
-	{
-		if (mSize != 1)
-		{
-			delete[] mData;
-
-			mData = new char[2]{ c, '\0' };
-
-			mSize = 1;
-		}
-		else
-		{
-			mData[0] = c;
-		}
-
-		return *this;
 	}
 
 	String& String::operator=(const char* other)
@@ -290,11 +267,6 @@ namespace sonic
 		mData = newData;
 	}
 
-	bool String::equals(char c) const
-	{
-		return mSize == 1 && mData[0] == c;
-	}
-
 	bool String::equals(const String& other) const
 	{
 		return std::strcmp(mData, other.mData) == 0;
@@ -303,11 +275,6 @@ namespace sonic
 	bool String::equals(const char* other) const
 	{
 		return std::strcmp(mData, other) == 0;
-	}
-
-	bool String::equalsIgnoreCase(char c) const
-	{
-		return mSize == 1 && _toLowerCase(mData[0]) == _toLowerCase(c);
 	}
 
 	bool String::equalsIgnoreCase(const String& other) const
@@ -564,7 +531,6 @@ namespace sonic
 
 	String& String::replaceAll(const char* oldString, const char* newString, size_t startIndex)
 	{
-		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceAll can only replace segments of equal size");
 		bool atLeastOneReplacement = false;
 
 		size_t index = 0;
@@ -576,7 +542,6 @@ namespace sonic
 
 	String& String::replaceAll(const String& oldString, const String& newString, size_t startIndex)
 	{
-		SN_ASSERT(oldString.mSize == newString.mSize, "replaceAll can only replace segments of equal size");
 		bool atLeastOneReplacement = false;
 
 		while ((startIndex = _replaceFirst(oldString, newString, startIndex)) != mSize)
@@ -597,7 +562,6 @@ namespace sonic
 
 	String& String::replaceAllIgnoreCase(const char* oldString, const char* newString, size_t startIndex)
 	{
-		SN_ASSERT(strlen(oldString) == strlen(newString), "replaceAllIgnoreCase can only replace segments of equal size");
 		bool atLeastOneReplacement = false;
 
 		while ((startIndex = _replaceFirstIgnoreCase(oldString, newString, startIndex)) != mSize)
@@ -608,7 +572,6 @@ namespace sonic
 
 	String& String::replaceAllIgnoreCase(const String& oldString, const String& newString, size_t startIndex)
 	{
-		SN_ASSERT(oldString.mSize == newString.mSize, "replaceAllIgnoreCase can only replace segments of equal size");
 		bool atLeastOneReplacement = false;
 
 		while ((startIndex = _replaceFirstIgnoreCase(oldString, newString, startIndex)) != mSize)

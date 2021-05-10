@@ -43,19 +43,6 @@ namespace sonic
 		{
 		}
 
-		template<typename L>
-		Function(const L& lambda)
-			: mTypePunnedObject(0), mTypePunnedFunction(_createLambda(lambda)), 
-				mFunctionCaller(&Function::_callLambda<L>)
-		{
-		}
-
-		~Function()
-		{
-			if (isLambda())
-				_deleteLambda(mTypePunnedFunction);
-		}
-
 		R operator()(Args... args) const
 		{
 			return (this->*mFunctionCaller)(std::forward<Args>(args)...);
@@ -78,12 +65,7 @@ namespace sonic
 
 		bool isMemberFunction() const
 		{
-			return isValid() && !isFunction() && mTypePunnedObject != 0;
-		}
-
-		bool isLambda() const
-		{
-			return !isFunction() && !isMemberFunction();
+			return isValid() && !isFunction();
 		}
 
 		template<typename R1, typename... Args1>
@@ -105,19 +87,6 @@ namespace sonic
 		}
 
 	private:
-		template<typename L>
-		static inline uintptr_t _createLambda(const L& lambda)
-		{
-			L* lambdaLocation = reinterpret_cast<L*>(operator new(sizeof(L*)));
-			new(lambdaLocation) L(lambda);
-			return reinterpret_cast<uintptr_t>(lambdaLocation);
-		}
-
-		static inline void _deleteLambda(uintptr_t lambda)
-		{
-			operator delete(reinterpret_cast<void*>(lambda));
-		}
-
 		R _callFunction(Args&&... args) const
 		{
 			NonMemberFunction function = *reinterpret_cast<NonMemberFunction*>(&mTypePunnedFunction);
@@ -131,13 +100,6 @@ namespace sonic
 			MemberFunction<T> memberFunction = *reinterpret_cast<MemberFunction<T>*>(&mTypePunnedFunction);
 
 			return (object->*memberFunction)(std::forward<Args>(args)...);
-		}
-
-		template<typename L>
-		R _callLambda(Args&&... args) const
-		{
-			L* lambda = reinterpret_cast<L*>(mTypePunnedFunction);
-			return (*lambda)(std::forward<Args>(args)...);
 		}
 
 		uintptr_t mTypePunnedObject;
